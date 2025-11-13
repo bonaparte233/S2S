@@ -1,0 +1,1240 @@
+{
+  "template_file": "template.pptx",
+  "layouts": {
+    "0": {
+      "name": "标题幻灯片",
+      "layout_index": 0,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "CENTER_TITLE (3)",
+          "name": "标题 1",
+          "left": 1524000,
+          "top": 1122363,
+          "width": 9144000,
+          "height": 2387600,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "subtitle": {
+          "id": 1,
+          "type": "SUBTITLE (4)",
+          "name": "副标题 2",
+          "left": 1524000,
+          "top": 3602038,
+          "width": 9144000,
+          "height": 1655762,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 0
+    },
+    "1": {
+      "name": "标题和内容",
+      "layout_index": 1,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 10515600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 1
+    },
+    "2": {
+      "name": "节标题",
+      "layout_index": 2,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 831850,
+          "top": 1709738,
+          "width": 10515600,
+          "height": 2852737,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "文本占位符 2",
+          "left": 831850,
+          "top": 4589463,
+          "width": 10515600,
+          "height": 1500187,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 2
+    },
+    "3": {
+      "name": "两栏内容",
+      "layout_index": 3,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 5181600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 3",
+          "left": 6172200,
+          "top": 1825625,
+          "width": 5181600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 3
+    },
+    "4": {
+      "name": "比较",
+      "layout_index": 4,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "文本占位符 2",
+          "left": 839788,
+          "top": 1681163,
+          "width": 5157787,
+          "height": 823912,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 3",
+          "left": 839788,
+          "top": 2505075,
+          "width": 5157787,
+          "height": 3684588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_3": {
+          "id": 3,
+          "type": "BODY (2)",
+          "name": "文本占位符 4",
+          "left": 6172200,
+          "top": 1681163,
+          "width": 5183188,
+          "height": 823912,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_4": {
+          "id": 4,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 5",
+          "left": 6172200,
+          "top": 2505075,
+          "width": 5183188,
+          "height": 3684588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 4
+    },
+    "5": {
+      "name": "仅标题",
+      "layout_index": 5,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 5
+    },
+    "6": {
+      "name": "空白",
+      "layout_index": 6,
+      "master_index": 0,
+      "placeholders": {},
+      "template_slide_index": 6
+    },
+    "7": {
+      "name": "内容与标题",
+      "layout_index": 7,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 457200,
+          "width": 3932237,
+          "height": 1600200,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 5183188,
+          "top": 987425,
+          "width": 6172200,
+          "height": 4873625,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "BODY (2)",
+          "name": "文本占位符 3",
+          "left": 839788,
+          "top": 2057400,
+          "width": 3932237,
+          "height": 3811588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 7
+    },
+    "8": {
+      "name": "图片与标题",
+      "layout_index": 8,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 457200,
+          "width": 3932237,
+          "height": 1600200,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "picture": {
+          "id": 1,
+          "type": "PICTURE (18)",
+          "name": "图片占位符 2",
+          "left": 5183188,
+          "top": 987425,
+          "width": 6172200,
+          "height": 4873625,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 2,
+          "type": "BODY (2)",
+          "name": "文本占位符 3",
+          "left": 839788,
+          "top": 2057400,
+          "width": 3932237,
+          "height": 3811588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 8
+    },
+    "9": {
+      "name": "标题和竖排文字",
+      "layout_index": 9,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "竖排文字占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 10515600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 9
+    },
+    "10": {
+      "name": "垂直排列标题与\n文本",
+      "layout_index": 10,
+      "master_index": 0,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "竖排标题 1",
+          "left": 8724900,
+          "top": 365125,
+          "width": 2628900,
+          "height": 5811838,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "竖排文字占位符 2",
+          "left": 838200,
+          "top": 365125,
+          "width": 7734300,
+          "height": 5811838,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 10
+    },
+    "11": {
+      "name": "标题幻灯片",
+      "layout_index": 11,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "CENTER_TITLE (3)",
+          "name": "标题 1",
+          "left": 1524000,
+          "top": 1122363,
+          "width": 9144000,
+          "height": 2387600,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "subtitle": {
+          "id": 1,
+          "type": "SUBTITLE (4)",
+          "name": "副标题 2",
+          "left": 1524000,
+          "top": 3602038,
+          "width": 9144000,
+          "height": 1655762,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 11
+    },
+    "12": {
+      "name": "标题和内容",
+      "layout_index": 12,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 10515600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 12
+    },
+    "13": {
+      "name": "节标题",
+      "layout_index": 13,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 831850,
+          "top": 1709738,
+          "width": 10515600,
+          "height": 2852737,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "文本占位符 2",
+          "left": 831850,
+          "top": 4589463,
+          "width": 10515600,
+          "height": 1500187,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 13
+    },
+    "14": {
+      "name": "两栏内容",
+      "layout_index": 14,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 5181600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 3",
+          "left": 6172200,
+          "top": 1825625,
+          "width": 5181600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 14
+    },
+    "15": {
+      "name": "比较",
+      "layout_index": 15,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "文本占位符 2",
+          "left": 839788,
+          "top": 1681163,
+          "width": 5157787,
+          "height": 823912,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 3",
+          "left": 839788,
+          "top": 2505075,
+          "width": 5157787,
+          "height": 3684588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_3": {
+          "id": 3,
+          "type": "BODY (2)",
+          "name": "文本占位符 4",
+          "left": 6172200,
+          "top": 1681163,
+          "width": 5183188,
+          "height": 823912,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_4": {
+          "id": 4,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 5",
+          "left": 6172200,
+          "top": 2505075,
+          "width": 5183188,
+          "height": 3684588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 15
+    },
+    "16": {
+      "name": "仅标题",
+      "layout_index": 16,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 16
+    },
+    "17": {
+      "name": "空白",
+      "layout_index": 17,
+      "master_index": 1,
+      "placeholders": {},
+      "template_slide_index": 17
+    },
+    "18": {
+      "name": "内容与标题",
+      "layout_index": 18,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 457200,
+          "width": 3932237,
+          "height": 1600200,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 5183188,
+          "top": 987425,
+          "width": 6172200,
+          "height": 4873625,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "BODY (2)",
+          "name": "文本占位符 3",
+          "left": 839788,
+          "top": 2057400,
+          "width": 3932237,
+          "height": 3811588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 18
+    },
+    "19": {
+      "name": "图片与标题",
+      "layout_index": 19,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 457200,
+          "width": 3932237,
+          "height": 1600200,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "picture": {
+          "id": 1,
+          "type": "PICTURE (18)",
+          "name": "图片占位符 2",
+          "left": 5183188,
+          "top": 987425,
+          "width": 6172200,
+          "height": 4873625,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 2,
+          "type": "BODY (2)",
+          "name": "文本占位符 3",
+          "left": 839788,
+          "top": 2057400,
+          "width": 3932237,
+          "height": 3811588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 19
+    },
+    "20": {
+      "name": "标题和竖排文字",
+      "layout_index": 20,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "竖排文字占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 10515600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 20
+    },
+    "21": {
+      "name": "垂直排列标题与\n文本",
+      "layout_index": 21,
+      "master_index": 1,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "竖排标题 1",
+          "left": 8724900,
+          "top": 365125,
+          "width": 2628900,
+          "height": 5811838,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "竖排文字占位符 2",
+          "left": 838200,
+          "top": 365125,
+          "width": 7734300,
+          "height": 5811838,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 21
+    },
+    "22": {
+      "name": "标题幻灯片",
+      "layout_index": 22,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "CENTER_TITLE (3)",
+          "name": "标题 1",
+          "left": 1524000,
+          "top": 1122363,
+          "width": 9144000,
+          "height": 2387600,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "subtitle": {
+          "id": 1,
+          "type": "SUBTITLE (4)",
+          "name": "副标题 2",
+          "left": 1524000,
+          "top": 3602038,
+          "width": 9144000,
+          "height": 1655762,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 22
+    },
+    "23": {
+      "name": "标题和内容",
+      "layout_index": 23,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 10515600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 23
+    },
+    "24": {
+      "name": "节标题",
+      "layout_index": 24,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 831850,
+          "top": 1709738,
+          "width": 10515600,
+          "height": 2852737,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "文本占位符 2",
+          "left": 831850,
+          "top": 4589463,
+          "width": 10515600,
+          "height": 1500187,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 24
+    },
+    "25": {
+      "name": "两栏内容",
+      "layout_index": 25,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 5181600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 3",
+          "left": 6172200,
+          "top": 1825625,
+          "width": 5181600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 25
+    },
+    "26": {
+      "name": "比较",
+      "layout_index": 26,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "文本占位符 2",
+          "left": 839788,
+          "top": 1681163,
+          "width": 5157787,
+          "height": 823912,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 3",
+          "left": 839788,
+          "top": 2505075,
+          "width": 5157787,
+          "height": 3684588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_3": {
+          "id": 3,
+          "type": "BODY (2)",
+          "name": "文本占位符 4",
+          "left": 6172200,
+          "top": 1681163,
+          "width": 5183188,
+          "height": 823912,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_4": {
+          "id": 4,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 5",
+          "left": 6172200,
+          "top": 2505075,
+          "width": 5183188,
+          "height": 3684588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 26
+    },
+    "27": {
+      "name": "仅标题",
+      "layout_index": 27,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 27
+    },
+    "28": {
+      "name": "空白",
+      "layout_index": 28,
+      "master_index": 2,
+      "placeholders": {},
+      "template_slide_index": 28
+    },
+    "29": {
+      "name": "内容与标题",
+      "layout_index": 29,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 457200,
+          "width": 3932237,
+          "height": 1600200,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "OBJECT (7)",
+          "name": "内容占位符 2",
+          "left": 5183188,
+          "top": 987425,
+          "width": 6172200,
+          "height": 4873625,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text_2": {
+          "id": 2,
+          "type": "BODY (2)",
+          "name": "文本占位符 3",
+          "left": 839788,
+          "top": 2057400,
+          "width": 3932237,
+          "height": 3811588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 29
+    },
+    "30": {
+      "name": "图片与标题",
+      "layout_index": 30,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 839788,
+          "top": 457200,
+          "width": 3932237,
+          "height": 1600200,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "picture": {
+          "id": 1,
+          "type": "PICTURE (18)",
+          "name": "图片占位符 2",
+          "left": 5183188,
+          "top": 987425,
+          "width": 6172200,
+          "height": 4873625,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 2,
+          "type": "BODY (2)",
+          "name": "文本占位符 3",
+          "left": 839788,
+          "top": 2057400,
+          "width": 3932237,
+          "height": 3811588,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 30
+    },
+    "31": {
+      "name": "标题和竖排文字",
+      "layout_index": 31,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "标题 1",
+          "left": 838200,
+          "top": 365125,
+          "width": 10515600,
+          "height": 1325563,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "竖排文字占位符 2",
+          "left": 838200,
+          "top": 1825625,
+          "width": 10515600,
+          "height": 4351338,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      },
+      "template_slide_index": 31
+    },
+    "32": {
+      "name": "垂直排列标题与\n文本",
+      "layout_index": 32,
+      "master_index": 2,
+      "placeholders": {
+        "title": {
+          "id": 0,
+          "type": "TITLE (1)",
+          "name": "竖排标题 1",
+          "left": 8724900,
+          "top": 365125,
+          "width": 2628900,
+          "height": 5811838,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        },
+        "body_text": {
+          "id": 1,
+          "type": "BODY (2)",
+          "name": "竖排文字占位符 2",
+          "left": 838200,
+          "top": 365125,
+          "width": 7734300,
+          "height": 5811838,
+          "constraints": {
+            "max_chars": "50",
+            "max_lines": "2"
+          }
+        }
+      }
+    }
+  }
+}
