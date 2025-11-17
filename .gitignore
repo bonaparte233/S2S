@@ -210,3 +210,4 @@ config/.DS_Store
 template/.DS_Store
 /output
 /template
+.DS_Store
