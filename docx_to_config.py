@@ -5,6 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import secrets
+import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -17,7 +20,17 @@ MARKER_RE = re.compile(r"【PPT(\d+)】")
 IMAGE_NAME_TEMPLATE = "doc_image_{idx}.{ext}"
 
 
+def _create_run_dir(base_dir: Path = Path("temp")) -> Path:
+    """创建带时间戳前缀的运行目录，方便前端一次处理对应到单独目录。"""
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    suffix = secrets.token_hex(2)
+    run_dir = base_dir / f"script-{timestamp}-{suffix}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return run_dir
+
+
 def parse_docx_blocks(doc_path: str, image_dir: Path) -> Tuple[List[Dict], bool, Dict]:
+    """读取 DOCX 并按照 PPT 标记拆分内容，同时保存提取的图片与课程元信息。"""
     doc = Document(doc_path)
     image_dir.mkdir(parents=True, exist_ok=True)
     slides: List[Dict] = []
@@ -542,26 +555,24 @@ def _plan_without_markers(
     return pages
 
 
-def process_docx(
+def generate_config_data(
     docx_path: str,
     template_json: str,
     template_list: str,
-    output_path: str,
     use_llm: bool,
     llm_provider: str,
     llm_model: Optional[str],
-    override_course: Optional[str],
-    override_college: Optional[str],
-    override_lecturer: Optional[str],
-):
-    image_dir = Path("images/temp")
+    metadata_overrides: Optional[Dict[str, str]],
+    run_dir: Path,
+) -> Dict:
+    """核心逻辑：生成 JSON 内容，供 GUI/CLI 复用。"""
+    metadata_overrides = metadata_overrides or {}
+    image_dir = run_dir / "images"
     blocks, has_marker, metadata = parse_docx_blocks(docx_path, image_dir)
-    if override_course:
-        metadata["course"] = override_course
-    if override_college:
-        metadata["college"] = override_college
-    if override_lecturer:
-        metadata["lecturer"] = override_lecturer
+    for key in ("course", "college", "lecturer"):
+        if metadata_overrides.get(key):
+            metadata[key] = metadata_overrides[key]
+
     templates = load_template_defs(template_json, template_list)
     llm = choose_llm(use_llm, llm_provider, llm_model)
 
@@ -585,25 +596,70 @@ def process_docx(
             }
         )
 
-    output = {"ppt_pages": stripped_pages}
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(output_path).write_text(
-        json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8"
+    return {"ppt_pages": stripped_pages}
+
+
+def process_docx(
+    docx_path: str,
+    template_json: str,
+    template_list: str,
+    output_path: Optional[str],
+    use_llm: bool,
+    llm_provider: str,
+    llm_model: Optional[str],
+    override_course: Optional[str],
+    override_college: Optional[str],
+    override_lecturer: Optional[str],
+    run_dir: Optional[str],
+    config_name: str,
+):
+    """CLI 包装：处理参数、保证 run 目录存在，并额外复制文件到 output。"""
+    metadata_overrides = {
+        "course": override_course,
+        "college": override_college,
+        "lecturer": override_lecturer,
+    }
+
+    base_dir = Path(run_dir) if run_dir else _create_run_dir()
+    base_dir.mkdir(parents=True, exist_ok=True)
+    config_path = base_dir / config_name
+
+    config = generate_config_data(
+        docx_path,
+        template_json,
+        template_list,
+        use_llm,
+        llm_provider,
+        llm_model,
+        metadata_overrides,
+        base_dir,
     )
-    print(f"✅ 已生成 JSON：{output_path}")
+
+    config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    if output_path:
+        explicit = Path(output_path)
+        explicit.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(config_path, explicit)
+        print(f"📄 另存为：{explicit}")
+
+    print(f"✅ 已生成 JSON：{config_path}")
+    print(f"📁 资源输出目录：{base_dir}")
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="根据 DOCX 讲稿生成 PPT 配置 JSON。")
     parser.add_argument("--docx", required=True, help="讲稿 DOCX 路径")
     parser.add_argument(
-        "--template-json", default="config/template.json", help="模板定义 JSON 文件"
+        "--template-json", default="template/template.json", help="模板定义 JSON 文件"
     )
     parser.add_argument(
-        "--template-list", default="config/template.txt", help="可用模板编号列表 txt"
+        "--template-list", default="template/template.txt", help="可用模板编号列表 txt"
     )
     parser.add_argument(
-        "--output", default="config/generated.json", help="输出 JSON 路径"
+        "--output",
+        default=None,
+        help="如需额外复制一份 JSON，请提供完整路径；若省略则仅在 temp/run-*/ 中生成",
     )
     parser.add_argument("--use-llm", action="store_true", help="启用大模型填充/排版")
     parser.add_argument("--llm-provider", default="deepseek", help="大模型提供商")
@@ -611,6 +667,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--course-name", default=None, help="手动指定课程/项目名称")
     parser.add_argument("--college-name", default=None, help="手动指定学院/单位")
     parser.add_argument("--lecturer-name", default=None, help="手动指定主讲教师姓名")
+    parser.add_argument(
+        "--run-dir",
+        default=None,
+        help="指定输出目录（默认在 temp 下自动创建 run-时间戳-随机值 文件夹）",
+    )
+    parser.add_argument(
+        "--config-name",
+        default="config.json",
+        help="输出目录中生成的配置文件名称",
+    )
     return parser
 
 
@@ -627,6 +693,8 @@ def main():
         override_course=args.course_name,
         override_college=args.college_name,
         override_lecturer=args.lecturer_name,
+        run_dir=args.run_dir,
+        config_name=args.config_name,
     )
 
 
