@@ -40,8 +40,8 @@
 **初始化用户：**
 
 ```bash
+source .venv/bin/activate
 cd web
-source ../.venv/bin/activate
 python manage.py init_users
 ```
 
@@ -121,7 +121,7 @@ python manage.py init_users
 
 ## 安装
 
-1. 准备好 Python 3.10+ 环境。
+1. 准备好 Python 3.11 环境。
 2. 在项目根目录执行：
 
 ```bash
@@ -337,8 +337,8 @@ Web 前端基于 Django 5.2.8 开发，可以作为独立服务部署：
 **生产环境：**
 
 ```bash
+source .venv/bin/activate
 cd web
-source ../.venv/bin/activate
 
 # 收集静态文件
 python manage.py collectstatic --noinput
@@ -364,7 +364,7 @@ gunicorn web_frontend.wsgi:application --bind 0.0.0.0:8000 --workers 4
 
 ### 后端
 
-- **Python 3.10+**
+- **Python 3.11**
 - **Django 5.2.8**：Web 框架
 - **python-pptx**：PPT 文件操作
 - **python-docx**：DOCX 文件解析
@@ -433,7 +433,7 @@ pip install -r requirements.txt
 
 ## 更新日志
 
-### v2.0.0 (2025-11-19)
+### v2.0.0
 
 - ✨ 新增 Django Web 前端
 - ✨ 新增用户认证和权限系统
