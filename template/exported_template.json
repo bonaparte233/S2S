@@ -1,0 +1,1157 @@
+{
+  "manifest": [
+    {
+      "template_page_num": 1,
+      "page_type": "封面页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 2,
+      "page_type": "章节页",
+      "text_slots": 4,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 3,
+      "page_type": "章节页多字版",
+      "text_slots": 4,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 4,
+      "page_type": "目录页",
+      "text_slots": 11,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 8,
+      "page_type": "图文页4",
+      "text_slots": 6,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 12,
+      "page_type": "图文页3",
+      "text_slots": 13,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 15,
+      "page_type": "文字页2",
+      "text_slots": 13,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 16,
+      "page_type": "文字页1",
+      "text_slots": 13,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 17,
+      "page_type": "文字页3",
+      "text_slots": 11,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 18,
+      "page_type": "图文页1",
+      "text_slots": 9,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 21,
+      "page_type": "图文页5",
+      "text_slots": 6,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 26,
+      "page_type": "图文页2",
+      "text_slots": 6,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 27,
+      "page_type": "过渡页",
+      "text_slots": 4,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 28,
+      "page_type": "主讲人页",
+      "text_slots": 4,
+      "image_slots": 0
+    }
+  ],
+  "ppt_pages": [
+    {
+      "page_type": "封面页",
+      "template_page_num": 1,
+      "content": {
+        "封面页_学院名称区": {
+          "type": "text",
+          "hint": "填写“封面页_学院名称区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 9
+        },
+        "封面页_总课程名称区": {
+          "type": "text",
+          "hint": "填写“封面页_总课程名称区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 9
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "章节页",
+      "template_page_num": 2,
+      "content": {
+        "章节名称": {
+          "type": "text",
+          "hint": "填写“章节名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "知识点名称": {
+          "type": "text",
+          "hint": "填写“知识点名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "主讲人": {
+          "type": "text",
+          "hint": "填写“主讲人”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "主讲人名称": {
+          "type": "text",
+          "hint": "填写“主讲人名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 4,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "章节页多字版",
+      "template_page_num": 3,
+      "content": {
+        "章节名称": {
+          "type": "text",
+          "hint": "填写“章节名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "知识点名称多字版": {
+          "type": "text",
+          "hint": "填写“知识点名称多字版”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "主讲人": {
+          "type": "text",
+          "hint": "填写“主讲人”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "主讲人名称": {
+          "type": "text",
+          "hint": "填写“主讲人名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 4,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "目录页",
+      "template_page_num": 4,
+      "content": {
+        "目录页_目录标题区": {
+          "type": "text",
+          "hint": "填写“目录页_目录标题区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "目录页_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 15
+          }
+        },
+        "目录页_目录条目区1": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区1": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "目录页_目录条目区2": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区2": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "目录页_目录条目区3": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区3": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "目录页_目录条目区4": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区4": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 11,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页4",
+      "template_page_num": 8,
+      "content": {
+        "图文页4_内容区": {
+          "图文页4_文字内容区": {
+            "type": "text",
+            "hint": "填写“图文页4_文字内容区”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 60
+          },
+          "图文页4_三级标题区": {
+            "三级标题": {
+              "type": "text",
+              "hint": "填写“三级标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 17
+            }
+          },
+          "图文页4_一二级标题区": {
+            "二级标题": {
+              "type": "text",
+              "hint": "填写“二级标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 17
+            },
+            "一级标题": {
+              "type": "text",
+              "hint": "填写“一级标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 14
+            }
+          }
+        },
+        "图文页4_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 6,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页3",
+      "template_page_num": 12,
+      "content": {
+        "图文页3_标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写“三级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写“二级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 18
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写“一级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 15
+          }
+        },
+        "图文页3_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        },
+        "图文页3_内容区4": {
+          "图文页3_文字内容区4": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 24
+            }
+          },
+          "图文页3_标签区4": {
+            "标签": {
+              "type": "text",
+              "hint": "填写“标签”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        },
+        "图文页3_内容区3": {
+          "图文页3_文字内容区3": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 24
+            }
+          },
+          "图文页3_标签区3": {
+            "标签": {
+              "type": "text",
+              "hint": "填写“标签”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        },
+        "图文页3_内容区2": {
+          "图文页3_文字内容区2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 24
+            }
+          },
+          "图文页3_标签区2": {
+            "标签": {
+              "type": "text",
+              "hint": "填写“标签”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        },
+        "图文页3_内容区1": {
+          "图文页3_文字内容区1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 24
+            }
+          },
+          "图文页3_标签区1": {
+            "标签": {
+              "type": "text",
+              "hint": "填写“标签”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 13,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "文字页2",
+      "template_page_num": 15,
+      "content": {
+        "文字页2_文字内容区2": {
+          "文本1": {
+            "type": "text",
+            "hint": "填写“文本1”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "文本2": {
+            "type": "text",
+            "hint": "填写“文本2”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 35
+          },
+          "文本3": {
+            "type": "text",
+            "hint": "填写“文本3”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          },
+          "文本4": {
+            "type": "text",
+            "hint": "填写“文本4”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          }
+        },
+        "文字页2_文字内容区1": {
+          "文本5": {
+            "type": "text",
+            "hint": "填写“文本5”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 18
+          },
+          "文本6": {
+            "type": "text",
+            "hint": "填写“文本6”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 39
+          },
+          "文本7": {
+            "type": "text",
+            "hint": "填写“文本7”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 21
+          },
+          "文本8": {
+            "type": "text",
+            "hint": "填写“文本8”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 21
+          }
+        },
+        "文字页2_标题区": {
+          "文字页2_三级标题": {
+            "type": "text",
+            "hint": "填写“文字页2_三级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "文字页2_二级标题": {
+            "type": "text",
+            "hint": "填写“文字页2_二级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "文字页2_一级标题": {
+            "type": "text",
+            "hint": "填写“文字页2_一级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 15
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        },
+        "文字页2_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 13,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "文字页1",
+      "template_page_num": 16,
+      "content": {
+        "文字页1_内容区1": {
+          "文字页1_文字内容区1": {
+            "文本1": {
+              "type": "text",
+              "hint": "填写“文本1”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 21
+            },
+            "文本2": {
+              "type": "text",
+              "hint": "填写“文本2”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 21
+            },
+            "文本3": {
+              "type": "text",
+              "hint": "填写“文本3”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 39
+            }
+          },
+          "文字页1_文字标题区1": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写“文字标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          }
+        },
+        "文字页1_内容区2": {
+          "文字页1_文字内容区2": {
+            "文本4": {
+              "type": "text",
+              "hint": "填写“文本4”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 17
+            },
+            "文本5": {
+              "type": "text",
+              "hint": "填写“文本5”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 14
+            },
+            "文本6": {
+              "type": "text",
+              "hint": "填写“文本6”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 35
+            }
+          },
+          "文字页1_文字标题区2": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写“文字标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          }
+        },
+        "文字页1_标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写“三级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写“二级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写“一级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 15
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        },
+        "文字页1_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 13,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "文字页3",
+      "template_page_num": 17,
+      "content": {
+        "文字页3_内容区3": {
+          "文字页3_文字内容区3": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 60
+            }
+          },
+          "文字页3_文字标题区3": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写“文字标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 9
+            }
+          }
+        },
+        "文字页3_内容区2": {
+          "文字页3_文字内容区2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 60
+            }
+          },
+          "文字页3_文字标题区2": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写“文字标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 9
+            }
+          }
+        },
+        "文字页3_内容区1": {
+          "文字页3_文字内容区1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 60
+            }
+          },
+          "文字页3_文字标题区1": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写“文字标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 9
+            }
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        },
+        "文字页3_标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写“三级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 17
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写“二级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 18
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写“一级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 15
+          }
+        },
+        "文字页3_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 11,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页1",
+      "template_page_num": 18,
+      "content": {
+        "图文页1_文字标题区": {
+          "文字标题": {
+            "type": "text",
+            "hint": "填写“文字标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 21
+          }
+        },
+        "图文页1_文字内容区1": {
+          "文字内容": {
+            "type": "text",
+            "hint": "填写“文字内容”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 48
+          }
+        },
+        "图文页1_文字内容区2": {
+          "文字内容": {
+            "type": "text",
+            "hint": "填写“文字内容”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 24
+          }
+        },
+        "图文页1_文字内容区3": {
+          "文字内容": {
+            "type": "text",
+            "hint": "填写“文字内容”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 24
+          }
+        },
+        "图文页1_标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写“三级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 12
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写“一级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 15
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写“二级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 18
+          }
+        },
+        "图文页1_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 9,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页5",
+      "template_page_num": 21,
+      "content": {
+        "图文页5_文字内容区1": {
+          "type": "text",
+          "hint": "填写“图文页5_文字内容区1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "图文页5_文字内容区2": {
+          "type": "text",
+          "hint": "填写“图文页5_文字内容区2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "图文页5_文字内容区3": {
+          "type": "text",
+          "hint": "填写“图文页5_文字内容区3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "图文页5_二三级标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写“三级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 12
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写“二级标题”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 18
+          }
+        },
+        "图文页5_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 6,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页2",
+      "template_page_num": 26,
+      "content": {
+        "图文页2_内容区": {
+          "图文页2_三级标题区": {
+            "三级标题": {
+              "type": "text",
+              "hint": "填写“三级标题”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 18
+            }
+          },
+          "图文页2_文字内容区3": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          },
+          "图文页2_文字内容区2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          },
+          "图文页2_文字内容区1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          }
+        },
+        "图文页2_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        },
+        "图片区": {
+          "type": "image",
+          "hint": "为“图片区”提供图片路径",
+          "required": true,
+          "value": "",
+          "preferred_format": "png/jpg"
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 6,
+        "image_slots": 1,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "过渡页",
+      "template_page_num": 27,
+      "content": {
+        "过渡页_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        },
+        "过渡页_文字内容区": {
+          "过渡页_文字内容1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 15
+            }
+          },
+          "过渡页_文字内容2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写“文字内容”的内容",
+              "required": true,
+              "value": "",
+              "max_chars": 12
+            }
+          }
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 4,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "主讲人页",
+      "template_page_num": 28,
+      "content": {
+        "主讲教师": {
+          "type": "text",
+          "hint": "填写“主讲教师”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "主讲人页_主讲教师区": {
+          "type": "text",
+          "hint": "填写“主讲人页_主讲教师区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "主讲人页_总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写“总课程名称”的内容",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "字幕": {
+          "type": "text",
+          "hint": "填写“字幕”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 53
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 4,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    }
+  ]
+}

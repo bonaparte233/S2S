@@ -1,0 +1,2136 @@
+{
+  "manifest": [
+    {
+      "template_page_num": 1,
+      "page_type": "封面页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 2,
+      "page_type": "章节页",
+      "text_slots": 4,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 3,
+      "page_type": "章节页多字版",
+      "text_slots": 4,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 4,
+      "page_type": "目录页",
+      "text_slots": 14,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 5,
+      "page_type": "模板第5页",
+      "text_slots": 14,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 6,
+      "page_type": "模板第6页",
+      "text_slots": 6,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 7,
+      "page_type": "模板第7页",
+      "text_slots": 11,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 8,
+      "page_type": "图文页4",
+      "text_slots": 5,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 9,
+      "page_type": "模板第9页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 10,
+      "page_type": "模板第10页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 11,
+      "page_type": "模板第11页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 12,
+      "page_type": "图文页3",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 13,
+      "page_type": "模板第13页",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 14,
+      "page_type": "模板第14页",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 15,
+      "page_type": "文字页2",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 16,
+      "page_type": "文字页1",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 17,
+      "page_type": "文字页3",
+      "text_slots": 10,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 18,
+      "page_type": "图文页1",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 19,
+      "page_type": "模板第19页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 20,
+      "page_type": "模板第20页",
+      "text_slots": 7,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 21,
+      "page_type": "图文页5",
+      "text_slots": 6,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 22,
+      "page_type": "模板第22页",
+      "text_slots": 7,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 23,
+      "page_type": "模板第23页",
+      "text_slots": 7,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 24,
+      "page_type": "模板第24页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 25,
+      "page_type": "模板第25页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 26,
+      "page_type": "图文页2",
+      "text_slots": 5,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 27,
+      "page_type": "过渡页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 28,
+      "page_type": "主讲人页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 29,
+      "page_type": "模板第29页",
+      "text_slots": 5,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 30,
+      "page_type": "模板第30页",
+      "text_slots": 0,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 31,
+      "page_type": "模板第31页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 32,
+      "page_type": "模板第32页",
+      "text_slots": 2,
+      "image_slots": 0
+    }
+  ],
+  "ppt_pages": [
+    {
+      "page_type": "封面页",
+      "template_page_num": 1,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 23
+        },
+        "封面页_学院名称区": {
+          "type": "text",
+          "hint": "填写“封面页_学院名称区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 9
+        },
+        "封面页_总课程名称区": {
+          "type": "text",
+          "hint": "填写“封面页_总课程名称区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 9
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "章节页",
+      "template_page_num": 2,
+      "content": {
+        "章节名称": {
+          "type": "text",
+          "hint": "填写“章节名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "知识点名称": {
+          "type": "text",
+          "hint": "填写“知识点名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "主讲人": {
+          "type": "text",
+          "hint": "填写“主讲人”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "主讲人名称": {
+          "type": "text",
+          "hint": "填写“主讲人名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 4,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "章节页多字版",
+      "template_page_num": 3,
+      "content": {
+        "章节名称": {
+          "type": "text",
+          "hint": "填写“章节名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "知识点名称多字版": {
+          "type": "text",
+          "hint": "填写“知识点名称多字版”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "主讲人": {
+          "type": "text",
+          "hint": "填写“主讲人”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "主讲人名称": {
+          "type": "text",
+          "hint": "填写“主讲人名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 4,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "目录页",
+      "template_page_num": 4,
+      "content": {
+        "目录页_目录标题区": {
+          "type": "text",
+          "hint": "填写“目录页_目录标题区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录条目区1": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区1": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "目录页_目录条目区2": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区2": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "目录页_目录条目区3": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区3": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "目录页_目录条目区4": {
+          "type": "text",
+          "hint": "填写“目录页_目录条目区4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "目录页_目录内容区4": {
+          "type": "text",
+          "hint": "填写“目录页_目录内容区4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 14,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第5页",
+      "template_page_num": 5,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本9": {
+          "type": "text",
+          "hint": "填写“文本9”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本10": {
+          "type": "text",
+          "hint": "填写“文本10”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本11": {
+          "type": "text",
+          "hint": "填写“文本11”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本12": {
+          "type": "text",
+          "hint": "填写“文本12”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本13": {
+          "type": "text",
+          "hint": "填写“文本13”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本14": {
+          "type": "text",
+          "hint": "填写“文本14”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 14,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第6页",
+      "template_page_num": 6,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 48
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 21
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 26
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 6,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第7页",
+      "template_page_num": 7,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本9": {
+          "type": "text",
+          "hint": "填写“文本9”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本10": {
+          "type": "text",
+          "hint": "填写“文本10”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本11": {
+          "type": "text",
+          "hint": "填写“文本11”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 11,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页4",
+      "template_page_num": 8,
+      "content": {
+        "图文页4_文字内容区": {
+          "type": "text",
+          "hint": "填写“图文页4_文字内容区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写“二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写“一级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 5,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第9页",
+      "template_page_num": 9,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 54
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第10页",
+      "template_page_num": 10,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 36
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第11页",
+      "template_page_num": 11,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 48
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 48
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页3",
+      "template_page_num": 12,
+      "content": {
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写“二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写“一级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文字内容": {
+          "type": "text",
+          "hint": "填写“文字内容”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "标签": {
+          "type": "text",
+          "hint": "填写“标签”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第13页",
+      "template_page_num": 13,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本9": {
+          "type": "text",
+          "hint": "填写“文本9”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本10": {
+          "type": "text",
+          "hint": "填写“文本10”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本11": {
+          "type": "text",
+          "hint": "填写“文本11”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本12": {
+          "type": "text",
+          "hint": "填写“文本12”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第14页",
+      "template_page_num": 14,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本9": {
+          "type": "text",
+          "hint": "填写“文本9”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本10": {
+          "type": "text",
+          "hint": "填写“文本10”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本11": {
+          "type": "text",
+          "hint": "填写“文本11”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本12": {
+          "type": "text",
+          "hint": "填写“文本12”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "文字页2",
+      "template_page_num": 15,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 35
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 39
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 21
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 21
+        },
+        "文字页2_三级标题": {
+          "type": "text",
+          "hint": "填写“文字页2_三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文字页2_二级标题": {
+          "type": "text",
+          "hint": "填写“文字页2_二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文字页2_一级标题": {
+          "type": "text",
+          "hint": "填写“文字页2_一级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "文字页1",
+      "template_page_num": 16,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 21
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 21
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 39
+        },
+        "文字标题": {
+          "type": "text",
+          "hint": "填写“文字标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 35
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写“二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写“一级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "文字页3",
+      "template_page_num": 17,
+      "content": {
+        "文字内容": {
+          "type": "text",
+          "hint": "填写“文字内容”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "文字标题": {
+          "type": "text",
+          "hint": "填写“文字标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 9
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写“二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写“一级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 10,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页1",
+      "template_page_num": 18,
+      "content": {
+        "文字标题": {
+          "type": "text",
+          "hint": "填写“文字标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 21
+        },
+        "文字内容": {
+          "type": "text",
+          "hint": "填写“文字内容”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写“一级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写“二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第19页",
+      "template_page_num": 19,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第20页",
+      "template_page_num": 20,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 33
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 33
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 33
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 7,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页5",
+      "template_page_num": 21,
+      "content": {
+        "图文页5_文字内容区1": {
+          "type": "text",
+          "hint": "填写“图文页5_文字内容区1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "图文页5_文字内容区2": {
+          "type": "text",
+          "hint": "填写“图文页5_文字内容区2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "图文页5_文字内容区3": {
+          "type": "text",
+          "hint": "填写“图文页5_文字内容区3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写“二级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 6,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第22页",
+      "template_page_num": 22,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 7,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第23页",
+      "template_page_num": 23,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 7,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第24页",
+      "template_page_num": 24,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 60
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本6": {
+          "type": "text",
+          "hint": "填写“文本6”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本7": {
+          "type": "text",
+          "hint": "填写“文本7”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本8": {
+          "type": "text",
+          "hint": "填写“文本8”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第25页",
+      "template_page_num": 25,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "图文页2",
+      "template_page_num": 26,
+      "content": {
+        "三级标题": {
+          "type": "text",
+          "hint": "填写“三级标题”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文字内容": {
+          "type": "text",
+          "hint": "填写“文字内容”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 11
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 5,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "过渡页",
+      "template_page_num": 27,
+      "content": {
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "文字内容": {
+          "type": "text",
+          "hint": "填写“文字内容”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "主讲人页",
+      "template_page_num": 28,
+      "content": {
+        "主讲教师": {
+          "type": "text",
+          "hint": "填写“主讲教师”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "主讲人页_主讲教师区": {
+          "type": "text",
+          "hint": "填写“主讲人页_主讲教师区”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写“总课程名称”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第29页",
+      "template_page_num": 29,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本3": {
+          "type": "text",
+          "hint": "填写“文本3”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本4": {
+          "type": "text",
+          "hint": "填写“文本4”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文本5": {
+          "type": "text",
+          "hint": "填写“文本5”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 5,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第30页",
+      "template_page_num": 30,
+      "content": {},
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 0,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第31页",
+      "template_page_num": 31,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    },
+    {
+      "page_type": "模板第32页",
+      "template_page_num": 32,
+      "content": {
+        "文本1": {
+          "type": "text",
+          "hint": "填写“文本1”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 17
+        },
+        "文本2": {
+          "type": "text",
+          "hint": "填写“文本2”的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        }
+      },
+      "meta": {
+        "layout": "auto-generated",
+        "scene": [],
+        "style": "auto",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "由 export_template_structure.py 自动提取。请根据实际模板补充更丰富的描述。"
+      }
+    }
+  ]
+}

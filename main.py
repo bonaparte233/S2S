@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from shutil import copyfile
 
-from docx_to_config import generate_config_data
-from generate_slides import render_slides
+from scripts.docx_to_config import generate_config_data
+from scripts.generate_slides import render_slides
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -27,6 +27,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-llm", action="store_true", help="是否启用大模型")
     parser.add_argument("--llm-provider", default="deepseek", help="大模型提供商标识")
     parser.add_argument("--llm-model", default="deepseek-chat", help="大模型名称")
+    parser.add_argument("--llm-base-url", default="http://172.18.75.58:9000", help="大模型接口地址")
     parser.add_argument("--course-name", default=None, help="覆盖课程名称")
     parser.add_argument("--college-name", default=None, help="覆盖学院名称")
     parser.add_argument("--lecturer-name", default=None, help="覆盖讲师名称")
@@ -60,6 +61,7 @@ def run_pipeline(args: argparse.Namespace) -> None:
         use_llm=args.use_llm,
         llm_provider=args.llm_provider,
         llm_model=args.llm_model,
+        llm_base_url=args.llm_base_url,
         metadata_overrides=overrides,
         run_dir=run_dir,
     )
