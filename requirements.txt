@@ -1,4 +1,9 @@
+# Core dependencies
 python-pptx
 python-docx
 requests
+Pillow
 
+# Django web framework
+Django>=5.2
+ 

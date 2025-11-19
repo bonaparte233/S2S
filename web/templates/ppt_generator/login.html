@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - S2S PPT生成器</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: var(--spacing-xl);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .login-header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .login-header p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .login-form .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .login-form label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .alert {
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .alert-error {
+            background: #fee;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+        
+        .default-accounts {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+        }
+        
+        .default-accounts h3 {
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-color);
+        }
+        
+        .default-accounts ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .default-accounts li {
+            padding: var(--spacing-xs) 0;
+            color: var(--text-light);
+        }
+        
+        .default-accounts code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🎨 S2S</h1>
+                <p>Script to Slides - PPT生成器</p>
+            </div>
+            
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="login-btn">登录</button>
+            </form>
+            
+            <div class="default-accounts">
+                <h3>📝 默认账户</h3>
+                <ul>
+                    <li>👑 管理员: <code>admin</code> / <code>admin123</code></li>
+                    <li>🔧 开发者: <code>developer</code> / <code>dev123</code></li>
+                    <li>👤 普通用户: <code>user</code> / <code>user123</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

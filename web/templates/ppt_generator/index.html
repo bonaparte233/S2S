@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}生成PPT - S2S{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>📝 生成PPT演示文稿</h2>
+    <p class="subtitle">上传讲稿文档，选择模板，一键生成精美PPT</p>
+</div>
+
+<div class="grid-container">
+    <!-- Upload Form Section -->
+    <div class="card card-primary">
+        <div class="card-header">
+            <h3>📤 上传文件</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+
+                <!-- DOCX File Upload -->
+                <div class="form-group">
+                    <label for="{{ form.docx_file.id_for_label }}" class="form-label required">
+                        {{ form.docx_file.label }}
+                    </label>
+                    <div class="file-upload-wrapper">
+                        {{ form.docx_file }}
+                        <span class="file-upload-label">选择讲稿文件 (.docx)</span>
+                    </div>
+                    {% if form.docx_file.help_text %}
+                    <small class="form-help">{{ form.docx_file.help_text }}</small>
+                    {% endif %}
+                    {% if form.docx_file.errors %}
+                    <div class="form-error">{{ form.docx_file.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Template Selection -->
+                <div class="form-group">
+                    <label class="form-label required">{{ form.template_choice.label }}</label>
+                    <div class="radio-group">
+                        {% for choice in form.template_choice %}
+                        <label class="radio-label">
+                            {{ choice.tag }}
+                            <span>{{ choice.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Custom Template Upload (shown when 'upload' is selected) -->
+                <div class="form-group" id="customTemplateGroup" style="display: none;">
+                    <label for="{{ form.template_file.id_for_label }}" class="form-label">
+                        {{ form.template_file.label }}
+                    </label>
+                    <div class="file-upload-wrapper">
+                        {{ form.template_file }}
+                        <span class="file-upload-label">选择模板文件 (.pptx)</span>
+                    </div>
+                    {% if form.template_file.help_text %}
+                    <small class="form-help">{{ form.template_file.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- LLM Configuration Section -->
+                <div class="form-section">
+                    <h4>🤖 大模型配置
+                        {% if is_developer %}
+                        <span style="color: var(--warning-color); font-size: 0.8rem;">(开发者功能)</span>
+                        {% endif %}
+                    </h4>
+
+                    <!-- Use LLM Checkbox (All Users) -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            {{ form.use_llm }}
+                            <span>{{ form.use_llm.label }}</span>
+                        </label>
+                        <small class="form-help">{{ form.use_llm.help_text }}</small>
+                    </div>
+
+                    {% if is_developer %}
+                    <!-- Developer-only LLM Configuration -->
+                    <div id="llmConfigSection" style="display: none;">
+                        <div class="form-group">
+                            <label for="{{ form.llm_provider.id_for_label }}" class="form-label">
+                                {{ form.llm_provider.label }}
+                            </label>
+                            {{ form.llm_provider }}
+                            <small class="form-help">选择大模型供应商以启用智能规划功能</small>
+                        </div>
+
+                        <div class="form-group" id="llmModelGroup" style="display: none;">
+                            <label for="{{ form.llm_model.id_for_label }}" class="form-label">
+                                {{ form.llm_model.label }}
+                            </label>
+                            {{ form.llm_model }}
+                            <small class="form-help">DeepSeek: deepseek-chat 或 deepseek-reasoner</small>
+                        </div>
+
+                        <div class="form-group" id="llmApiKeyGroup" style="display: none;">
+                            <label for="{{ form.llm_api_key.id_for_label }}" class="form-label">
+                                {{ form.llm_api_key.label }}
+                            </label>
+                            {{ form.llm_api_key }}
+                            <small class="form-help">输入您的API密钥</small>
+                        </div>
+
+                        <div class="form-group" id="llmBaseUrlGroup" style="display: none;">
+                            <label for="{{ form.llm_base_url.id_for_label }}" class="form-label">
+                                {{ form.llm_base_url.label }}
+                            </label>
+                            {{ form.llm_base_url }}
+                            <small class="form-help">自定义服务器地址（可选）</small>
+                        </div>
+
+                        <div class="form-group" id="userPromptGroup" style="display: none;">
+                            <label for="{{ form.user_prompt.id_for_label }}" class="form-label">
+                                {{ form.user_prompt.label }}
+                            </label>
+                            {{ form.user_prompt }}
+                            <small class="form-help">额外的提示词将附加到系统默认提示词之后</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Optional Metadata -->
+                <div class="form-section">
+                    <h4>📋 可选信息</h4>
+
+                    <div class="form-group">
+                        <label for="{{ form.course_name.id_for_label }}" class="form-label">
+                            {{ form.course_name.label }}
+                        </label>
+                        {{ form.course_name }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.college_name.id_for_label }}" class="form-label">
+                            {{ form.college_name.label }}
+                        </label>
+                        {{ form.college_name }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.lecturer_name.id_for_label }}" class="form-label">
+                            {{ form.lecturer_name.label }}
+                        </label>
+                        {{ form.lecturer_name }}
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large">
+                        🚀 开始生成PPT
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Generations Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3>📜 最近生成</h3>
+        </div>
+        <div class="card-body">
+            {% if recent_generations %}
+            <div class="generation-list">
+                {% for gen in recent_generations %}
+                <a href="{% url 'generation_detail' gen.pk %}" class="generation-item">
+                    <div class="generation-status status-{{ gen.status }}">
+                        {{ gen.get_status_display }}
+                    </div>
+                    <div class="generation-info">
+                        <div class="generation-title">
+                            {% if gen.course_name %}
+                            {{ gen.course_name }}
+                            {% else %}
+                            生成 #{{ gen.id }}
+                            {% endif %}
+                        </div>
+                        <div class="generation-meta">
+                            {{ gen.created_at|date:"Y-m-d H:i" }}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">暂无生成记录</p>
+            {% endif %}
+
+            <a href="{% url 'history' %}" class="btn btn-secondary btn-block">查看全部历史</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide custom template upload based on selection
+    document.addEventListener('DOMContentLoaded', function () {
+        const templateChoices = document.querySelectorAll('input[name="template_choice"]');
+        const customTemplateGroup = document.getElementById('customTemplateGroup');
+
+        templateChoices.forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (this.value === 'upload') {
+                    customTemplateGroup.style.display = 'block';
+                } else {
+                    customTemplateGroup.style.display = 'none';
+                }
+            });
+        });
+
+        // Show/hide LLM configuration section based on use_llm checkbox (for developers)
+        const useLlmCheckbox = document.getElementById('id_use_llm');
+        const llmConfigSection = document.getElementById('llmConfigSection');
+
+        if (useLlmCheckbox && llmConfigSection) {
+            useLlmCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    llmConfigSection.style.display = 'block';
+                } else {
+                    llmConfigSection.style.display = 'none';
+                }
+            });
+
+            // Initialize on page load
+            if (useLlmCheckbox.checked) {
+                llmConfigSection.style.display = 'block';
+            }
+        }
+
+        // Show/hide LLM configuration fields based on provider selection (for developers)
+        const llmProvider = document.getElementById('id_llm_provider');
+        const llmModelGroup = document.getElementById('llmModelGroup');
+        const llmApiKeyGroup = document.getElementById('llmApiKeyGroup');
+        const llmBaseUrlGroup = document.getElementById('llmBaseUrlGroup');
+        const userPromptGroup = document.getElementById('userPromptGroup');
+        const llmModelInput = document.getElementById('id_llm_model');
+
+        if (llmProvider) {
+            function updateLLMFields() {
+                const provider = llmProvider.value;
+
+                if (!provider) {
+                    // No provider selected - hide all LLM fields
+                    llmModelGroup.style.display = 'none';
+                    llmApiKeyGroup.style.display = 'none';
+                    llmBaseUrlGroup.style.display = 'none';
+                    userPromptGroup.style.display = 'none';
+                } else {
+                    // Provider selected - show relevant fields
+                    llmModelGroup.style.display = 'block';
+                    llmApiKeyGroup.style.display = 'block';
+                    userPromptGroup.style.display = 'block';
+
+                    // Set default model based on provider
+                    if (provider === 'deepseek') {
+                        llmModelInput.value = llmModelInput.value || 'deepseek-chat';
+                        llmModelInput.placeholder = 'deepseek-chat 或 deepseek-reasoner';
+                        llmBaseUrlGroup.style.display = 'none';
+                    } else if (provider === 'local') {
+                        llmModelInput.value = llmModelInput.value || 'Qwen3-8B';
+                        llmModelInput.placeholder = '例如：Qwen3-8B';
+                        llmBaseUrlGroup.style.display = 'block';
+                    } else if (provider === 'custom') {
+                        llmModelInput.placeholder = '输入模型名称';
+                        llmBaseUrlGroup.style.display = 'block';
+                    }
+                }
+            }
+
+            llmProvider.addEventListener('change', updateLLMFields);
+            updateLLMFields(); // Initialize on page load
+        }
+    });
+</script>
+{% endblock %}

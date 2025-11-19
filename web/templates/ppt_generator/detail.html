@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}生成详情 #{{ generation.id }} - S2S{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>📊 生成详情 #{{ generation.id }}</h2>
+    <a href="{% url 'index' %}" class="btn btn-secondary">← 返回首页</a>
+</div>
+
+<div class="grid-container">
+    <!-- Status Card -->
+    <div class="card card-primary">
+        <div class="card-header">
+            <h3>📈 生成状态</h3>
+        </div>
+        <div class="card-body">
+            <div class="status-display">
+                <div class="status-badge status-{{ generation.status }}">
+                    {{ generation.get_status_display }}
+                </div>
+
+                {% if generation.status == 'pending' %}
+                <p class="status-message">准备开始生成...</p>
+                <button id="startBtn" class="btn btn-primary btn-large">
+                    🚀 开始生成
+                </button>
+                {% elif generation.status == 'processing' %}
+                <div class="loading-spinner"></div>
+                <p class="status-message">正在生成PPT，请稍候...</p>
+                {% elif generation.status == 'completed' %}
+                <p class="status-message success">✅ PPT生成成功！</p>
+                <div class="download-actions">
+                    <a href="{% url 'download_ppt' generation.pk %}" class="btn btn-success btn-large">
+                        📥 下载PPT
+                    </a>
+                    {% if is_developer and generation.config_json %}
+                    <a href="{{ generation.config_json.url }}" class="btn btn-secondary" download>
+                        📄 下载配置JSON
+                    </a>
+                    {% endif %}
+                </div>
+                {% elif generation.status == 'failed' %}
+                <p class="status-message error">❌ 生成失败</p>
+                {% if generation.error_message %}
+                <div class="error-details">
+                    <h4>错误详情：</h4>
+                    <pre>{{ generation.error_message }}</pre>
+                </div>
+                {% endif %}
+                <a href="{% url 'index' %}" class="btn btn-primary">
+                    🔄 重新生成
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3>📋 配置信息</h3>
+        </div>
+        <div class="card-body">
+            <div class="detail-list">
+                <div class="detail-item">
+                    <span class="detail-label">讲稿文件：</span>
+                    <span class="detail-value">{{ generation.docx_file.name|default:"未上传" }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">模板：</span>
+                    <span class="detail-value">
+                        {% if generation.template_file %}
+                        {{ generation.template_file.name }}
+                        {% else %}
+                        {{ generation.template_name|default:"默认模板" }}
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">使用大模型：</span>
+                    <span class="detail-value">
+                        {% if generation.use_llm %}
+                        ✅ 是
+                        {% else %}
+                        ❌ 否
+                        {% endif %}
+                    </span>
+                </div>
+
+                {% if generation.course_name %}
+                <div class="detail-item">
+                    <span class="detail-label">课程名称：</span>
+                    <span class="detail-value">{{ generation.course_name }}</span>
+                </div>
+                {% endif %}
+
+                {% if generation.college_name %}
+                <div class="detail-item">
+                    <span class="detail-label">学院名称：</span>
+                    <span class="detail-value">{{ generation.college_name }}</span>
+                </div>
+                {% endif %}
+
+                {% if generation.lecturer_name %}
+                <div class="detail-item">
+                    <span class="detail-label">讲师名称：</span>
+                    <span class="detail-value">{{ generation.lecturer_name }}</span>
+                </div>
+                {% endif %}
+
+                <div class="detail-item">
+                    <span class="detail-label">创建时间：</span>
+                    <span class="detail-value">{{ generation.created_at|date:"Y-m-d H:i:s" }}</span>
+                </div>
+
+                {% if generation.completed_at %}
+                <div class="detail-item">
+                    <span class="detail-label">完成时间：</span>
+                    <span class="detail-value">{{ generation.completed_at|date:"Y-m-d H:i:s" }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const generationId = {{ generation.id }};
+    const currentStatus = '{{ generation.status }}';
+
+    // Auto-start if pending
+    if (currentStatus === 'pending') {
+        document.getElementById('startBtn').addEventListener('click', function () {
+            startGeneration();
+        });
+    }
+
+    // Poll status if processing
+    if (currentStatus === 'processing') {
+        pollStatus();
+    }
+
+    function startGeneration() {
+        const btn = document.getElementById('startBtn');
+        const statusDisplay = document.querySelector('.status-display');
+        const statusBadge = document.querySelector('.status-badge');
+
+        // Immediately show processing UI
+        btn.disabled = true;
+        btn.textContent = '⏳ 启动中...';
+
+        fetch(`/generation/${generationId}/start/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI to show processing state
+                    statusBadge.className = 'status-badge status-processing';
+                    statusBadge.textContent = '处理中';
+
+                    statusDisplay.innerHTML = `
+                        <div class="status-badge status-processing">处理中</div>
+                        <div class="loading-spinner"></div>
+                        <p class="status-message">正在生成PPT，请稍候...</p>
+                        <small style="color: var(--text-secondary);">这可能需要几分钟时间，请耐心等待</small>
+                    `;
+
+                    // Start polling for status updates
+                    pollStatus();
+                } else {
+                    // Show error and restore button
+                    statusDisplay.innerHTML = `
+                        <div class="status-badge status-failed">失败</div>
+                        <p class="status-message error">❌ 启动失败: ${data.error}</p>
+                        <button id="startBtn" class="btn btn-primary btn-large">🚀 重新开始</button>
+                    `;
+                    document.getElementById('startBtn').addEventListener('click', startGeneration);
+                }
+            })
+            .catch(error => {
+                // Show error and restore button
+                statusDisplay.innerHTML = `
+                    <div class="status-badge status-failed">失败</div>
+                    <p class="status-message error">❌ 请求失败: ${error}</p>
+                    <button id="startBtn" class="btn btn-primary btn-large">🚀 重新开始</button>
+                `;
+                document.getElementById('startBtn').addEventListener('click', startGeneration);
+            });
+    }
+
+    function pollStatus() {
+        const interval = setInterval(() => {
+            fetch(`/generation/${generationId}/status/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'completed' || data.status === 'failed') {
+                        clearInterval(interval);
+                        location.reload();
+                    }
+                });
+        }, 2000);  // Poll every 2 seconds
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

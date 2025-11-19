@@ -9,7 +9,73 @@
 - 从讲稿 DOCX 中解析段落、图片和基础元信息（课程名称、学院名称、主讲教师等）。
 - 根据模板配置自动规划每一页内容（可使用大模型 LLM，也可在文稿中显式标记模板）。
 - 按照既定 PPT 模板 (`template/template.pptx`) 填充文本与图片，生成统一风格的课件/汇报 PPT。
-- 提供命令行入口和函数级 API，方便集成到 GUI 或其他系统中。
+- 提供命令行入口、函数级 API 和 **Web 前端界面**，方便不同场景使用。
+
+---
+
+## 🌐 Web 前端（推荐）
+
+项目提供了基于 Django 的 Web 前端，支持在线上传讲稿、配置模板、启用大模型，并在线查看生成历史。
+
+### 快速启动
+
+在项目根目录运行：
+
+```bash
+./start_web.sh
+```
+
+然后访问：`http://127.0.0.1:8000/`
+
+### 用户系统
+
+系统内置三种用户角色：
+
+| 用户名 | 密码 | 角色 | 权限 |
+|--------|------|------|------|
+| `admin` | `admin123` | 管理员 | 所有权限 + Django Admin 后台访问 |
+| `developer` | `dev123` | 开发者 | LLM 配置、JSON 下载、模板导出 |
+| `user` | `user123` | 普通用户 | 基础 PPT 生成功能 |
+
+**初始化用户：**
+
+```bash
+cd web
+source ../.venv/bin/activate
+python manage.py init_users
+```
+
+### 全局 LLM 配置
+
+管理员可以在 Django Admin 后台配置全局的 LLM 设置，这样普通用户无需输入 API 密钥即可使用大模型功能。
+
+**配置步骤：**
+
+1. 访问 `http://127.0.0.1:8000/admin/`
+2. 使用 `admin` / `admin123` 登录
+3. 点击"全局LLM配置"
+4. 配置：
+   - LLM 供应商（DeepSeek / 本地部署 / 自定义服务）
+   - LLM 模型（如 `deepseek-chat`）
+   - API Key（全局默认密钥）
+   - 服务器地址（可选）
+   - 默认系统 Prompt（可选）
+5. 保存
+
+**配置优先级：**
+
+- 开发者/管理员在生成页面输入的配置会临时覆盖全局配置
+- 普通用户勾选"使用大模型"后自动使用全局配置
+
+### Web 功能特性
+
+- ✅ **用户认证**：强制登录，按角色分配权限
+- ✅ **在线上传**：支持上传 DOCX 讲稿和自定义 PPT 模板
+- ✅ **LLM 配置**：支持 DeepSeek、本地部署、自定义服务
+- ✅ **实时状态**：自动轮询生成状态，完成后自动刷新
+- ✅ **历史记录**：查看个人生成历史，下载 PPT 和 JSON
+- ✅ **全局配置**：管理员统一管理 API 密钥
+- ✅ **模板导出**：开发者可导出模板结构为 JSON（语义/文本模式）
 
 ---
 
@@ -23,10 +89,29 @@
 
 ## 目录结构（关键文件）
 
+### 核心脚本
+
 - `main.py`：主入口，一条命令完成 DOCX → JSON → PPT。
-- `docx_to_config.py`：DOCX → JSON 的核心逻辑与独立 CLI。
-- `generate_slides.py`：JSON → PPT 的核心逻辑与独立 CLI。
-- `llm_client.py`：大模型抽象与 DeepSeek / 本地模型 Provider 封装。
+- `scripts/docx_to_config.py`：DOCX → JSON 的核心逻辑与独立 CLI。
+- `scripts/generate_slides.py`：JSON → PPT 的核心逻辑与独立 CLI。
+- `scripts/llm_client.py`：大模型抽象与 DeepSeek / 本地模型 Provider 封装。
+- `scripts/export_template_structure.py`：导出模板结构为 JSON（语义/文本模式）。
+
+### Web 前端
+
+- `web/`：Django Web 应用
+  - `ppt_generator/`：PPT 生成应用
+    - `models.py`：数据模型（PPTGeneration、GlobalLLMConfig）
+    - `views.py`：视图函数（上传、生成、历史记录等）
+    - `forms.py`：表单定义
+    - `admin.py`：Django Admin 配置
+  - `templates/`：HTML 模板
+  - `static/`：静态资源（CSS、JS、图片）
+  - `media/`：用户上传的文件和生成的输出
+- `start_web.sh`：Web 服务器启动脚本
+
+### 资源文件
+
 - `template/`：PPT 模板文件、模板定义 JSON、模板编号白名单以及示例讲稿 DOCX。
 - `temp/`：运行目录，每次运行会在其中创建带时间戳和随机后缀的子目录, 包含中间 JSON、生成的 PPT 以及提取的图片。
 - `archive/`：历史遗留文件。
@@ -36,20 +121,49 @@
 
 ## 安装
 
-1. 准备好 Python 3 环境。
+1. 准备好 Python 3.10+ 环境。
 2. 在项目根目录执行：
 
 ```bash
+# 创建虚拟环境
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 安装依赖
 pip install -r requirements.txt
+
+# 初始化 Web 数据库（如需使用 Web 前端）
+cd web
+python manage.py migrate
+python manage.py init_users
+cd ..
 ```
 
 ---
 
-## 快速开始（推荐）
+## 快速开始
+
+### 方式一：Web 界面（推荐）
+
+```bash
+./start_web.sh
+```
+
+然后访问 `http://127.0.0.1:8000/`，使用以下账户登录：
+
+- 管理员：`admin` / `admin123`
+- 开发者：`developer` / `dev123`
+- 普通用户：`user` / `user123`
+
+### 方式二：命令行
 
 在项目根目录运行：
 
 ```bash
+# 激活虚拟环境
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 运行生成
 python main.py \
   --docx path/to/讲稿.docx \
   --use-llm \
@@ -199,11 +313,141 @@ python generate_slides.py \
 
 ## 二次开发与集成
 
+### Python API
+
 在其他程序中集成本项目时，可以直接调用 Python 函数而不是通过命令行：
 
 - 从 DOCX 生成 JSON：
-  - 调用 `docx_to_config.generate_config_data(docx_path, template_json, template_list, use_llm, llm_provider, llm_model, metadata_overrides, run_dir)`。
+  - 调用 `scripts.docx_to_config.generate_config_data(docx_path, template_json, template_list, use_llm, llm_provider, llm_model, metadata_overrides, run_dir)`。
 - 从 JSON 生成 PPT：
-  - 调用 `generate_slides.render_slides(template_path, config, output_name, run_dir=None)`。
+  - 调用 `scripts.generate_slides.render_slides(template_path, config, output_name, run_dir=None)`。
 
 `main.py` 仅仅是对上述两步的封装，方便命令行和 GUI 共同复用。
+
+### Web 集成
+
+Web 前端基于 Django 5.2.8 开发，可以作为独立服务部署：
+
+**开发环境：**
+
+```bash
+./start_web.sh
+```
+
+**生产环境：**
+
+```bash
+cd web
+source ../.venv/bin/activate
+
+# 收集静态文件
+python manage.py collectstatic --noinput
+
+# 使用 Gunicorn 运行
+gunicorn web_frontend.wsgi:application --bind 0.0.0.0:8000 --workers 4
+```
+
+**环境变量配置：**
+
+在 `web/web_frontend/settings.py` 中可以配置：
+
+- `SECRET_KEY`：Django 密钥
+- `DEBUG`：调试模式
+- `ALLOWED_HOSTS`：允许的主机名
+- `MEDIA_ROOT`：媒体文件存储路径
+- `S2S_TEMPLATE_DIR`：模板目录路径
+- `S2S_TEMP_DIR`：临时文件目录路径
+
+---
+
+## 技术栈
+
+### 后端
+
+- **Python 3.10+**
+- **Django 5.2.8**：Web 框架
+- **python-pptx**：PPT 文件操作
+- **python-docx**：DOCX 文件解析
+- **OpenAI SDK**：LLM 接口调用
+
+### 前端
+
+- **HTML5 + CSS3**
+- **Vanilla JavaScript**：无框架依赖
+- **Fetch API**：异步请求
+
+### 数据库
+
+- **SQLite**：开发环境默认数据库
+- 支持 PostgreSQL、MySQL 等（生产环境推荐）
+
+---
+
+## 常见问题
+
+### 1. Web 服务器启动失败
+
+**问题：** `ModuleNotFoundError: No module named 'django'`
+
+**解决：**
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. 生成失败：API 密钥错误
+
+**问题：** `AuthenticationError: Invalid API key`
+
+**解决：**
+
+- 检查全局 LLM 配置中的 API 密钥是否正确
+- 或在生成页面手动输入正确的 API 密钥
+
+### 3. 模板文件找不到
+
+**问题：** `FileNotFoundError: 模板文件不存在`
+
+**解决：**
+
+- 确保 `template/template.pptx` 存在
+- 或上传自定义模板文件
+
+### 4. 权限不足
+
+**问题：** `403 Forbidden`
+
+**解决：**
+
+- 确认使用正确的用户角色登录
+- 开发者功能需要 `developer` 或 `admin` 账户
+
+---
+
+## 许可证
+
+本项目仅供学习和研究使用。
+
+---
+
+## 更新日志
+
+### v2.0.0 (2025-11-19)
+
+- ✨ 新增 Django Web 前端
+- ✨ 新增用户认证和权限系统
+- ✨ 新增全局 LLM 配置功能
+- ✨ 新增在线生成历史记录
+- ✨ 新增实时状态轮询
+- ✨ 新增模板导出功能（开发者）
+- 🔧 优化代码结构，将核心脚本移至 `scripts/` 目录
+- 🔧 改进 LLM 配置逻辑，支持配置优先级
+- 📝 更新文档
+
+### v1.0.0
+
+- 🎉 初始版本
+- ✅ 支持 DOCX → JSON → PPT 转换
+- ✅ 支持 DeepSeek 和本地 LLM
+- ✅ 支持命令行和函数调用

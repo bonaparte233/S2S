@@ -349,7 +349,11 @@ def llm_fill_slide(
 
 
 def llm_plan_slides(
-    llm: BaseLLM, doc_text: str, templates: Dict[int, Dict], images: List[str]
+    llm: BaseLLM,
+    doc_text: str,
+    templates: Dict[int, Dict],
+    images: List[str],
+    user_prompt: Optional[str] = None,
 ) -> List[Dict]:
     template_desc = "\n".join(
         f"- 模板 {info['page_type']} (编号 {num}): 文本{len(info['text_fields'])}项, 图片{len(info['image_fields'])}项"
@@ -384,6 +388,10 @@ def llm_plan_slides(
 讲稿全文：
 {doc_text}
 """
+    # Append user prompt if provided
+    if user_prompt:
+        prompt += f"\n\n用户额外要求：\n{user_prompt}"
+
     response = llm.generate([{"role": "user", "content": prompt}], temperature=0.3)
     try:
         plan = _ensure_json_array(response)
@@ -460,7 +468,9 @@ def choose_llm(
     if provider == "qwen":
         endpoint = base_url or os.getenv("QWEN_VLLM_BASE_URL")
         if not endpoint:
-            raise ValueError("Qwen provider 需要提供 --llm-base-url 或设置 QWEN_VLLM_BASE_URL。")
+            raise ValueError(
+                "Qwen provider 需要提供 --llm-base-url 或设置 QWEN_VLLM_BASE_URL。"
+            )
         return QwenVLLM(base_url=endpoint)
     raise ValueError(f"暂不支持的大模型提供商：{provider}")
 
@@ -561,7 +571,11 @@ def _fill_by_markers(
 
 
 def _plan_without_markers(
-    blocks: List[Dict], templates: Dict[int, Dict], llm: BaseLLM, metadata: Dict
+    blocks: List[Dict],
+    templates: Dict[int, Dict],
+    llm: BaseLLM,
+    metadata: Dict,
+    user_prompt: Optional[str] = None,
 ) -> List[Dict]:
     if not llm:
         raise ValueError("讲稿未指定 PPT 标记且未启用 LLM，无法自动分配模板。")
@@ -569,7 +583,7 @@ def _plan_without_markers(
         block.get("text", "") for block in blocks if block.get("text")
     )
     all_images = [path for block in blocks for path in block.get("images", [])]
-    plan = llm_plan_slides(llm, doc_text, templates, all_images)
+    plan = llm_plan_slides(llm, doc_text, templates, all_images, user_prompt)
     pages: List[Dict] = []
     for item in plan:
         try:
@@ -614,6 +628,7 @@ def generate_config_data(
     llm_base_url: Optional[str],
     metadata_overrides: Optional[Dict[str, str]],
     run_dir: Path,
+    user_prompt: Optional[str] = None,
 ) -> Dict:
     """核心逻辑：生成 JSON 内容，供 GUI/CLI 复用。"""
     metadata_overrides = metadata_overrides or {}
@@ -629,7 +644,7 @@ def generate_config_data(
     if has_marker:
         pages = _fill_by_markers(blocks, templates, llm, metadata)
     else:
-        pages = _plan_without_markers(blocks, templates, llm, metadata)
+        pages = _plan_without_markers(blocks, templates, llm, metadata, user_prompt)
 
     if not pages:
         raise ValueError("未生成任何幻灯片内容，请检查讲稿或模板。")
@@ -687,7 +702,9 @@ def process_docx(
         base_dir,
     )
 
-    config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+    config_path.write_text(
+        json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     if output_path:
         explicit = Path(output_path)
@@ -716,7 +733,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-llm", action="store_true", help="启用大模型填充/排版")
     parser.add_argument("--llm-provider", default="deepseek", help="大模型提供商")
     parser.add_argument("--llm-model", default="deepseek-chat", help="大模型名称")
-    parser.add_argument("--llm-base-url", default="http://172.18.75.58:9000", help="自定义大模型接口地址")
+    parser.add_argument(
+        "--llm-base-url",
+        default="http://172.18.75.58:9000",
+        help="自定义大模型接口地址",
+    )
     parser.add_argument("--course-name", default=None, help="手动指定课程/项目名称")
     parser.add_argument("--college-name", default=None, help="手动指定学院/单位")
     parser.add_argument("--lecturer-name", default=None, help="手动指定主讲教师姓名")

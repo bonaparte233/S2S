@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}模板导出 - S2S{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>🔧 模板导出工具</h2>
+    <p class="subtitle">上传PPT模板文件，导出JSON描述（开发者功能）</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>📤 上传模板文件</h3>
+    </div>
+    <div class="card-body">
+        <form id="exportForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="template_file" class="form-label required">
+                    PPT模板文件
+                </label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="template_file" name="template_file" accept=".pptx" required>
+                    <span class="file-upload-label">选择模板文件 (.pptx)</span>
+                </div>
+                <small class="form-help">上传PPT模板文件以生成JSON描述</small>
+            </div>
+
+            <div class="form-group">
+                <label for="mode" class="form-label">导出模式</label>
+                <select id="mode" name="mode" class="form-control">
+                    <option value="semantic">语义模式 - 仅导出命名规范的元素（推荐）</option>
+                    <option value="text">文本模式 - 导出所有可编辑文本框</option>
+                </select>
+                <small class="form-help">语义模式只导出包含"xx区"等命名的元素，文本模式导出所有文本框</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    🚀 导出JSON
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="resultCard" class="card" style="display: none; margin-top: var(--spacing-lg);">
+    <div class="card-header">
+        <h3>📄 导出结果</h3>
+    </div>
+    <div class="card-body">
+        <div id="resultContent"></div>
+        <div class="form-actions" style="margin-top: var(--spacing-md);">
+            <button id="downloadBtn" class="btn btn-success">
+                📥 下载JSON文件
+            </button>
+            <button id="copyBtn" class="btn btn-secondary">
+                📋 复制到剪贴板
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="errorCard" class="card" style="display: none; margin-top: var(--spacing-lg);">
+    <div class="card-header">
+        <h3>❌ 错误</h3>
+    </div>
+    <div class="card-body">
+        <div id="errorContent" class="error-details"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('exportForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const resultCard = document.getElementById('resultCard');
+        const errorCard = document.getElementById('errorCard');
+
+        // Hide previous results
+        resultCard.style.display = 'none';
+        errorCard.style.display = 'none';
+
+        try {
+            const response = await fetch('{% url "export_template" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Show result
+                const jsonStr = JSON.stringify(data, null, 2);
+                document.getElementById('resultContent').innerHTML = `<pre>${jsonStr}</pre>`;
+                resultCard.style.display = 'block';
+
+                // Store JSON for download
+                window.exportedJSON = jsonStr;
+            } else {
+                // Show error
+                let errorMsg = data.error || '导出失败';
+                if (data.traceback) {
+                    errorMsg += '\n\n详细错误信息：\n' + data.traceback;
+                }
+                document.getElementById('errorContent').innerHTML = `<pre>${errorMsg}</pre>`;
+                errorCard.style.display = 'block';
+            }
+        } catch (error) {
+            document.getElementById('errorContent').innerHTML = `<pre>${error.message}</pre>`;
+            errorCard.style.display = 'block';
+        }
+    });
+
+    // Download JSON
+    document.getElementById('downloadBtn').addEventListener('click', function () {
+        const blob = new Blob([window.exportedJSON], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'template.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // Copy to clipboard
+    document.getElementById('copyBtn').addEventListener('click', async function () {
+        try {
+            await navigator.clipboard.writeText(window.exportedJSON);
+            alert('已复制到剪贴板！');
+        } catch (error) {
+            alert('复制失败：' + error.message);
+        }
+    });
+</script>
+{% endblock %}
