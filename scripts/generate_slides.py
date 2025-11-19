@@ -22,9 +22,7 @@ from archive.generatePPT_template import build_from_json
 
 SUFFIXES = ("区", "框", "栏")
 PLACEHOLDER_KEYWORDS = ("文字内容", "字幕", "标题名称", "内容内容")
-SUBTITLE_TEXTS = (
-    "字幕18pt，白色字体深色描边，悬浮阴影。确保在任何底色上都能明确显示",
-)
+SUBTITLE_TEXTS = ("字幕18pt，白色字体深色描边，悬浮阴影。确保在任何底色上都能明确显示",)
 IGNORE_KEYWORDS = ("背景", "矩形", "圆角", "椭圆", "形状", "图形", "遮罩", "底色")
 EXPANDABLE_KEYWORDS = ("标题", "名称", "课题", "栏目")
 EMU_PER_PT = 12700
@@ -390,7 +388,9 @@ def _clear_default_subtitles(shapes):
         if not shape.has_text_frame:
             continue
         text = (shape.text_frame.text or "").strip()
-        if text in SUBTITLE_TEXTS or any(keyword in text for keyword in PLACEHOLDER_KEYWORDS):
+        if text in SUBTITLE_TEXTS or any(
+            keyword in text for keyword in PLACEHOLDER_KEYWORDS
+        ):
             shape.text_frame.clear()
 
 
@@ -559,7 +559,9 @@ def render_slides(
 
     try:
         tmp_json = run_dir / "config.json"
-        tmp_json.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp_json.write_text(
+            json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
         build_from_json(template_path, tmp_json, temp_ppt)
         connector_snapshots = _extract_connectors(temp_ppt)
@@ -583,8 +585,12 @@ def main():
     parser = argparse.ArgumentParser(description="读取 JSON 并填充模板生成 PPT")
     parser.add_argument("--template", required=True, help="模板 PPTX 路径")
     parser.add_argument("--json", required=True, help="描述内容的 JSON 文件")
-    parser.add_argument("--output", default="final_output.pptx", help="输出 PPTX 文件名或路径")
-    parser.add_argument("--run-dir", default=None, help="输出 run 目录（默认 temp/run-...）")
+    parser.add_argument(
+        "--output", default="final_output.pptx", help="输出 PPTX 文件名或路径"
+    )
+    parser.add_argument(
+        "--run-dir", default=None, help="输出 run 目录（默认 temp/run-...）"
+    )
     args = parser.parse_args()
 
     config = json.loads(Path(args.json).read_text(encoding="utf-8"))
