@@ -9,8 +9,19 @@ from django.utils import timezone
 
 
 class GlobalLLMConfig(models.Model):
-    """全局LLM配置 - 单例模式，为所有用户提供默认LLM配置"""
+    """全局LLM配置 - 支持多个配置，可选择默认配置"""
 
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="配置名称",
+        help_text="为此配置起一个易于识别的名称",
+    )
+    is_default = models.BooleanField(
+        default=False,
+        verbose_name="默认配置",
+        help_text="勾选后，此配置将成为系统默认配置",
+    )
     llm_provider = models.CharField(
         max_length=50,
         choices=[
@@ -54,27 +65,46 @@ class GlobalLLMConfig(models.Model):
     class Meta:
         verbose_name = "全局LLM配置"
         verbose_name_plural = "全局LLM配置"
+        ordering = ["-is_default", "name"]
 
     def save(self, *args, **kwargs):
-        # 确保只有一个配置实例（单例模式）
-        if not self.pk and GlobalLLMConfig.objects.exists():
-            raise ValidationError("只能存在一个全局LLM配置，请编辑现有配置。")
+        # 如果设置为默认配置，取消其他配置的默认状态
+        if self.is_default:
+            GlobalLLMConfig.objects.filter(is_default=True).exclude(pk=self.pk).update(
+                is_default=False
+            )
+        # 如果这是第一个配置，自动设为默认
+        elif not self.pk and not GlobalLLMConfig.objects.exists():
+            self.is_default = True
         return super().save(*args, **kwargs)
 
     @classmethod
     def get_config(cls):
-        """获取全局配置（如果不存在则创建默认配置）"""
-        config, created = cls.objects.get_or_create(
-            pk=1,
-            defaults={
-                "llm_provider": "deepseek",
-                "llm_model": "deepseek-chat",
-            },
+        """获取默认配置（如果不存在则创建默认配置）"""
+        # 尝试获取默认配置
+        config = cls.objects.filter(is_default=True).first()
+        if config:
+            return config
+
+        # 如果没有默认配置，尝试获取第一个配置
+        config = cls.objects.first()
+        if config:
+            config.is_default = True
+            config.save()
+            return config
+
+        # 如果没有任何配置，创建默认配置
+        config = cls.objects.create(
+            name="默认配置",
+            is_default=True,
+            llm_provider="deepseek",
+            llm_model="deepseek-chat",
         )
         return config
 
     def __str__(self):
-        return f"全局LLM配置 ({self.llm_provider} - {self.llm_model})"
+        default_mark = " [默认]" if self.is_default else ""
+        return f"{self.name} ({self.llm_provider} - {self.llm_model}){default_mark}"
 
 
 class PPTGeneration(models.Model):

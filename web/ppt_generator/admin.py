@@ -12,21 +12,32 @@ class GlobalLLMConfigAdmin(admin.ModelAdmin):
     """Admin interface for Global LLM Configuration."""
 
     list_display = [
-        "id",
+        "name",
+        "is_default_badge",
         "llm_provider",
         "llm_model",
         "has_api_key",
         "updated_at",
         "updated_by",
     ]
+    list_filter = ["is_default", "llm_provider"]
+    search_fields = ["name", "llm_model"]
     readonly_fields = ["updated_at", "updated_by"]
+    actions = ["set_as_default"]
 
     fieldsets = [
+        (
+            "配置标识",
+            {
+                "fields": ["name", "is_default"],
+                "description": "为配置命名，并选择是否设为默认配置",
+            },
+        ),
         (
             "基本配置",
             {
                 "fields": ["llm_provider", "llm_model"],
-                "description": "配置默认的LLM供应商和模型",
+                "description": "配置LLM供应商和模型",
             },
         ),
         (
@@ -53,6 +64,16 @@ class GlobalLLMConfigAdmin(admin.ModelAdmin):
         ),
     ]
 
+    def is_default_badge(self, obj):
+        """显示是否为默认配置"""
+        if obj.is_default:
+            return format_html(
+                '<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold;">✓ 默认</span>'
+            )
+        return format_html('<span style="color: #999;">-</span>')
+
+    is_default_badge.short_description = "默认配置"
+
     def has_api_key(self, obj):
         """显示是否配置了API密钥"""
         if obj.llm_api_key:
@@ -61,15 +82,24 @@ class GlobalLLMConfigAdmin(admin.ModelAdmin):
 
     has_api_key.short_description = "API密钥"
 
-    def has_add_permission(self, request):
-        """只允许一个配置实例"""
-        if GlobalLLMConfig.objects.exists():
-            return False
-        return super().has_add_permission(request)
+    def set_as_default(self, request, queryset):
+        """将选中的配置设为默认配置"""
+        if queryset.count() != 1:
+            self.message_user(request, "请只选择一个配置设为默认", level="error")
+            return
 
-    def has_delete_permission(self, request, obj=None):
-        """不允许删除配置"""
-        return False
+        config = queryset.first()
+        # 取消其他配置的默认状态
+        GlobalLLMConfig.objects.filter(is_default=True).update(is_default=False)
+        # 设置当前配置为默认
+        config.is_default = True
+        config.save()
+
+        self.message_user(
+            request, f"已将 '{config.name}' 设为默认配置", level="success"
+        )
+
+    set_as_default.short_description = "设为默认配置"
 
     def save_model(self, request, obj, form, change):
         """保存时记录更新者"""
