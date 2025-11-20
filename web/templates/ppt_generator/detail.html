@@ -79,6 +79,20 @@
                     </span>
                 </div>
 
+                {% if generation.config_template_file %}
+                <div class="detail-item">
+                    <span class="detail-label">配置模板文件：</span>
+                    <span class="detail-value">{{ generation.config_template_file.name }}</span>
+                </div>
+                {% elif generation.config_template %}
+                <div class="detail-item">
+                    <span class="detail-label">配置模板：</span>
+                    <span class="detail-value">{{ generation.config_template }}</span>
+                </div>
+                {% endif %}
+
+
+
                 <div class="detail-item">
                     <span class="detail-label">使用大模型：</span>
                     <span class="detail-value">

@@ -22,7 +22,8 @@
                 </li>
                 {% if user.is_authenticated %}
                 {% if is_developer %}
-                <li><a href="{% url 'export_template' %}">🔧 模板导出</a></li>
+                <li><a href="{% url 'developer_tools' %}"
+                        class="{% if 'developer-tools' in request.path %}active{% endif %}">🔧 开发者工具</a></li>
                 {% endif %}
                 <li class="nav-user">
                     <span class="user-info">

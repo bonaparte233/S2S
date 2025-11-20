@@ -1,0 +1,1150 @@
+{
+  "manifest": [
+    {
+      "template_page_num": 1,
+      "page_type": "封面页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 2,
+      "page_type": "章节页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 3,
+      "page_type": "章节页多字版",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 4,
+      "page_type": "目录页",
+      "text_slots": 10,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 8,
+      "page_type": "图文页4",
+      "text_slots": 5,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 12,
+      "page_type": "图文页3",
+      "text_slots": 12,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 15,
+      "page_type": "文字页2",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 16,
+      "page_type": "文字页1",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 17,
+      "page_type": "文字页3",
+      "text_slots": 10,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 18,
+      "page_type": "图文页1",
+      "text_slots": 8,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 21,
+      "page_type": "图文页5",
+      "text_slots": 6,
+      "image_slots": 3
+    },
+    {
+      "template_page_num": 26,
+      "page_type": "图文页2",
+      "text_slots": 6,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 27,
+      "page_type": "过渡页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 28,
+      "page_type": "主讲人页",
+      "text_slots": 2,
+      "image_slots": 0
+    }
+  ],
+  "ppt_pages": [
+    {
+      "page_type": "封面页",
+      "template_page_num": 1,
+      "content": {
+        "学院名称区": {
+          "type": "text",
+          "hint": "填写学院或单位名称",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "总课程名称区": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        }
+      },
+      "meta": {
+        "layout": "封面大图",
+        "scene": [
+          "课程封面"
+        ],
+        "style": "大标题+学院信息，深色背景配点缀图形",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "生成 JSON 时若无标注默认插入此页 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "章节页",
+      "template_page_num": 2,
+      "content": {
+        "章节名称": {
+          "type": "text",
+          "hint": "填写章节标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "知识点名称": {
+          "type": "text",
+          "hint": "填写知识点标题",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "主讲人名称": {
+          "type": "text",
+          "hint": "仅填写主讲教师名字",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        }
+      },
+      "meta": {
+        "layout": "章节起始页",
+        "scene": [
+          "章节开场",
+          "内容切换"
+        ],
+        "style": "单列标题+讲师署名",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "填写简短章节名称 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "章节页多字版",
+      "template_page_num": 3,
+      "content": {
+        "章节名称": {
+          "type": "text",
+          "hint": "填写章节标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "知识点名称多字版": {
+          "type": "text",
+          "hint": "填写知识点标题",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "主讲人名称": {
+          "type": "text",
+          "hint": "填写主讲教师信息",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        }
+      },
+      "meta": {
+        "layout": "章节起始页（多字）",
+        "scene": [
+          "章节开场",
+          "大段副标题"
+        ],
+        "style": "主标题+宽幅副标题",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "知识点名称文字较长时使用 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "目录页",
+      "template_page_num": 4,
+      "content": {
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": false,
+            "value": "",
+            "max_chars": 10
+          }
+        },
+        "目录条目区1": {
+          "type": "text",
+          "hint": "填写目录条目标题",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        },
+        "目录内容区1": {
+          "type": "text",
+          "hint": "填写对应条目的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 40
+        },
+        "目录条目区2": {
+          "type": "text",
+          "hint": "填写目录条目标题",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        },
+        "目录内容区2": {
+          "type": "text",
+          "hint": "填写对应条目的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 40
+        },
+        "目录条目区3": {
+          "type": "text",
+          "hint": "填写目录条目标题",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        },
+        "目录内容区3": {
+          "type": "text",
+          "hint": "填写对应条目的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 40
+        },
+        "目录条目区4": {
+          "type": "text",
+          "hint": "填写目录条目标题",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        },
+        "目录内容区4": {
+          "type": "text",
+          "hint": "填写对应条目的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 40
+        }
+      },
+      "meta": {
+        "layout": "目录列表",
+        "scene": [
+          "课程目录",
+          "提纲展示"
+        ],
+        "style": "四条目录+课程名",
+        "text_slots": 10,
+        "image_slots": 0,
+        "notes": "支持 4 个条目，每条含标题与描述（描述可选填） 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "图文页4",
+      "template_page_num": 8,
+      "content": {
+        "内容区": {
+          "文字内容区": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 100
+          },
+          "三级标题区": {
+            "三级标题": {
+              "type": "text",
+              "hint": "填写三级标题",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          },
+          "一二级标题区": {
+            "二级标题": {
+              "type": "text",
+              "hint": "填写二级标题",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            },
+            "一级标题": {
+              "type": "text",
+              "hint": "填写一级标题",
+              "required": true,
+              "value": "",
+              "max_chars": 9
+            }
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        },
+        "图片区": {
+          "type": "image",
+          "hint": "插入与本页主题相关的图片路径",
+          "required": true,
+          "value": "",
+          "preferred_format": "png/jpg"
+        }
+      },
+      "meta": {
+        "layout": "图文阐述页",
+        "scene": [
+          "概念讲解",
+          "单图配文"
+        ],
+        "style": "主标题+三级标题+单张配图",
+        "text_slots": 5,
+        "image_slots": 1,
+        "notes": "左侧文字右侧图片布局，适合长文本带配图的内容选用，如果无法填满三级标题就不要选，选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "图文页3",
+      "template_page_num": 12,
+      "content": {
+        "图片区": {
+          "type": "image",
+          "hint": "插入与本页主题相关的图片路径",
+          "required": false,
+          "value": "",
+          "preferred_format": "png/jpg"
+        },
+        "标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写三级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写二级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写一级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 9
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        },
+        "内容区4": {
+          "文字内容区4": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 32
+            }
+          },
+          "标签区4": {
+            "标签": {
+              "type": "text",
+              "hint": "填写标签名称",
+              "required": true,
+              "value": "",
+              "max_chars": 2
+            }
+          }
+        },
+        "内容区3": {
+          "文字内容区3": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 32
+            }
+          },
+          "标签区3": {
+            "标签": {
+              "type": "text",
+              "hint": "填写标签名称",
+              "required": true,
+              "value": "",
+              "max_chars": 2
+            }
+          }
+        },
+        "内容区2": {
+          "文字内容区2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 32
+            }
+          },
+          "标签区2": {
+            "标签": {
+              "type": "text",
+              "hint": "填写标签名称",
+              "required": true,
+              "value": "",
+              "max_chars": 2
+            }
+          }
+        },
+        "内容区1": {
+          "文字内容区1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 32
+            }
+          },
+          "标签区1": {
+            "标签": {
+              "type": "text",
+              "hint": "填写标签名称",
+              "required": true,
+              "value": "",
+              "max_chars": 2
+            }
+          }
+        }
+      },
+      "meta": {
+        "layout": "图文标签页",
+        "scene": [
+          "流程/要点分组",
+          "标签说明"
+        ],
+        "style": "四个标签+描述+配图",
+        "text_slots": 12,
+        "image_slots": 1,
+        "notes": "适合展示四个领域/模块 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "文字页2",
+      "template_page_num": 15,
+      "content": {
+        "文字内容区2": {
+          "文字内容 1": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "文字内容 2": {
+            "type": "text",
+            "hint": "填写正文内容（更长的文本通常放这里）",
+            "required": true,
+            "value": "",
+            "max_chars": 25
+          },
+          "文字内容 3": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 13
+          },
+          "文字内容 4": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 13
+          }
+        },
+        "文字内容区1": {
+          "文字标题1": {
+            "type": "text",
+            "hint": "填写段落标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "文字内容2": {
+            "type": "text",
+            "hint": "填写正文内容（更长的文本通常放这里）",
+            "required": true,
+            "value": "",
+            "max_chars": 25
+          },
+          "文字内容3": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 13
+          },
+          "文字内容4": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 13
+          }
+        },
+        "标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写三级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写二级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写一级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 9
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        }
+      },
+      "meta": {
+        "layout": "多段文字页",
+        "scene": [
+          "步骤拆解",
+          "长段落说明"
+        ],
+        "style": "左右两组段落",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "共 8 条文字内容，可用于条目罗列，内容尽量精炼 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "文字页1",
+      "template_page_num": 16,
+      "content": {
+        "内容区1": {
+          "文字内容区1": {
+            "文字内容3": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 13
+            },
+            "文字内容2": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 13
+            },
+            "文字内容1": {
+              "type": "text",
+              "hint": "填写正文内容（更长的文本通常放这里）",
+              "required": true,
+              "value": "",
+              "max_chars": 25
+            }
+          },
+          "文字标题区1": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写段落标题",
+              "required": true,
+              "value": "",
+              "max_chars": 7
+            }
+          }
+        },
+        "内容区2": {
+          "文字内容区2": {
+            "文字内容3": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 13
+            },
+            "文字内容2": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 13
+            },
+            "文字内容1": {
+              "type": "text",
+              "hint": "填写正文内容（更长的文本通常放这里）",
+              "required": true,
+              "value": "",
+              "max_chars": 25
+            }
+          },
+          "文字标题区2": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写段落标题",
+              "required": true,
+              "value": "",
+              "max_chars": 7
+            }
+          }
+        },
+        "标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写三级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写二级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写一级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 9
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        }
+      },
+      "meta": {
+        "layout": "双列文字页",
+        "scene": [
+          "对比说明",
+          "关键要点"
+        ],
+        "style": "两列标题+三段内容",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "每列含标题及 3 条正文 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "文字页3",
+      "template_page_num": 17,
+      "content": {
+        "内容区3": {
+          "文字内容区3": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 48
+            }
+          },
+          "文字标题区3": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写段落标题",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        },
+        "内容区2": {
+          "文字内容区2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 48
+            }
+          },
+          "文字标题区2": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写段落标题",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        },
+        "内容区1": {
+          "文字内容区1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 48
+            }
+          },
+          "文字标题区1": {
+            "文字标题": {
+              "type": "text",
+              "hint": "填写段落标题",
+              "required": true,
+              "value": "",
+              "max_chars": 6
+            }
+          }
+        },
+        "标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写三级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写二级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写一级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 9
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        }
+      },
+      "meta": {
+        "layout": "三列文字页",
+        "scene": [
+          "特性总结",
+          "多点陈述"
+        ],
+        "style": "三列标题+段落",
+        "text_slots": 10,
+        "image_slots": 1,
+        "notes": "用于三项内容均衡展示，可输入文本略长 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "图文页1",
+      "template_page_num": 18,
+      "content": {
+        "文字标题区": {
+          "文字标题": {
+            "type": "text",
+            "hint": "填写段落标题",
+            "required": true,
+            "value": "",
+            "max_chars": 14
+          }
+        },
+        "文字内容区1": {
+          "文字内容": {
+            "type": "text",
+            "hint": "填写正文内容,第 16 个字后需要换行来保持排版",
+            "required": true,
+            "value": "",
+            "max_chars": 32
+          }
+        },
+        "文字内容区2": {
+          "文字内容": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 16
+          }
+        },
+        "文字内容区3": {
+          "文字内容": {
+            "type": "text",
+            "hint": "填写正文内容",
+            "required": true,
+            "value": "",
+            "max_chars": 16
+          }
+        },
+        "图片区": {
+          "图片": {
+            "type": "image",
+            "hint": "插入与本页主题相关的图片路径",
+            "required": true,
+            "value": "",
+            "preferred_format": "png/jpg"
+          }
+        },
+        "标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写三级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "一级标题": {
+            "type": "text",
+            "hint": "填写一级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 9
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写二级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        }
+      },
+      "meta": {
+        "layout": "图文组合页",
+        "scene": [
+          "概念解释",
+          "配图说明"
+        ],
+        "style": "标题组+三段正文+图片区",
+        "text_slots": 8,
+        "image_slots": 1,
+        "notes": "图片区支持 16:9 图片 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "图文页5",
+      "template_page_num": 21,
+      "content": {
+        "图片区3": {
+          "图片": {
+            "type": "image",
+            "hint": "插入与本页主题相关的图片路径",
+            "required": false,
+            "value": "",
+            "preferred_format": "png/jpg"
+          }
+        },
+        "图片区2": {
+          "图片": {
+            "type": "image",
+            "hint": "插入与本页主题相关的图片路径",
+            "required": false,
+            "value": "",
+            "preferred_format": "png/jpg"
+          }
+        },
+        "图片区1": {
+          "图片": {
+            "type": "image",
+            "hint": "插入与本页主题相关的图片路径",
+            "required": false,
+            "value": "",
+            "preferred_format": "png/jpg"
+          }
+        },
+        "文字内容区1": {
+          "type": "text",
+          "hint": "填写图片1的描述",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文字内容区2": {
+          "type": "text",
+          "hint": "填写图片2的描述",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "文字内容区3": {
+          "type": "text",
+          "hint": "填写图片3的描述",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "二三级标题区": {
+          "三级标题": {
+            "type": "text",
+            "hint": "填写三级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          },
+          "二级标题": {
+            "type": "text",
+            "hint": "填写二级标题",
+            "required": true,
+            "value": "",
+            "max_chars": 11
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        }
+      },
+      "meta": {
+        "layout": "多图对照",
+        "scene": [
+          "案例展示",
+          "对比说明"
+        ],
+        "style": "标题+三张图片+文字",
+        "text_slots": 6,
+        "image_slots": 3,
+        "notes": "适合展示多个场景或产品，文字内容区应填对应图片的描述文本 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "图文页2",
+      "template_page_num": 26,
+      "content": {
+        "内容区": {
+          "三级标题区": {
+            "三级标题": {
+              "type": "text",
+              "hint": "填写三级标题",
+              "required": true,
+              "value": "",
+              "max_chars": 11
+            }
+          },
+          "文字内容区3": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 7
+            }
+          },
+          "文字内容区2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 7
+            }
+          },
+          "文字内容区1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 7
+            }
+          }
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        },
+        "图片区": {
+          "type": "image",
+          "hint": "插入与本页主题相关的图片路径",
+          "required": true,
+          "value": "",
+          "preferred_format": "png/jpg"
+        }
+      },
+      "meta": {
+        "layout": "图文卡片",
+        "scene": [
+          "条目阐述",
+          "图文结合"
+        ],
+        "style": "三级标题+三段文字+图片区",
+        "text_slots": 6,
+        "image_slots": 1,
+        "notes": "左侧图右侧文 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "过渡页",
+      "template_page_num": 27,
+      "content": {
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        },
+        "文字内容区": {
+          "文字内容1": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 10
+            }
+          },
+          "文字内容2": {
+            "文字内容": {
+              "type": "text",
+              "hint": "填写正文内容",
+              "required": true,
+              "value": "",
+              "max_chars": 10
+            }
+          }
+        }
+      },
+      "meta": {
+        "layout": "过渡页",
+        "scene": [
+          "章节过渡",
+          "总结思考"
+        ],
+        "style": "章节过渡总结页",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "使用两短句 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    },
+    {
+      "page_type": "主讲人页",
+      "template_page_num": 28,
+      "content": {
+        "主讲教师区": {
+          "type": "text",
+          "hint": "仅填写主讲教师姓名",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "总课程名称区": {
+          "总课程名称": {
+            "type": "text",
+            "hint": "填写课程或项目名称",
+            "required": true,
+            "value": "",
+            "max_chars": 10
+          }
+        }
+      },
+      "meta": {
+        "layout": "主讲人页",
+        "scene": [
+          "教师介绍",
+          "课程团队"
+        ],
+        "style": "讲师名称",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "填写主讲教师姓名和课程/项目名称 选择此模板时请尽量填写所有文本与图片区域，避免保留占位符。"
+      }
+    }
+  ]
+}

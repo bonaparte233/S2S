@@ -71,11 +71,15 @@ python manage.py init_users
 
 - ✅ **用户认证**：强制登录，按角色分配权限
 - ✅ **在线上传**：支持上传 DOCX 讲稿和自定义 PPT 模板
+- ✅ **配置模板管理**：支持上传和选择 JSON 配置模板
 - ✅ **LLM 配置**：支持 DeepSeek、本地部署、自定义服务
 - ✅ **实时状态**：自动轮询生成状态，完成后自动刷新
 - ✅ **历史记录**：查看个人生成历史，下载 PPT 和 JSON
 - ✅ **全局配置**：管理员统一管理 API 密钥
-- ✅ **模板导出**：开发者可导出模板结构为 JSON（语义/文本模式）
+- ✅ **开发者工具**：
+  - 从 PPTX 生成配置模板（语义/文本模式）
+  - 在线编辑配置模板（hint、required、max_chars、notes）
+  - AI 一键填充配置模板（使用 LLM 自动生成提示信息）
 
 ---
 
@@ -95,7 +99,7 @@ python manage.py init_users
 - `scripts/docx_to_config.py`：DOCX → JSON 的核心逻辑与独立 CLI。
 - `scripts/generate_slides.py`：JSON → PPT 的核心逻辑与独立 CLI。
 - `scripts/llm_client.py`：大模型抽象与 DeepSeek / 本地模型 Provider 封装。
-- `scripts/export_template_structure.py`：导出模板结构为 JSON（语义/文本模式）。
+- `scripts/export_template_structure.py`：导出模板结构为 JSON（语义/文本模式），支持 AI 填充配置。
 
 ### Web 前端
 
@@ -303,6 +307,73 @@ python generate_slides.py \
 
 ---
 
+## 开发者工具
+
+### 导出模板结构
+
+从 PPTX 模板导出配置模板 JSON：
+
+```bash
+python scripts/export_template_structure.py \
+    --template template/template.pptx \
+    --output template/exported_template.json \
+    --mode semantic
+```
+
+**参数说明：**
+
+- `--template`（必选）：PPTX 模板路径
+- `--output`（必选）：导出 JSON 的输出路径
+- `--mode`（默认 `semantic`）：导出模式
+  - `semantic`：仅导出命名规范（含"xx区"等）的元素
+  - `text`：导出所有可编辑文本框（忽略图片/背景）
+- `--include`：可选，逗号分隔的页码列表，仅导出这些幻灯片，例如：`1,2,4`
+
+### AI 填充配置模板
+
+使用 AI 自动填充配置模板中的 `hint`、`required`、`max_chars` 和 `notes` 字段：
+
+```bash
+python scripts/export_template_structure.py \
+    --template template/template.pptx \
+    --output template/exported_template.json \
+    --mode semantic \
+    --ai-enrich \
+    --llm-provider deepseek \
+    --llm-model deepseek-chat
+```
+
+**AI 填充参数：**
+
+- `--ai-enrich`：启用 AI 填充
+- `--llm-provider`（默认 `deepseek`）：LLM 提供商（deepseek/local/qwen）
+- `--llm-model`：LLM 模型名称
+- `--llm-base-url`：LLM 服务器地址（仅在 local/qwen 时需要）
+
+**注意：**
+
+- AI 生成的内容可能不准确，需要人工审核和修改
+- 需要设置环境变量 `DEEPSEEK_API_KEY`（如果使用 DeepSeek）
+- 每个页面会调用一次 LLM，模板页面较多时可能需要较长时间
+
+### Web 界面使用
+
+开发者也可以在 Web 界面中使用这些功能：
+
+1. 访问"开发者工具"页面（需要 `developer` 或 `admin` 账户）
+2. **生成配置模板** Tab：
+   - 上传 PPTX 模板文件
+   - 选择导出模式（语义/文本）
+   - 点击"生成配置模板"
+   - 下载或直接编辑
+3. **编辑配置模板** Tab：
+   - 上传现有 JSON 配置文件
+   - 点击"🤖 AI 一键填充"自动生成提示信息
+   - 在左侧选择页面，在右侧编辑字段
+   - 下载编辑后的配置模板
+
+---
+
 ## 示例文件
 
 - `template/模板.docx`、`template/天文模板.docx`：示例讲稿。
@@ -433,7 +504,25 @@ pip install -r requirements.txt
 
 ## 更新日志
 
-### v2.0.0
+### v2.1.0 (2025-11-20)
+
+- ✨ 新增配置模板管理功能
+  - 支持上传和选择 JSON 配置模板
+  - 配置模板与 PPTX 模板关联
+  - 自动匹配配置模板
+- ✨ 新增开发者工具页面
+  - 从 PPTX 生成配置模板（语义/文本模式）
+  - 在线编辑配置模板（左右分栏布局）
+  - AI 一键填充配置模板（hint、required、max_chars、notes）
+- ✨ 新增 `ai_enrich_template()` 函数
+  - 使用 LLM 自动生成配置提示信息
+  - 支持 CLI 和 Web 两种调用方式
+- 🔧 优化配置模板 UI 设计
+  - 移动到 LLM 配置区域
+  - 改进交互逻辑
+- 📝 更新文档
+
+### v2.0.0 (2025-11-19)
 
 - ✨ 新增 Django Web 前端
 - ✨ 新增用户认证和权限系统

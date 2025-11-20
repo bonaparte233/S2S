@@ -17,5 +17,15 @@ urlpatterns = [
     path("generation/<int:pk>/download/", views.download_ppt, name="download_ppt"),
     path("history/", views.history, name="history"),
     # Developer only
-    path("export-template/", views.export_template_json, name="export_template"),
+    path("developer-tools/", views.developer_tools, name="developer_tools"),
+    path(
+        "developer-tools/generate/",
+        views.generate_config_template,
+        name="generate_config_template",
+    ),
+    path(
+        "developer-tools/ai-enrich/",
+        views.ai_enrich_template_view,
+        name="ai_enrich_template",
+    ),
 ]

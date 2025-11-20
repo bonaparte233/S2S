@@ -6,7 +6,8 @@ python scripts/export_template_structure.py \
     --template template/template.pptx \
     --output template/exported_template.json \
     --mode semantic \
-    --include 1,2,3,4,8,12,15,16,17,18,21,26,27,28
+    --include 1,2,3,4,8,12,15,16,17,18,21,26,27,28 \
+    --ai-enrich --llm-provider deepseek --llm-model deepseek-chat
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 from collections import Counter, OrderedDict
 from pathlib import Path
@@ -46,6 +48,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--include",
         help="可选，逗号分隔的页码列表，仅导出这些幻灯片，例如：1,2,4",
+    )
+    parser.add_argument(
+        "--ai-enrich",
+        action="store_true",
+        help="使用 AI 自动填充 hint、required、max_chars 和 notes 字段",
+    )
+    parser.add_argument(
+        "--llm-provider",
+        choices=("deepseek", "local", "qwen"),
+        default="deepseek",
+        help="LLM 提供商（仅在 --ai-enrich 时有效）",
+    )
+    parser.add_argument(
+        "--llm-model",
+        help="LLM 模型名称（仅在 --ai-enrich 时有效）",
+    )
+    parser.add_argument(
+        "--llm-base-url",
+        help="LLM 服务器地址（仅在 --ai-enrich 时有效）",
     )
     return parser.parse_args()
 
@@ -183,7 +204,9 @@ def collect_fields(slide, mode: str) -> Tuple[OrderedDict, int, int]:
             new_context = context
             new_semantics = context_has_semantics
             if should_include_group(name, mode):
-                new_context = context + (sanitize_name(name, f"区域{len(context)+1}"),)
+                new_context = context + (
+                    sanitize_name(name, f"区域{len(context) + 1}"),
+                )
                 new_semantics = True
             for child in shape.shapes:
                 visit(child, new_context, new_semantics)
@@ -236,7 +259,9 @@ def collect_fields(slide, mode: str) -> Tuple[OrderedDict, int, int]:
     return content, text_slots, image_slots
 
 
-def build_manifest_entry(page_num: int, page_type: str, text_slots: int, image_slots: int) -> Dict:
+def build_manifest_entry(
+    page_num: int, page_type: str, text_slots: int, image_slots: int
+) -> Dict:
     return {
         "template_page_num": page_num,
         "page_type": page_type,
@@ -283,6 +308,149 @@ def export_template_structure(
     return {"manifest": data_manifest, "ppt_pages": ppt_pages}
 
 
+def ai_enrich_template(
+    template_data: Dict,
+    llm_provider: str = "deepseek",
+    llm_model: Optional[str] = None,
+    llm_base_url: Optional[str] = None,
+) -> Dict:
+    """使用 AI 自动填充模板配置中的 hint、required、max_chars 和 notes 字段。
+
+    Args:
+        template_data: 从 export_template_structure 生成的模板数据
+        llm_provider: LLM 提供商 (deepseek/local/qwen)
+        llm_model: LLM 模型名称
+        llm_base_url: LLM 服务器地址
+
+    Returns:
+        填充后的模板数据
+    """
+    # Import LLM client
+    try:
+        from scripts.llm_client import BaseLLM, DeepSeekLLM, LocalLLM, QwenVLLM
+    except ImportError:
+        # Fallback for when running from web context
+        from llm_client import BaseLLM, DeepSeekLLM, LocalLLM, QwenVLLM
+
+    # Initialize LLM
+    llm: BaseLLM
+    provider = llm_provider.lower()
+    if provider == "deepseek":
+        llm = DeepSeekLLM(model=llm_model or "deepseek-chat")
+    elif provider == "local":
+        llm = LocalLLM(model=llm_model, base_url=llm_base_url)
+    elif provider == "qwen":
+        if not llm_base_url:
+            llm_base_url = os.getenv("QWEN_VLLM_BASE_URL")
+        if not llm_base_url:
+            raise ValueError(
+                "Qwen provider 需要提供 --llm-base-url 或设置 QWEN_VLLM_BASE_URL"
+            )
+        llm = QwenVLLM(base_url=llm_base_url)
+    else:
+        raise ValueError(f"不支持的 LLM 提供商：{llm_provider}")
+
+    print(f"🤖 使用 {llm_provider} 进行 AI 填充...")
+
+    # Process each page
+    enriched_data = template_data.copy()
+    enriched_data["ppt_pages"] = []
+
+    for page_idx, page in enumerate(template_data["ppt_pages"], start=1):
+        print(
+            f"  处理第 {page_idx}/{len(template_data['ppt_pages'])} 页: {page['page_type']}"
+        )
+
+        # Build prompt for this page
+        page_type = page["page_type"]
+        template_page_num = page["template_page_num"]
+        fields = page.get("content", {})
+
+        # Create field summary
+        field_names = list(fields.keys())
+        field_summary = "\n".join([f"  - {name}" for name in field_names])
+
+        prompt = f"""你是一个 PPT 模板配置专家。现在需要为一个 PPT 模板页面填写配置信息。
+
+页面信息：
+- 页面类型：{page_type}
+- 模板页码：{template_page_num}
+- 字段列表：
+{field_summary}
+
+请为这个页面生成配置信息，包括：
+1. 页面说明 (notes)：简要描述这一页的用途和内容要求（1-2句话）
+2. 每个字段的配置：
+   - hint：提示大模型该字段应该填写什么内容（简洁明了）
+   - required：该字段是否必填（true/false）
+   - max_chars：该字段的最大字符数（合理估计）
+
+请以 JSON 格式返回，格式如下：
+{{
+  "notes": "页面说明文字",
+  "fields": {{
+    "字段名1": {{
+      "hint": "提示文字",
+      "required": true,
+      "max_chars": 20
+    }},
+    "字段名2": {{
+      "hint": "提示文字",
+      "required": false,
+      "max_chars": 50
+    }}
+  }}
+}}
+
+注意：
+- notes 要简洁明了，帮助大模型理解页面用途
+- hint 要具体，说明该字段应该填什么内容
+- required 根据字段的重要性判断
+- max_chars 要合理，考虑页面布局和内容需求
+- 只返回 JSON，不要有其他文字"""
+
+        try:
+            # Call LLM
+            response = llm.generate(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+            )
+
+            # Parse response
+            # Try to extract JSON from response
+            json_match = re.search(r"\{[\s\S]*\}", response)
+            if json_match:
+                ai_config = json.loads(json_match.group())
+            else:
+                ai_config = json.loads(response)
+
+            # Update page notes
+            if "notes" in ai_config:
+                page["meta"]["notes"] = ai_config["notes"]
+
+            # Update field configurations
+            if "fields" in ai_config:
+                for field_name, field_config in ai_config["fields"].items():
+                    if field_name in fields:
+                        if "hint" in field_config:
+                            fields[field_name]["hint"] = field_config["hint"]
+                        if "required" in field_config:
+                            fields[field_name]["required"] = field_config["required"]
+                        if "max_chars" in field_config:
+                            fields[field_name]["max_chars"] = field_config["max_chars"]
+
+            print(f"    ✅ 成功填充")
+
+        except Exception as e:
+            print(f"    ⚠️  AI 填充失败: {e}")
+            print(f"    使用默认配置")
+
+        enriched_data["ppt_pages"].append(page)
+
+    print("✅ AI 填充完成")
+    return enriched_data
+
+
 def main() -> None:
     args = parse_args()
     template_path = Path(args.template)
@@ -291,9 +459,21 @@ def main() -> None:
 
     include_pages = None
     if args.include:
-        include_pages = [int(num.strip()) for num in args.include.split(",") if num.strip()]
+        include_pages = [
+            int(num.strip()) for num in args.include.split(",") if num.strip()
+        ]
 
     data = export_template_structure(template_path, args.mode, include_pages)
+
+    # AI enrichment if requested
+    if args.ai_enrich:
+        data = ai_enrich_template(
+            template_data=data,
+            llm_provider=args.llm_provider,
+            llm_model=args.llm_model,
+            llm_base_url=args.llm_base_url,
+        )
+
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:

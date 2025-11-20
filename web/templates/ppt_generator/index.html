@@ -82,6 +82,49 @@
                     {% if is_developer %}
                     <!-- Developer-only LLM Configuration -->
                     <div id="llmConfigSection" style="display: none;">
+                        <!-- Config Template Selection (developer only, shown when LLM is enabled) -->
+                        <div class="form-group">
+                            <label class="form-label">{{ form.config_template_choice.label }}</label>
+                            <div class="radio-group">
+                                {% for choice in form.config_template_choice %}
+                                <label class="radio-label">
+                                    {{ choice.tag }}
+                                    <span>{{ choice.choice_label }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="form-help">
+                                配置模板用于控制大模型的 Prompt 和生成规则
+                            </small>
+                        </div>
+
+                        <!-- Config Template Dropdown (shown when 'select' is chosen) -->
+                        <div class="form-group" id="configTemplateSelectGroup" style="display: none;">
+                            <label class="form-label">选择配置模板</label>
+                            <select name="config_template" class="text-input">
+                                <option value="">-- 请选择 --</option>
+                                {% for cfg in available_config_templates %}
+                                <option value="{{ cfg }}" {% if form.config_template.value == cfg %}selected{% endif %}>
+                                    {{ cfg }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Config Template Upload (shown when 'upload' is chosen) -->
+                        <div class="form-group" id="configTemplateUploadGroup" style="display: none;">
+                            <label for="{{ form.config_template_file.id_for_label }}" class="form-label">
+                                上传配置模板文件
+                            </label>
+                            <div class="file-upload-wrapper">
+                                {{ form.config_template_file }}
+                                <span class="file-upload-label">选择配置文件 (.json)</span>
+                            </div>
+                            {% if form.config_template_file.help_text %}
+                            <small class="form-help">{{ form.config_template_file.help_text }}</small>
+                            {% endif %}
+                        </div>
+
                         <div class="form-group">
                             <label for="{{ form.llm_provider.id_for_label }}" class="form-label">
                                 {{ form.llm_provider.label }}
@@ -215,6 +258,39 @@
                 }
             });
         });
+
+        // Show/hide config template options based on selection (for developers)
+        const configTemplateChoices = document.querySelectorAll('input[name="config_template_choice"]');
+        const configTemplateSelectGroup = document.getElementById('configTemplateSelectGroup');
+        const configTemplateUploadGroup = document.getElementById('configTemplateUploadGroup');
+
+        if (configTemplateChoices.length > 0) {
+            configTemplateChoices.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value === 'select') {
+                        configTemplateSelectGroup.style.display = 'block';
+                        configTemplateUploadGroup.style.display = 'none';
+                    } else if (this.value === 'upload') {
+                        configTemplateSelectGroup.style.display = 'none';
+                        configTemplateUploadGroup.style.display = 'block';
+                    } else {
+                        // 'auto' - hide both
+                        configTemplateSelectGroup.style.display = 'none';
+                        configTemplateUploadGroup.style.display = 'none';
+                    }
+                });
+            });
+
+            // Initialize on page load
+            const checkedConfigChoice = document.querySelector('input[name="config_template_choice"]:checked');
+            if (checkedConfigChoice) {
+                if (checkedConfigChoice.value === 'select') {
+                    configTemplateSelectGroup.style.display = 'block';
+                } else if (checkedConfigChoice.value === 'upload') {
+                    configTemplateUploadGroup.style.display = 'block';
+                }
+            }
+        }
 
         // Show/hide LLM configuration section based on use_llm checkbox (for developers)
         const useLlmCheckbox = document.getElementById('id_use_llm');

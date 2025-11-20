@@ -103,6 +103,15 @@ class PPTGeneration(models.Model):
     template_name = models.CharField(
         max_length=255, null=True, blank=True, verbose_name="模板名称"
     )
+    config_template = models.CharField(
+        max_length=500, null=True, blank=True, verbose_name="配置模板"
+    )
+    config_template_file = models.FileField(
+        upload_to="uploads/config_templates/",
+        null=True,
+        blank=True,
+        verbose_name="配置模板文件",
+    )
 
     # Configuration
     use_llm = models.BooleanField(default=False, verbose_name="使用大模型")

@@ -15,6 +15,13 @@ class PPTGenerationForm(forms.ModelForm):
         ("upload", "上传自定义模板"),
     ]
 
+    # Config template selection options
+    CONFIG_TEMPLATE_CHOICES = [
+        ("auto", "自动匹配（根据 PPTX 模板）"),
+        ("select", "从预设模板中选择"),
+        ("upload", "上传自定义配置"),
+    ]
+
     # LLM Provider options
     LLM_PROVIDER_CHOICES = [
         ("", "不使用大模型"),
@@ -33,8 +40,16 @@ class PPTGenerationForm(forms.ModelForm):
         choices=TEMPLATE_CHOICES,
         initial="default",
         widget=forms.RadioSelect,
-        label="选择模板",
+        label="选择PPT模板",
         required=True,
+    )
+
+    config_template_choice = forms.ChoiceField(
+        choices=CONFIG_TEMPLATE_CHOICES,
+        initial="auto",
+        widget=forms.RadioSelect,
+        label="大模型配置模板 (template.json)",
+        required=False,
     )
 
     llm_provider = forms.ChoiceField(
@@ -99,6 +114,8 @@ class PPTGenerationForm(forms.ModelForm):
         fields = [
             "docx_file",
             "template_file",
+            "config_template",
+            "config_template_file",
             "use_llm",
             "llm_provider",
             "llm_model",
@@ -120,6 +137,12 @@ class PPTGenerationForm(forms.ModelForm):
                 attrs={
                     "class": "file-input",
                     "accept": ".pptx",
+                }
+            ),
+            "config_template_file": forms.FileInput(
+                attrs={
+                    "class": "file-input",
+                    "accept": ".json",
                 }
             ),
             "use_llm": forms.CheckboxInput(
@@ -149,6 +172,7 @@ class PPTGenerationForm(forms.ModelForm):
         labels = {
             "docx_file": "讲稿文件 (DOCX)",
             "template_file": "自定义模板 (PPTX)",
+            "config_template_file": "自定义配置模板 (JSON)",
             "use_llm": "启用大模型智能规划",
             "course_name": "课程名称（可选）",
             "college_name": "学院名称（可选）",
@@ -157,6 +181,7 @@ class PPTGenerationForm(forms.ModelForm):
         help_texts = {
             "docx_file": "请上传包含讲稿内容的 Word 文档",
             "template_file": '仅在选择"上传自定义模板"时需要',
+            "config_template_file": "上传自定义 JSON 配置模板（可选，优先级高于下拉选择）",
             "use_llm": "使用大模型自动规划幻灯片内容布局",
         }
 
