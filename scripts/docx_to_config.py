@@ -10,15 +10,20 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from docx import Document
 from docx.oxml.ns import qn
 
-from scripts.llm_client import BaseLLM, DeepSeekLLM, LocalLLM, QwenVLLM
+from scripts.llm_client import BaseLLM, DeepSeekLLM, LocalLLM, QwenVLLM, TaichuLLM
+import base64
+import mimetypes
 
 MARKER_RE = re.compile(r"【PPT(\d+)】")
 IMAGE_NAME_TEMPLATE = "doc_image_{idx}.{ext}"
+
+# 调试标志：设置为 True 时打印 LLM 请求和响应
+DEBUG_LLM = os.getenv("DEBUG_LLM", "false").lower() in ("true", "1", "yes")
 
 
 def _create_run_dir(base_dir: Path = Path("temp")) -> Path:
@@ -103,6 +108,8 @@ def parse_docx_blocks(doc_path: str, image_dir: Path) -> Tuple[List[Dict], bool,
         images = extract_images(para)
         if images:
             attach_images(images)
+            for img_path in images:
+                buffer.append(f"[图片资源: {img_path}]")
 
         matches = list(MARKER_RE.finditer(text))
         if matches:
@@ -235,7 +242,9 @@ def _simple_fill(template_info: Dict, raw_text: str, images: List[str]) -> Dict:
     return result
 
 
-def _build_prompt(template_info: Dict, raw_text: str, images: List[str]) -> str:
+def _build_prompt(
+    template_info: Dict, raw_text: str, images: List[str], is_multimodal: bool = False
+) -> str:
     def describe_fields(fields):
         if not fields:
             return "无"
@@ -254,16 +263,37 @@ def _build_prompt(template_info: Dict, raw_text: str, images: List[str]) -> str:
 
     text_desc = describe_fields(template_info["text_fields"])
     image_desc = describe_fields(template_info["image_fields"])
-    image_section = "无" if not images else "\n".join(images)
+
+    # 对于多模态模型，不需要列出图片路径（图片已通过 base64 附加）
+    if is_multimodal:
+        image_section = f"已附加 {len(images)} 张图片供你参考"
+    else:
+        image_section = "无" if not images else "\n".join(images)
+
     meta = template_info.get("meta") or {}
     scene = "、".join(meta.get("scene", [])) or "通用"
     layout = meta.get("layout", template_info["page_type"])
     style = meta.get("style", "")
     note = meta.get("notes", "")
+
+    multimodal_instruction = ""
+    if is_multimodal and images:
+        multimodal_instruction = f"""
+特别注意（多模态图片理解）：
+我已附带了 {len(images)} 张图片供你参考。
+- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置，你无需在输出中包含这些标记。
+- 请根据图片内容和上下文，决定将图片放入哪个图片字段。
+- 图片应与其上下文文本（如相关段落或标题）放在同一页 PPT 中。
+- 如果你认为某张图片适合放入某个图片字段，请在 JSON 的 "images" 数组对应位置填入该图片的完整路径。
+- 如果图片字段不需要图片，请留空字符串。
+- 你可以根据图片内容优化文本描述，使其更准确、更生动。
+"""
+
     prompt = f"""
 请阅读以下讲稿并生成一个 JSON，对模板《{template_info["page_type"]}》的文本/图片字段进行填充。
 模板布局：{layout}；使用场景：{scene}；风格提示：{style}
 注意事项：{note}
+{multimodal_instruction}
 务必记住讲稿中提到的主讲人姓名、课程/讲座/项目名称或其他关键专有名词，并在后续所有需要这些信息的字段保持完全一致、不要改写。所有标记为“required”的字段必须填写，且文本长度不得超过对应的 max_chars 限制。
 该模板包含如下文本字段（按照顺序对应）：
 {text_desc}
@@ -285,6 +315,63 @@ def _build_prompt(template_info: Dict, raw_text: str, images: List[str]) -> str:
 {raw_text}
 """
     return prompt
+
+
+def _encode_image(image_path: str) -> Optional[str]:
+    """Read image file and return base64 string.
+
+    Returns:
+        Base64 encoded string, or None if encoding fails.
+    """
+    try:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+    except FileNotFoundError:
+        print(f"⚠️ 警告：图片文件不存在：{image_path}")
+        return None
+    except Exception as e:
+        print(f"⚠️ 警告：读取图片失败 {image_path}：{e}")
+        return None
+
+
+def _build_multimodal_messages(
+    template_info: Dict, raw_text: str, images: List[str]
+) -> List[Dict]:
+    """Construct multimodal messages for Taichu-VL.
+
+    Args:
+        template_info: Template configuration
+        raw_text: Text content from DOCX
+        images: List of image paths
+
+    Returns:
+        List of messages in OpenAI-compatible multimodal format
+    """
+    prompt_text = _build_prompt(template_info, raw_text, images, is_multimodal=True)
+
+    content: List[Dict[str, Any]] = [{"type": "text", "text": prompt_text}]
+
+    # 添加图片
+    for img_path in images:
+        if not os.path.exists(img_path):
+            print(f"⚠️ 警告：跳过不存在的图片：{img_path}")
+            continue
+
+        # Taichu-VL 使用 OpenAI 兼容格式，支持 data URL (base64)
+        # 参考：https://docs.wair.ac.cn/intelligent/maas/visioIntro.html
+        mime_type, _ = mimetypes.guess_type(img_path)
+        if not mime_type:
+            mime_type = "image/jpeg"
+
+        base64_str = _encode_image(img_path)
+        if not base64_str:  # 编码失败，跳过此图片
+            continue
+
+        data_url = f"data:{mime_type};base64,{base64_str}"
+
+        content.append({"type": "image_url", "image_url": {"url": data_url}})
+
+    return [{"role": "user", "content": content}]
 
 
 def _lookup_field_value(field, payload, fallback_list, idx):
@@ -318,8 +405,36 @@ def llm_fill_slide(
     if not llm:
         return _simple_fill(template_info, raw_text, images)
 
-    prompt = _build_prompt(template_info, raw_text, images)
-    response = llm.generate([{"role": "user", "content": prompt}], temperature=0.2)
+    if isinstance(llm, TaichuLLM) and images:
+        messages = _build_multimodal_messages(template_info, raw_text, images)
+    else:
+        prompt = _build_prompt(template_info, raw_text, images)
+        messages = [{"role": "user", "content": prompt}]
+
+    if DEBUG_LLM:
+        print(f"\n{'=' * 60}")
+        print(f"🔍 [DEBUG] LLM 请求 (llm_fill_slide)")
+        print(f"{'=' * 60}")
+        if isinstance(llm, TaichuLLM) and images:
+            print(f"📝 多模态消息 (文本 + {len(images)} 张图片)")
+            # 只打印文本部分，图片太长不打印
+            for msg in messages:
+                if isinstance(msg.get("content"), list):
+                    for item in msg["content"]:
+                        if item.get("type") == "text":
+                            print(f"文本内容:\n{item['text'][:500]}...")
+        else:
+            print(f"📝 文本消息:\n{messages[0]['content'][:500]}...")
+        print(f"{'=' * 60}\n")
+
+    response = llm.generate(messages, temperature=0.2)
+
+    if DEBUG_LLM:
+        print(f"\n{'=' * 60}")
+        print(f"📥 [DEBUG] LLM 响应 (llm_fill_slide)")
+        print(f"{'=' * 60}")
+        print(f"{response[:500]}...")
+        print(f"{'=' * 60}\n")
     try:
         data = _ensure_json_object(response)
         texts = data.get("texts", [])
@@ -359,7 +474,25 @@ def llm_plan_slides(
         f"- 模板 {info['page_type']} (编号 {num}): 文本{len(info['text_fields'])}项, 图片{len(info['image_fields'])}项"
         for num, info in templates.items()
     )
-    image_section = "无" if not images else "\n".join(images)
+
+    # 对于多模态模型，不需要列出图片路径（图片已通过 base64 附加）
+    if isinstance(llm, TaichuLLM) and images:
+        image_section = f"已附加 {len(images)} 张图片供你参考"
+    else:
+        image_section = "无" if not images else "\n".join(images)
+
+    multimodal_instruction = ""
+    if isinstance(llm, TaichuLLM) and images:
+        multimodal_instruction = f"""
+特别注意（多模态图片理解）：
+我已附带了 {len(images)} 张图片供你参考。
+- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置，你无需在输出中包含这些标记。
+- 请根据图片内容和上下文，决定将图片放入哪个模板的图片字段。
+- 图片应与其上下文文本（如相关段落或标题）放在同一页 PPT 中。
+- 在输出的 JSON 对象中，"images" 数组应包含你选择使用的图片完整路径。
+- 你可以根据图片内容优化文本描述，使其更准确、更生动。
+"""
+
     prompt = f"""
 请将以下讲稿拆分成若干张 PPT，每张幻灯片选择一个模板，并输出 JSON 数组，每个元素包含：
 - template_page_num: 模板编号
@@ -372,6 +505,8 @@ def llm_plan_slides(
 
 可用图片路径：
 {image_section}
+
+{multimodal_instruction}
 
 输出格式示例：
 [
@@ -392,7 +527,49 @@ def llm_plan_slides(
     if user_prompt:
         prompt += f"\n\n用户额外要求：\n{user_prompt}"
 
-    response = llm.generate([{"role": "user", "content": prompt}], temperature=0.3)
+    if isinstance(llm, TaichuLLM) and images:
+        content: List[Dict[str, Any]] = [{"type": "text", "text": prompt}]
+        for img_path in images:
+            if not os.path.exists(img_path):
+                print(f"⚠️ 警告：跳过不存在的图片：{img_path}")
+                continue
+            mime_type, _ = mimetypes.guess_type(img_path)
+            if not mime_type:
+                mime_type = "image/jpeg"
+            base64_str = _encode_image(img_path)
+            if not base64_str:  # 编码失败，跳过此图片
+                continue
+            data_url = f"data:{mime_type};base64,{base64_str}"
+            content.append({"type": "image_url", "image_url": {"url": data_url}})
+        messages = [{"role": "user", "content": content}]
+    else:
+        messages = [{"role": "user", "content": prompt}]
+
+    if DEBUG_LLM:
+        print(f"\n{'=' * 60}")
+        print("🔍 [DEBUG] LLM 请求 (llm_plan_slides)")
+        print(f"{'=' * 60}")
+        if isinstance(llm, TaichuLLM) and images:
+            print(f"📝 多模态消息 (文本 + {len(images)} 张图片)")
+            # 只打印文本部分
+            for msg in messages:
+                if isinstance(msg.get("content"), list):
+                    for item in msg["content"]:
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            print(f"文本内容:\n{item['text'][:500]}...")
+        else:
+            print(f"📝 文本消息:\n{messages[0]['content'][:500]}...")
+        print(f"{'=' * 60}\n")
+
+    response = llm.generate(messages, temperature=0.3)
+
+    if DEBUG_LLM:
+        print(f"\n{'=' * 60}")
+        print("📥 [DEBUG] LLM 响应 (llm_plan_slides)")
+        print(f"{'=' * 60}")
+        print(f"{response[:500]}...")
+        print(f"{'=' * 60}\n")
+
     try:
         plan = _ensure_json_array(response)
         return plan
@@ -472,6 +649,8 @@ def choose_llm(
                 "Qwen provider 需要提供 --llm-base-url 或设置 QWEN_VLLM_BASE_URL。"
             )
         return QwenVLLM(base_url=endpoint)
+    if provider == "taichu":
+        return TaichuLLM(model=model or "taichu_vl", base_url=base_url)
     raise ValueError(f"暂不支持的大模型提供商：{provider}")
 
 

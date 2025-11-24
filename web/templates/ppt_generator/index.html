@@ -48,6 +48,16 @@
                     </div>
                 </div>
 
+                <!-- Preset Template Selection (shown when 'preset' is selected) -->
+                <div class="form-group" id="presetTemplateGroup" style="display: none;">
+                    <label class="form-label">选择预设模板</label>
+                    <select name="preset_template_path" class="text-input">
+                        {% for tmpl in available_templates %}
+                        <option value="{{ tmpl.path }}">{{ tmpl.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <!-- Custom Template Upload (shown when 'upload' is selected) -->
                 <div class="form-group" id="customTemplateGroup" style="display: none;">
                     <label for="{{ form.template_file.id_for_label }}" class="form-label">
@@ -249,15 +259,29 @@
         const templateChoices = document.querySelectorAll('input[name="template_choice"]');
         const customTemplateGroup = document.getElementById('customTemplateGroup');
 
+        const presetTemplateGroup = document.getElementById('presetTemplateGroup');
+
         templateChoices.forEach(radio => {
             radio.addEventListener('change', function () {
                 if (this.value === 'upload') {
                     customTemplateGroup.style.display = 'block';
-                } else {
+                    presetTemplateGroup.style.display = 'none';
+                } else if (this.value === 'preset') {
                     customTemplateGroup.style.display = 'none';
+                    presetTemplateGroup.style.display = 'block';
                 }
             });
         });
+
+        // Initialize on page load
+        const checkedTemplate = document.querySelector('input[name="template_choice"]:checked');
+        if (checkedTemplate) {
+            if (checkedTemplate.value === 'upload') {
+                customTemplateGroup.style.display = 'block';
+            } else if (checkedTemplate.value === 'preset') {
+                presetTemplateGroup.style.display = 'block';
+            }
+        }
 
         // Show/hide config template options based on selection (for developers)
         const configTemplateChoices = document.querySelectorAll('input[name="config_template_choice"]');

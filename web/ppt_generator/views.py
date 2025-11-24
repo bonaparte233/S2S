@@ -93,8 +93,9 @@ def index(request):
 
             # Set template name based on choice
             template_choice = form.cleaned_data.get("template_choice")
-            if template_choice == "default":
-                generation.template_name = "template.pptx"
+            if template_choice == "preset":
+                # Store the relative path to the selected preset template
+                generation.template_name = form.cleaned_data.get("preset_template_path")
             else:
                 generation.template_name = "custom"
 
@@ -113,9 +114,27 @@ def index(request):
     available_templates = []
     available_config_templates = []
     if template_dir.exists():
-        for pptx_file in template_dir.glob("*.pptx"):
-            if not pptx_file.name.startswith("~$"):
-                available_templates.append(pptx_file.name)
+        # Scan for template.pptx in subdirectories (e.g. template/template1/template.pptx)
+        # Also include template.pptx in root for backward compatibility
+
+        # 1. Root template.pptx
+        if (template_dir / "template.pptx").exists():
+            available_templates.append(
+                {"name": "默认模板 (template.pptx)", "path": "template.pptx"}
+            )
+
+        # 2. Subdirectories
+        for subdir in template_dir.iterdir():
+            if subdir.is_dir() and not subdir.name.startswith("."):
+                ppt_path = subdir / "template.pptx"
+                if ppt_path.exists():
+                    available_templates.append(
+                        {
+                            "name": f"{subdir.name} (template.pptx)",
+                            "path": str(subdir.name) + "/template.pptx",
+                        }
+                    )
+
         for json_file in template_dir.rglob("*.json"):
             # 使用相对路径方便前端展示和回填
             rel_path = json_file.relative_to(template_dir)
@@ -208,9 +227,36 @@ def start_generation(request, pk):
 
             # Use user-provided config if available, otherwise use global config
             llm_provider = generation.llm_provider or global_config.llm_provider
-            llm_model = generation.llm_model or global_config.llm_model
+
+            # 智能获取模型名称和 API Key
+            # 如果用户指定了 provider，但没有指定 model/api_key，需要从全局配置中获取
+            if (
+                generation.llm_provider
+                and generation.llm_provider != global_config.llm_provider
+            ):
+                # 用户指定了不同的 provider，必须提供对应的配置
+                provider_defaults = {
+                    "deepseek": "deepseek-chat",
+                    "taichu": "taichu_vl",
+                    "local": "local-model",
+                }
+                llm_model = generation.llm_model or provider_defaults.get(
+                    generation.llm_provider, "deepseek-chat"
+                )
+                llm_api_key = generation.llm_api_key  # 必须用户提供
+                if not llm_api_key:
+                    raise ValueError(
+                        f"使用 {generation.llm_provider} 提供商时，必须提供对应的 API Key"
+                    )
+            else:
+                # 使用全局配置的 provider
+                if generation.llm_model:
+                    llm_model = generation.llm_model
+                else:
+                    llm_model = global_config.get_model_for_provider()
+                llm_api_key = generation.llm_api_key or global_config.llm_api_key
+
             llm_base_url = generation.llm_base_url or global_config.llm_base_url
-            llm_api_key = generation.llm_api_key or global_config.llm_api_key
             user_prompt = generation.user_prompt or global_config.default_prompt
         else:
             # LLM not enabled
@@ -221,11 +267,18 @@ def start_generation(request, pk):
             user_prompt = None
 
         # Set API key in environment if provided
-        if llm_api_key:
-            import os
+        import os
 
+        # 清除所有 LLM 相关的环境变量，避免使用旧的 API Key
+        for key in ["DEEPSEEK_API_KEY", "TAICHU_API_KEY", "LOCAL_LLM_API_KEY"]:
+            os.environ.pop(key, None)
+
+        # 设置当前使用的 API Key
+        if llm_api_key:
             if llm_provider == "deepseek":
                 os.environ["DEEPSEEK_API_KEY"] = llm_api_key
+            elif llm_provider == "taichu":
+                os.environ["TAICHU_API_KEY"] = llm_api_key
             elif llm_provider == "local":
                 os.environ["LOCAL_LLM_API_KEY"] = llm_api_key
 

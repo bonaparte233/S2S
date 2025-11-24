@@ -26,6 +26,7 @@ class GlobalLLMConfig(models.Model):
         max_length=50,
         choices=[
             ("deepseek", "DeepSeek"),
+            ("taichu", "紫东太初多模态模型"),
             ("local", "本地部署模型"),
             ("custom", "自定义服务"),
         ],
@@ -36,7 +37,7 @@ class GlobalLLMConfig(models.Model):
         max_length=100,
         default="deepseek-chat",
         verbose_name="LLM模型",
-        help_text="例如：deepseek-chat, deepseek-reasoner, Qwen3-8B",
+        help_text="DeepSeek: deepseek-chat | 紫东太初: taichu_vl | 本地: 自定义模型名称",
     )
     llm_api_key = models.CharField(
         max_length=500, blank=True, verbose_name="API Key", help_text="默认API密钥"
@@ -77,6 +78,28 @@ class GlobalLLMConfig(models.Model):
         elif not self.pk and not GlobalLLMConfig.objects.exists():
             self.is_default = True
         return super().save(*args, **kwargs)
+
+    def get_model_for_provider(self):
+        """根据提供商返回正确的模型名称"""
+        # 如果用户明确设置了模型名称，优先使用
+        if self.llm_model:
+            # 检查是否是默认的 deepseek-chat，如果是且提供商不是 deepseek，则使用提供商的默认值
+            if self.llm_model == "deepseek-chat" and self.llm_provider != "deepseek":
+                return self._get_default_model_for_provider()
+            return self.llm_model
+
+        # 否则返回提供商的默认模型
+        return self._get_default_model_for_provider()
+
+    def _get_default_model_for_provider(self):
+        """返回提供商的默认模型名称"""
+        defaults = {
+            "deepseek": "deepseek-chat",
+            "taichu": "taichu_vl",
+            "local": "local-model",
+            "custom": "custom-model",
+        }
+        return defaults.get(self.llm_provider, "deepseek-chat")
 
     @classmethod
     def get_config(cls):

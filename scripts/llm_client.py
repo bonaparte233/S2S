@@ -12,7 +12,7 @@ class BaseLLM(ABC):
     """大模型抽象基类，子类需实现 generate 方法。"""
 
     @abstractmethod
-    def generate(self, messages: List[Dict[str, str]], **kwargs) -> str:
+    def generate(self, messages: List[Dict[str, Any]], **kwargs) -> str:
         """传入类似 OpenAI Chat 的 messages，返回模型生成的文本。"""
         raise NotImplementedError
 
@@ -36,7 +36,7 @@ class OpenAILikeLLM(BaseLLM):
         self.extra_headers = extra_headers or {}
         self.completion_path = completion_path
 
-    def generate(self, messages: List[Dict[str, str]], **kwargs) -> str:
+    def generate(self, messages: List[Dict[str, Any]], **kwargs) -> str:
         payload: Dict[str, Any] = {
             "model": self.model,
             "messages": messages,
@@ -106,6 +106,28 @@ class LocalLLM(OpenAILikeLLM):
         super().__init__(model=model_name, base_url=base, api_key=key, timeout=timeout)
 
 
+class TaichuLLM(OpenAILikeLLM):
+    """太初多模态大模型 API 封装。"""
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: str = "taichu_vl",
+        base_url: Optional[str] = None,
+        timeout: int = 60,
+    ):
+        key = api_key or os.getenv("TAICHU_API_KEY")
+        if not key:
+            raise ValueError("未检测到 TAICHU_API_KEY，请在环境变量中配置。")
+        base = (
+            base_url
+            or os.getenv("TAICHU_BASE_URL")
+            or "https://platform.wair.ac.cn/maas/v1"
+        )
+        model_name = model
+        super().__init__(model=model_name, base_url=base, api_key=key, timeout=timeout)
+
+
 class QwenVLLM(BaseLLM):
     """适配 vLLM 部署的 Qwen /generate 接口，自动拼接 chat 模板。"""
 
@@ -134,7 +156,7 @@ class QwenVLLM(BaseLLM):
         parts.append("<|im_start|>assistant\n")
         return "".join(parts)
 
-    def generate(self, messages: List[Dict[str, str]], **kwargs) -> str:
+    def generate(self, messages: List[Dict[str, Any]], **kwargs) -> str:
         prompt = self._format_messages(messages)
         payload = {
             "prompt": prompt,

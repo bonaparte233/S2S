@@ -11,7 +11,7 @@ class PPTGenerationForm(forms.ModelForm):
 
     # Template selection options
     TEMPLATE_CHOICES = [
-        ("default", "默认模板 (template.pptx)"),
+        ("preset", "使用预设模板"),
         ("upload", "上传自定义模板"),
     ]
 
@@ -26,6 +26,7 @@ class PPTGenerationForm(forms.ModelForm):
     LLM_PROVIDER_CHOICES = [
         ("", "不使用大模型"),
         ("deepseek", "DeepSeek"),
+        ("taichu", "紫东太初多模态模型"),
         ("local", "本地部署模型"),
         ("custom", "自定义服务"),
     ]
@@ -42,6 +43,12 @@ class PPTGenerationForm(forms.ModelForm):
         widget=forms.RadioSelect,
         label="选择PPT模板",
         required=True,
+    )
+
+    preset_template_path = forms.CharField(
+        required=False,
+        widget=forms.Select(attrs={"class": "select-input"}),
+        label="选择预设模板",
     )
 
     config_template_choice = forms.ChoiceField(
@@ -192,9 +199,15 @@ class PPTGenerationForm(forms.ModelForm):
         use_llm = cleaned_data.get("use_llm")
         llm_provider = cleaned_data.get("llm_provider")
 
+        preset_path = cleaned_data.get("preset_template_path")
+
         # Validate template file is provided when upload is selected
         if template_choice == "upload" and not template_file:
             raise forms.ValidationError('选择"上传自定义模板"时必须上传模板文件')
+        
+        # Validate preset path is provided when preset is selected
+        if template_choice == "preset" and not preset_path:
+            raise forms.ValidationError('选择"使用预设模板"时必须选择一个模板')
 
         # For developers: if use_llm is checked but no provider selected, set provider to empty
         # For non-developers: use_llm checkbox controls the behavior directly
