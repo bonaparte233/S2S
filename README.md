@@ -61,7 +61,7 @@ python manage.py init_users
 4. 创建新配置：
    - 配置名称（如"DeepSeek 默认配置"、"GLM 多模态配置"）
    - LLM 供应商（DeepSeek / 紫东太初多模态模型 / 智谱AI (GLM) / 本地部署 / 自定义服务）
-   - LLM 模型（如 `deepseek-chat`、`glm-4v-plus`、`taichu4_vl_32b`）
+   - LLM 模型（如 `deepseek-chat`、`glm-4.5v`、`taichu4_vl_32b`）
    - API Key（全局默认密钥）
    - 服务器地址（可选）
    - 默认系统 Prompt（可选）
@@ -169,6 +169,12 @@ cd ..
 ./start_web.sh
 ```
 
+Windows 用户请运行：
+
+```bash
+start_web.bat
+```
+
 然后访问 `http://127.0.0.1:8000/`，使用以下账户登录：
 
 - 管理员：`admin` / `admin123`
@@ -209,7 +215,7 @@ python main.py \
 - `--slides-name`（默认 `slides.pptx`）：运行目录中的 PPT 文件名。
 - `--ppt-output`：如需额外复制 PPT，请提供完整输出路径。
 - `--use-llm`：是否启用大模型进行内容生成/排版。
-- `--llm-provider`（默认 `deepseek`）：大模型提供商标识，当前代码支持 `deepseek` 和 `local`。
+- `--llm-provider`（默认 `deepseek`）：大模型提供商标识。
 - `--llm-model`（默认 `deepseek-chat`）：模型名称，传给对应 Provider。
 - `--course-name` / `--college-name` / `--lecturer-name`：覆盖课程名称、学院名称、主讲教师姓名。
 
@@ -291,7 +297,7 @@ python generate_slides.py \
 - 需要环境变量：
   - `GLM_API_KEY`（必需）
   - `GLM_BASE_URL`（可选，默认 `https://open.bigmodel.cn/api/paas/v4/`）
-- 推荐模型：`glm-4v-plus`（多模态）、`glm-4.5v`（多模态）
+- 推荐模型：`glm-4`（文本）、`glm-4.5v`（多模态）
 - **支持多模态**：可以处理包含图片的讲稿
 - 使用 OpenAI 兼容接口
 
@@ -345,7 +351,16 @@ python generate_slides.py \
   - `template_page_num`：在 PPT 模板中的页号。
   - `page_type`：页面类型（如“封面页”“章节页”“图文页”等）。
   - `text_slots` / `image_slots`：文本/图片槽位数量。
-- 后续字段还会为每种页面类型定义具体的文本/图片字段及其路径，并提供布局、使用场景、风格、备注等元信息，作为 LLM 提示的一部分。
+- `template/template.json` 中的 `ppt_pages` 列表定义了各页面的详细信息：
+  - `page_type`：页面类型，必须与 `manifest` 中定义的一致。
+  - `template_page_num`：使用的模板页编号，必须与 `manifest` 中定义的一致。
+  - `content`：页面内容，包括各文本/图片字段的值。
+    - `type` 为 `text` 的字段为文本字段，`type` 为 `image` 的字段为图片字段。
+    - `hint` 字段为生成提示，模型会参考这个提示生成内容。
+    - `required` 字段必须填写，否则会报错。
+    - `max_chars` 字段定义了文本字段的最大长度，生成的内容不得超过这个限制。
+    - `value` 字段为生成的值，通常为空字符串。
+  - `meta`：页面元信息，包括布局、场景、风格等。
 - `template/template.txt` 中列出了允许使用的模板编号，若讲稿中指定的编号不在其中，会报错提示模板未定义或未被允许。
 
 ### 讲稿书写规范与模板标记
