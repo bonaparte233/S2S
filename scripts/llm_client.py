@@ -57,9 +57,7 @@ class OpenAILikeLLM(BaseLLM):
             timeout=self.timeout,
         )
         if resp.status_code != 200:
-            raise RuntimeError(
-                f"LLM API 调用失败：{resp.status_code} {resp.text}"
-            )
+            raise RuntimeError(f"LLM API 调用失败：{resp.status_code} {resp.text}")
 
         data = resp.json()
         try:
@@ -81,11 +79,7 @@ class DeepSeekLLM(OpenAILikeLLM):
         key = api_key or os.getenv("DEEPSEEK_API_KEY")
         if not key:
             raise ValueError("未检测到 DEEPSEEK_API_KEY，请在环境变量中配置。")
-        base = (
-            base_url
-            or os.getenv("DEEPSEEK_BASE_URL")
-            or "https://api.deepseek.com"
-        )
+        base = base_url or os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com"
         super().__init__(model=model, base_url=base, api_key=key, timeout=timeout)
 
 
@@ -99,7 +93,11 @@ class LocalLLM(OpenAILikeLLM):
         timeout: int = 60,
         api_key: Optional[str] = None,
     ):
-        base = base_url or os.getenv("LOCAL_LLM_BASE_URL") or "http://172.18.75.58:9000/generate"
+        base = (
+            base_url
+            or os.getenv("LOCAL_LLM_BASE_URL")
+            or "http://172.18.75.58:9000/generate"
+        )
         model_name = model or os.getenv("LOCAL_LLM_MODEL") or "Qwen3-8B"
         # 有些本地服务同样需要 key，可通过环境变量 LOCAL_LLM_API_KEY 指定
         key = api_key or os.getenv("LOCAL_LLM_API_KEY")
@@ -112,9 +110,9 @@ class TaichuLLM(OpenAILikeLLM):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "taichu_vl",
+        model: str = "taichu4_vl_32b",
         base_url: Optional[str] = None,
-        timeout: int = 60,
+        timeout: int = 360,
     ):
         key = api_key or os.getenv("TAICHU_API_KEY")
         if not key:
@@ -126,6 +124,27 @@ class TaichuLLM(OpenAILikeLLM):
         )
         model_name = model
         super().__init__(model=model_name, base_url=base, api_key=key, timeout=timeout)
+
+
+class GLMLLM(OpenAILikeLLM):
+    """智谱 AI (GLM) API 封装，兼容 OpenAI 接口。"""
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: str = "glm-4.5v",
+        base_url: Optional[str] = None,
+        timeout: int = 360,
+    ):
+        key = api_key or os.getenv("GLM_API_KEY")
+        if not key:
+            raise ValueError("未检测到 GLM_API_KEY，请在环境变量中配置。")
+        base = (
+            base_url
+            or os.getenv("GLM_BASE_URL")
+            or "https://open.bigmodel.cn/api/paas/v4/"
+        )
+        super().__init__(model=model, base_url=base, api_key=key, timeout=timeout)
 
 
 class QwenVLLM(BaseLLM):
@@ -170,7 +189,9 @@ class QwenVLLM(BaseLLM):
             timeout=self.timeout,
         )
         if response.status_code != 200:
-            raise RuntimeError(f"Qwen vLLM 调用失败：{response.status_code} {response.text}")
+            raise RuntimeError(
+                f"Qwen vLLM 调用失败：{response.status_code} {response.text}"
+            )
         data = response.json()
         print("⚠️ Qwen返回：", data)
         texts = data.get("text")

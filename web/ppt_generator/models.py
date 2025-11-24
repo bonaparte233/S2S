@@ -27,6 +27,7 @@ class GlobalLLMConfig(models.Model):
         choices=[
             ("deepseek", "DeepSeek"),
             ("taichu", "紫东太初多模态模型"),
+            ("glm", "智谱AI (GLM)"),
             ("local", "本地部署模型"),
             ("custom", "自定义服务"),
         ],
@@ -37,7 +38,7 @@ class GlobalLLMConfig(models.Model):
         max_length=100,
         default="deepseek-chat",
         verbose_name="LLM模型",
-        help_text="DeepSeek: deepseek-chat | 紫东太初: taichu_vl | 本地: 自定义模型名称",
+        help_text="DeepSeek: deepseek-chat | 紫东太初: taichu4_vl_32b | 智谱AI: glm-4.6 | 本地: 自定义模型名称",
     )
     llm_api_key = models.CharField(
         max_length=500, blank=True, verbose_name="API Key", help_text="默认API密钥"
@@ -95,7 +96,8 @@ class GlobalLLMConfig(models.Model):
         """返回提供商的默认模型名称"""
         defaults = {
             "deepseek": "deepseek-chat",
-            "taichu": "taichu_vl",
+            "taichu": "taichu4_vl_32b",
+            "glm": "glm-4.6",
             "local": "local-model",
             "custom": "custom-model",
         }
@@ -168,6 +170,30 @@ class PPTGeneration(models.Model):
 
     # Configuration
     use_llm = models.BooleanField(default=False, verbose_name="使用大模型")
+
+    # LLM 配置选择方式
+    LLM_CONFIG_CHOICES = [
+        ("preset", "使用预设配置"),
+        ("custom", "自定义配置"),
+    ]
+    llm_config_choice = models.CharField(
+        max_length=20,
+        choices=LLM_CONFIG_CHOICES,
+        default="preset",
+        verbose_name="配置方式",
+    )
+
+    # 预设配置（从 GlobalLLMConfig 中选择）
+    llm_preset_config = models.ForeignKey(
+        GlobalLLMConfig,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="预设配置",
+        help_text="选择管理员预设的 LLM 配置",
+    )
+
+    # 自定义配置字段（仅在选择"自定义配置"时使用）
     llm_provider = models.CharField(
         max_length=50, null=True, blank=True, verbose_name="LLM供应商"
     )

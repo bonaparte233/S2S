@@ -99,6 +99,18 @@ def index(request):
             else:
                 generation.template_name = "custom"
 
+            # Handle LLM configuration: populate llm_provider/llm_model for display in admin
+            if generation.use_llm:
+                llm_config_choice = form.cleaned_data.get("llm_config_choice", "preset")
+                if llm_config_choice == "preset" and generation.llm_preset_config:
+                    # 使用预设配置时，将预设的 provider 和 model 复制到记录字段中
+                    # 这样 Admin 界面可以正确显示
+                    preset = generation.llm_preset_config
+                    generation.llm_provider = preset.llm_provider
+                    generation.llm_model = preset.get_model_for_provider()
+                    # API Key 和 Base URL 不复制，保持安全性
+                # 如果是自定义配置，字段已经由表单填充，无需额外处理
+
             generation.save()
             return redirect("generation_detail", pk=generation.pk)
     else:
@@ -220,44 +232,37 @@ def start_generation(request, pk):
             "lecturer": generation.lecturer_name,
         }
 
-        # Prepare LLM configuration with fallback to global config
+        # Prepare LLM configuration
         if generation.use_llm:
-            # Get global config as fallback
-            global_config = GlobalLLMConfig.get_config()
-
-            # Use user-provided config if available, otherwise use global config
-            llm_provider = generation.llm_provider or global_config.llm_provider
-
-            # 智能获取模型名称和 API Key
-            # 如果用户指定了 provider，但没有指定 model/api_key，需要从全局配置中获取
+            # 判断使用预设配置还是自定义配置
             if (
-                generation.llm_provider
-                and generation.llm_provider != global_config.llm_provider
+                generation.llm_config_choice == "preset"
+                and generation.llm_preset_config
             ):
-                # 用户指定了不同的 provider，必须提供对应的配置
-                provider_defaults = {
-                    "deepseek": "deepseek-chat",
-                    "taichu": "taichu_vl",
-                    "local": "local-model",
-                }
-                llm_model = generation.llm_model or provider_defaults.get(
-                    generation.llm_provider, "deepseek-chat"
-                )
-                llm_api_key = generation.llm_api_key  # 必须用户提供
-                if not llm_api_key:
-                    raise ValueError(
-                        f"使用 {generation.llm_provider} 提供商时，必须提供对应的 API Key"
-                    )
+                # 使用预设配置
+                preset = generation.llm_preset_config
+                llm_provider = preset.llm_provider
+                llm_model = preset.get_model_for_provider()
+                llm_api_key = preset.llm_api_key
+                llm_base_url = preset.llm_base_url
+                user_prompt = generation.user_prompt or preset.default_prompt
             else:
-                # 使用全局配置的 provider
-                if generation.llm_model:
-                    llm_model = generation.llm_model
-                else:
-                    llm_model = global_config.get_model_for_provider()
-                llm_api_key = generation.llm_api_key or global_config.llm_api_key
+                # 使用自定义配置
+                llm_provider = generation.llm_provider
+                llm_model = generation.llm_model
+                llm_api_key = generation.llm_api_key
+                llm_base_url = generation.llm_base_url
+                user_prompt = generation.user_prompt
 
-            llm_base_url = generation.llm_base_url or global_config.llm_base_url
-            user_prompt = generation.user_prompt or global_config.default_prompt
+                # 如果自定义配置不完整，回退到全局默认配置
+                if not llm_provider or not llm_api_key:
+                    global_config = GlobalLLMConfig.get_config()
+                    llm_provider = llm_provider or global_config.llm_provider
+                    llm_model = llm_model or global_config.get_model_for_provider()
+                    llm_api_key = llm_api_key or global_config.llm_api_key
+                    llm_base_url = llm_base_url or global_config.llm_base_url
+                    user_prompt = user_prompt or global_config.default_prompt
+
         else:
             # LLM not enabled
             llm_provider = None
@@ -270,7 +275,12 @@ def start_generation(request, pk):
         import os
 
         # 清除所有 LLM 相关的环境变量，避免使用旧的 API Key
-        for key in ["DEEPSEEK_API_KEY", "TAICHU_API_KEY", "LOCAL_LLM_API_KEY"]:
+        for key in [
+            "DEEPSEEK_API_KEY",
+            "TAICHU_API_KEY",
+            "GLM_API_KEY",
+            "LOCAL_LLM_API_KEY",
+        ]:
             os.environ.pop(key, None)
 
         # 设置当前使用的 API Key
@@ -279,6 +289,8 @@ def start_generation(request, pk):
                 os.environ["DEEPSEEK_API_KEY"] = llm_api_key
             elif llm_provider == "taichu":
                 os.environ["TAICHU_API_KEY"] = llm_api_key
+            elif llm_provider == "glm" or llm_provider == "zhipu":
+                os.environ["GLM_API_KEY"] = llm_api_key
             elif llm_provider == "local":
                 os.environ["LOCAL_LLM_API_KEY"] = llm_api_key
 

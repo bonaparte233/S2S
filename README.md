@@ -45,27 +45,43 @@ cd web
 python manage.py init_users
 ```
 
-### 全局 LLM 配置
+### LLM 配置管理
 
-管理员可以在 Django Admin 后台配置全局的 LLM 设置，这样普通用户无需输入 API 密钥即可使用大模型功能。
+系统支持两种 LLM 配置方式：
+
+#### 1. 预设配置（推荐）
+
+管理员可以在 Django Admin 后台创建多个预设配置，用户直接选择使用：
 
 **配置步骤：**
 
 1. 访问 `http://127.0.0.1:8000/admin/`
 2. 使用 `admin` / `admin123` 登录
 3. 点击"全局LLM配置"
-4. 配置：
-   - LLM 供应商（DeepSeek / 本地部署 / 自定义服务）
-   - LLM 模型（如 `deepseek-chat`）
+4. 创建新配置：
+   - 配置名称（如"DeepSeek 默认配置"、"GLM 多模态配置"）
+   - LLM 供应商（DeepSeek / 紫东太初多模态模型 / 智谱AI (GLM) / 本地部署 / 自定义服务）
+   - LLM 模型（如 `deepseek-chat`、`glm-4v-plus`、`taichu4_vl_32b`）
    - API Key（全局默认密钥）
    - 服务器地址（可选）
    - 默认系统 Prompt（可选）
+   - 是否设为默认配置
 5. 保存
 
-**配置优先级：**
+**使用方式：**
 
-- 开发者/管理员在生成页面输入的配置会临时覆盖全局配置
-- 普通用户勾选"使用大模型"后自动使用全局配置
+- 用户在生成页面勾选"使用大模型"
+- 选择"使用预设配置"
+- 从下拉框选择管理员创建的配置
+- 无需填写 API Key 等敏感信息
+
+#### 2. 自定义配置
+
+开发者和管理员可以临时使用自定义配置：
+
+- 选择"自定义配置"
+- 手动填写 LLM 供应商、模型名称、API Key 等
+- 仅在当前生成任务中使用
 
 ### Web 功能特性
 
@@ -96,9 +112,9 @@ python manage.py init_users
 ### 核心脚本
 
 - `main.py`：主入口，一条命令完成 DOCX → JSON → PPT。
-- `scripts/docx_to_config.py`：DOCX → JSON 的核心逻辑与独立 CLI。
+- `scripts/docx_to_config.py`：DOCX → JSON 的核心逻辑与独立 CLI，支持多模态图片处理。
 - `scripts/generate_slides.py`：JSON → PPT 的核心逻辑与独立 CLI。
-- `scripts/llm_client.py`：大模型抽象与 DeepSeek / 本地模型 Provider 封装。
+- `scripts/llm_client.py`：大模型抽象层，支持 DeepSeek、紫东太初多模态、智谱AI (GLM)、本地模型等多种 Provider。
 - `scripts/export_template_structure.py`：导出模板结构为 JSON（语义/文本模式），支持 AI 填充配置。
 
 ### Web 前端
@@ -242,25 +258,82 @@ python generate_slides.py \
 大模型相关逻辑定义在 `llm_client.py` 与 `docx_to_config.py` 中：
 
 - 当传入 `use_llm=True` 时，`generate_config_data` 会通过 `choose_llm` 选择具体 LLM：
-  - `provider = "deepseek"` 时使用 `DeepSeekLLM`；
-  - `provider = "local"` 时使用 `LocalLLM`；
-  - 其他值会抛出错误：`暂不支持的大模型提供商：{provider}`。
+  - `provider = "deepseek"` 时使用 `DeepSeekLLM`
+  - `provider = "taichu"` 时使用 `TaichuLLM`（紫东太初多模态模型）
+  - `provider = "glm"` 时使用 `GLMLLM`（智谱AI）
+  - `provider = "local"` 时使用 `LocalLLM`
+  - `provider = "qwen"` 时使用 `QwenVLLM`（通义千问 vLLM 部署）
+  - 其他值会抛出错误：`暂不支持的大模型提供商：{provider}`
 - 如果讲稿中**没有任何模板标记**且未启用 LLM，则会抛出：
   - `讲稿未指定 PPT 标记且未启用 LLM，无法自动分配模板。`
 
-### DeepSeek 模型
+### 支持的 LLM 提供商
+
+#### DeepSeek
 
 - 需要环境变量：
-  - `DEEPSEEK_API_KEY`（必需）。
-  - `DEEPSEEK_BASE_URL`（可选，默认 `https://api.deepseek.com`）。
-- 默认模型名称为 `deepseek-chat`，也可通过命令行 `--llm-model` 覆盖。
+  - `DEEPSEEK_API_KEY`（必需）
+  - `DEEPSEEK_BASE_URL`（可选，默认 `https://api.deepseek.com`）
+- 默认模型名称为 `deepseek-chat`，也可通过命令行 `--llm-model` 覆盖
+- 支持纯文本生成
 
-### 本地/自建模型
+#### 紫东太初多模态模型 (Taichu)
+
+- 需要环境变量：
+  - `TAICHU_API_KEY`（必需）
+  - `TAICHU_BASE_URL`（可选，默认 `https://platform.wair.ac.cn/maas/v1`）
+- 默认模型名称为 `taichu4_vl_32b`
+- **支持多模态**：可以处理包含图片的讲稿，图片会以 base64 格式发送给模型
+- 适用于需要理解图片内容的场景
+
+#### 智谱AI (GLM)
+
+- 需要环境变量：
+  - `GLM_API_KEY`（必需）
+  - `GLM_BASE_URL`（可选，默认 `https://open.bigmodel.cn/api/paas/v4/`）
+- 推荐模型：`glm-4v-plus`（多模态）、`glm-4.5v`（多模态）
+- **支持多模态**：可以处理包含图片的讲稿
+- 使用 OpenAI 兼容接口
+
+#### 本地/自建模型
 
 - 使用环境变量：
-  - `LOCAL_LLM_BASE_URL`（可选，默认 `http://127.0.0.1:8000/v1`）。
-  - `LOCAL_LLM_MODEL`（可选，默认 `local-model`）。
-  - `LOCAL_LLM_API_KEY`（可选，本地服务需要鉴权时使用）。
+  - `LOCAL_LLM_BASE_URL`（可选，默认 `http://127.0.0.1:8000/v1`）
+  - `LOCAL_LLM_MODEL`（可选，默认 `local-model`）
+  - `LOCAL_LLM_API_KEY`（可选，本地服务需要鉴权时使用）
+- 适用于自建的 OpenAI 兼容 API 服务
+
+#### 通义千问 vLLM (Qwen)
+
+- 需要环境变量：
+  - `QWEN_BASE_URL`（必需）
+  - `QWEN_MODEL`（可选，默认 `Qwen2-VL-7B-Instruct`）
+  - `QWEN_API_KEY`（可选）
+- 适用于 vLLM 部署的通义千问模型
+
+### 多模态功能
+
+当讲稿中包含图片时，系统会自动：
+
+1. **提取图片**：从 DOCX 中提取所有图片并保存到 `images/` 目录
+2. **图片编码**：将图片转换为 base64 格式
+3. **多模态消息**：构建包含文本和图片的多模态消息
+4. **智能理解**：
+   - 模型会理解图片内容
+   - 分析图片与上下文文本的关系（图片通常在相关文本下方）
+   - 将图片放入合适的 PPT 页面
+   - 根据图片内容优化文本描述
+
+**支持多模态的模型**：
+
+- 紫东太初多模态模型 (`taichu4_vl_32b`)
+- 智谱AI GLM (`glm-4v-plus`, `glm-4.5v`)
+
+**多模态 Prompt 增强**：
+
+- 强调字数限制约束，防止生成内容超出 `max_chars` 限制
+- 明确图片与文本的位置关系
+- 强调图片的重要性，避免被忽略
 
 ---
 
@@ -503,6 +576,43 @@ pip install -r requirements.txt
 ---
 
 ## 更新日志
+
+### v2.3.0 (2025-11-24)
+
+- ✨ **多模态 LLM 支持增强**
+  - 修复 user_prompt 传递问题，确保用户自定义 prompt 在所有生成模式下生效
+  - 增强字数限制约束，使用更强的语气和警告格式
+  - 增强多模态指令，明确图片与文本的位置关系，强调图片重要性
+  - 新增 GLM 多模态模型支持（`glm-4v-plus`, `glm-4.5v`）
+  - 新增 `_is_multimodal_llm()` 辅助函数，统一多模态模型检测
+- 🔧 **LLM 配置重构**
+  - 将"LLM 供应商选择"改为"LLM 配置选择"
+  - 支持预设配置和自定义配置两种模式
+  - 预设配置模式：用户选择管理员创建的配置，无需填写 API Key
+  - 自定义配置模式：开发者/管理员临时输入配置信息
+  - 修复 Admin 界面显示问题，正确显示使用的 LLM 提供商
+- 🎨 **前端优化**
+  - 优化 LLM 配置方式区域布局，增加上边距
+  - 统一单选按钮样式，使用 radio-group 和 radio-label 类
+  - 修复 Django 5.2 模板语法错误（比较运算符两边必须有空格）
+- 📝 更新文档
+
+### v2.2.0 (2025-11-22)
+
+- ✨ 新增多模态 LLM 支持
+  - 支持紫东太初多模态模型 (Taichu-VL)
+  - 支持智谱AI (GLM) 多模态模型
+  - 自动提取 DOCX 中的图片并以 base64 格式发送给模型
+  - 多模态消息构建（文本 + 图片）
+- ✨ 新增多个 LLM Provider
+  - 紫东太初多模态模型 (`TaichuLLM`)
+  - 智谱AI (`GLMLLM`)
+  - 通义千问 vLLM (`QwenVLLM`)
+- 🔧 优化 LLM 配置管理
+  - 支持多个全局 LLM 配置
+  - 支持设置默认配置
+  - 配置名称和描述字段
+- 📝 更新文档
 
 ### v2.1.0 (2025-11-20)
 

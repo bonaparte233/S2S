@@ -3,7 +3,7 @@ Forms for PPT Generator application.
 """
 
 from django import forms
-from .models import PPTGeneration
+from .models import PPTGeneration, GlobalLLMConfig
 
 
 class PPTGenerationForm(forms.ModelForm):
@@ -22,11 +22,17 @@ class PPTGenerationForm(forms.ModelForm):
         ("upload", "上传自定义配置"),
     ]
 
-    # LLM Provider options
+    # LLM 配置选择方式
+    LLM_CONFIG_CHOICES = [
+        ("preset", "使用预设配置"),
+        ("custom", "自定义配置"),
+    ]
+
+    # LLM Provider options (for custom config)
     LLM_PROVIDER_CHOICES = [
-        ("", "不使用大模型"),
         ("deepseek", "DeepSeek"),
         ("taichu", "紫东太初多模态模型"),
+        ("glm", "智谱AI (GLM)"),
         ("local", "本地部署模型"),
         ("custom", "自定义服务"),
     ]
@@ -59,9 +65,28 @@ class PPTGenerationForm(forms.ModelForm):
         required=False,
     )
 
+    # LLM 配置选择方式
+    llm_config_choice = forms.ChoiceField(
+        choices=LLM_CONFIG_CHOICES,
+        initial="preset",
+        widget=forms.RadioSelect(attrs={"class": "radio-input"}),
+        label="LLM 配置方式",
+        required=False,
+    )
+
+    # 预设配置选择
+    llm_preset_config = forms.ModelChoiceField(
+        queryset=GlobalLLMConfig.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={"class": "select-input"}),
+        label="选择预设配置",
+        empty_label="请选择配置",
+    )
+
+    # 自定义配置字段
     llm_provider = forms.ChoiceField(
         choices=LLM_PROVIDER_CHOICES,
-        initial="",
+        initial="deepseek",
         widget=forms.Select(attrs={"class": "select-input"}),
         label="LLM供应商",
         required=False,
@@ -124,6 +149,8 @@ class PPTGenerationForm(forms.ModelForm):
             "config_template",
             "config_template_file",
             "use_llm",
+            "llm_config_choice",
+            "llm_preset_config",
             "llm_provider",
             "llm_model",
             "llm_api_key",
@@ -204,7 +231,7 @@ class PPTGenerationForm(forms.ModelForm):
         # Validate template file is provided when upload is selected
         if template_choice == "upload" and not template_file:
             raise forms.ValidationError('选择"上传自定义模板"时必须上传模板文件')
-        
+
         # Validate preset path is provided when preset is selected
         if template_choice == "preset" and not preset_path:
             raise forms.ValidationError('选择"使用预设模板"时必须选择一个模板')

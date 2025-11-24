@@ -135,44 +135,71 @@
                             {% endif %}
                         </div>
 
+                        <!-- LLM 配置选择方式 -->
+                        <div class="form-group" style="margin-top: 24px;">
+                            <label class="form-label">{{ form.llm_config_choice.label }}</label>
+                            <div class="radio-group">
+                                {% for choice in form.llm_config_choice %}
+                                <label class="radio-label">
+                                    {{ choice.tag }}
+                                    <span>{{ choice.choice_label }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="form-help">选择使用预设配置或自定义配置</small>
+                        </div>
+
+                        <!-- 预设配置选择 -->
+                        <div class="form-group" id="llmPresetConfigGroup">
+                            <label for="{{ form.llm_preset_config.id_for_label }}" class="form-label">
+                                {{ form.llm_preset_config.label }}
+                            </label>
+                            {{ form.llm_preset_config }}
+                            <small class="form-help">从管理员预设的配置中选择</small>
+                        </div>
+
+                        <!-- 自定义配置区域 -->
+                        <div id="llmCustomConfigGroup" style="display: none;">
+                            <div class="form-group">
+                                <label for="{{ form.llm_provider.id_for_label }}" class="form-label">
+                                    {{ form.llm_provider.label }}
+                                </label>
+                                {{ form.llm_provider }}
+                                <small class="form-help">选择大模型供应商</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.llm_model.id_for_label }}" class="form-label">
+                                    {{ form.llm_model.label }}
+                                </label>
+                                {{ form.llm_model }}
+                                <small class="form-help">例如：deepseek-chat, glm-4.5v, taichu4_vl_32b</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.llm_api_key.id_for_label }}" class="form-label">
+                                    {{ form.llm_api_key.label }}
+                                </label>
+                                {{ form.llm_api_key }}
+                                <small class="form-help">输入您的API密钥</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.llm_base_url.id_for_label }}" class="form-label">
+                                    {{ form.llm_base_url.label }}
+                                </label>
+                                {{ form.llm_base_url }}
+                                <small class="form-help">自定义服务器地址（可选）</small>
+                            </div>
+                        </div>
+
+                        <!-- User Prompt (对所有配置方式都可用) -->
                         <div class="form-group">
-                            <label for="{{ form.llm_provider.id_for_label }}" class="form-label">
-                                {{ form.llm_provider.label }}
-                            </label>
-                            {{ form.llm_provider }}
-                            <small class="form-help">选择大模型供应商以启用智能规划功能</small>
-                        </div>
-
-                        <div class="form-group" id="llmModelGroup" style="display: none;">
-                            <label for="{{ form.llm_model.id_for_label }}" class="form-label">
-                                {{ form.llm_model.label }}
-                            </label>
-                            {{ form.llm_model }}
-                            <small class="form-help">DeepSeek: deepseek-chat 或 deepseek-reasoner</small>
-                        </div>
-
-                        <div class="form-group" id="llmApiKeyGroup" style="display: none;">
-                            <label for="{{ form.llm_api_key.id_for_label }}" class="form-label">
-                                {{ form.llm_api_key.label }}
-                            </label>
-                            {{ form.llm_api_key }}
-                            <small class="form-help">输入您的API密钥</small>
-                        </div>
-
-                        <div class="form-group" id="llmBaseUrlGroup" style="display: none;">
-                            <label for="{{ form.llm_base_url.id_for_label }}" class="form-label">
-                                {{ form.llm_base_url.label }}
-                            </label>
-                            {{ form.llm_base_url }}
-                            <small class="form-help">自定义服务器地址（可选）</small>
-                        </div>
-
-                        <div class="form-group" id="userPromptGroup" style="display: none;">
                             <label for="{{ form.user_prompt.id_for_label }}" class="form-label">
                                 {{ form.user_prompt.label }}
                             </label>
                             {{ form.user_prompt }}
-                            <small class="form-help">额外的提示词将附加到系统默认提示词之后</small>
+                            <small class="form-help">额外的提示词将附加到系统默认提示词之后（可选）</small>
                         </div>
                     </div>
                     {% endif %}
@@ -335,49 +362,30 @@
             }
         }
 
-        // Show/hide LLM configuration fields based on provider selection (for developers)
-        const llmProvider = document.getElementById('id_llm_provider');
-        const llmModelGroup = document.getElementById('llmModelGroup');
-        const llmApiKeyGroup = document.getElementById('llmApiKeyGroup');
-        const llmBaseUrlGroup = document.getElementById('llmBaseUrlGroup');
-        const userPromptGroup = document.getElementById('userPromptGroup');
-        const llmModelInput = document.getElementById('id_llm_model');
+        // Show/hide LLM configuration based on config choice (preset vs custom)
+        const llmConfigChoiceRadios = document.querySelectorAll('input[name="llm_config_choice"]');
+        const llmPresetConfigGroup = document.getElementById('llmPresetConfigGroup');
+        const llmCustomConfigGroup = document.getElementById('llmCustomConfigGroup');
 
-        if (llmProvider) {
-            function updateLLMFields() {
-                const provider = llmProvider.value;
-
-                if (!provider) {
-                    // No provider selected - hide all LLM fields
-                    llmModelGroup.style.display = 'none';
-                    llmApiKeyGroup.style.display = 'none';
-                    llmBaseUrlGroup.style.display = 'none';
-                    userPromptGroup.style.display = 'none';
-                } else {
-                    // Provider selected - show relevant fields
-                    llmModelGroup.style.display = 'block';
-                    llmApiKeyGroup.style.display = 'block';
-                    userPromptGroup.style.display = 'block';
-
-                    // Set default model based on provider
-                    if (provider === 'deepseek') {
-                        llmModelInput.value = llmModelInput.value || 'deepseek-chat';
-                        llmModelInput.placeholder = 'deepseek-chat 或 deepseek-reasoner';
-                        llmBaseUrlGroup.style.display = 'none';
-                    } else if (provider === 'local') {
-                        llmModelInput.value = llmModelInput.value || 'Qwen3-8B';
-                        llmModelInput.placeholder = '例如：Qwen3-8B';
-                        llmBaseUrlGroup.style.display = 'block';
-                    } else if (provider === 'custom') {
-                        llmModelInput.placeholder = '输入模型名称';
-                        llmBaseUrlGroup.style.display = 'block';
-                    }
+        function updateLLMConfigDisplay() {
+            const selectedChoice = document.querySelector('input[name="llm_config_choice"]:checked');
+            if (selectedChoice) {
+                if (selectedChoice.value === 'preset') {
+                    llmPresetConfigGroup.style.display = 'block';
+                    llmCustomConfigGroup.style.display = 'none';
+                } else if (selectedChoice.value === 'custom') {
+                    llmPresetConfigGroup.style.display = 'none';
+                    llmCustomConfigGroup.style.display = 'block';
                 }
             }
-
-            llmProvider.addEventListener('change', updateLLMFields);
-            updateLLMFields(); // Initialize on page load
         }
+
+        llmConfigChoiceRadios.forEach(radio => {
+            radio.addEventListener('change', updateLLMConfigDisplay);
+        });
+
+        // Initialize on page load
+        updateLLMConfigDisplay();
     });
 </script>
 {% endblock %}

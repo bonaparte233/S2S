@@ -15,7 +15,14 @@ from typing import Any, Dict, List, Optional, Tuple
 from docx import Document
 from docx.oxml.ns import qn
 
-from scripts.llm_client import BaseLLM, DeepSeekLLM, LocalLLM, QwenVLLM, TaichuLLM
+from scripts.llm_client import (
+    BaseLLM,
+    DeepSeekLLM,
+    GLMLLM,
+    LocalLLM,
+    QwenVLLM,
+    TaichuLLM,
+)
 import base64
 import mimetypes
 
@@ -228,6 +235,11 @@ def _assign_in_schema(schema: Dict, path: List[str], value: str):
         node[path[-1]] = value
 
 
+def _is_multimodal_llm(llm: Optional[BaseLLM]) -> bool:
+    """检查是否为多模态模型"""
+    return isinstance(llm, (TaichuLLM, GLMLLM))
+
+
 def _simple_fill(template_info: Dict, raw_text: str, images: List[str]) -> Dict:
     result = _clone_schema(template_info["schema"])
     text_fields = template_info["text_fields"]
@@ -243,7 +255,11 @@ def _simple_fill(template_info: Dict, raw_text: str, images: List[str]) -> Dict:
 
 
 def _build_prompt(
-    template_info: Dict, raw_text: str, images: List[str], is_multimodal: bool = False
+    template_info: Dict,
+    raw_text: str,
+    images: List[str],
+    is_multimodal: bool = False,
+    user_prompt: Optional[str] = None,
 ) -> str:
     def describe_fields(fields):
         if not fields:
@@ -279,14 +295,23 @@ def _build_prompt(
     multimodal_instruction = ""
     if is_multimodal and images:
         multimodal_instruction = f"""
-特别注意（多模态图片理解）：
-我已附带了 {len(images)} 张图片供你参考。
-- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置，你无需在输出中包含这些标记。
-- 请根据图片内容和上下文，决定将图片放入哪个图片字段。
-- 图片应与其上下文文本（如相关段落或标题）放在同一页 PPT 中。
-- 如果你认为某张图片适合放入某个图片字段，请在 JSON 的 "images" 数组对应位置填入该图片的完整路径。
-- 如果图片字段不需要图片，请留空字符串。
-- 你可以根据图片内容优化文本描述，使其更准确、更生动。
+🖼️ 多模态图片理解（重要）：
+我已附带了 {len(images)} 张图片，这些图片是讲稿的重要组成部分，请务必认真处理。
+
+图片与文本的关系：
+- 每张图片都紧跟在相关文本段落的下方（图片在文本下方）
+- 图片是对上方文本的补充说明、示例或可视化
+- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置
+
+你的任务：
+1. 仔细查看每张图片的内容，理解图片传达的信息
+2. 分析图片与上下文文本的关系，确定图片所属的主题
+3. 将图片放入合适的图片字段（通常与相关文本在同一页 PPT）
+4. 在 JSON 的 "images" 数组对应位置填入该图片的完整路径
+5. 根据图片内容优化文本描述，使其更准确、更生动
+6. 如果图片字段不需要图片，请留空字符串
+
+⚠️ 重要：不要忽略图片！图片是讲稿的核心内容之一，必须合理使用。
 """
 
     prompt = f"""
@@ -294,7 +319,14 @@ def _build_prompt(
 模板布局：{layout}；使用场景：{scene}；风格提示：{style}
 注意事项：{note}
 {multimodal_instruction}
-务必记住讲稿中提到的主讲人姓名、课程/讲座/项目名称或其他关键专有名词，并在后续所有需要这些信息的字段保持完全一致、不要改写。所有标记为“required”的字段必须填写，且文本长度不得超过对应的 max_chars 限制。
+
+⚠️ 严格要求（必须遵守）：
+1. 所有标记为"required"的字段必须填写，绝对不得留空。
+2. 每个文本字段都有字数上限（max_chars），你生成的内容绝对不能超过这个限制。
+3. 如果原文内容过长，请精简压缩，但务必保留核心信息和关键专有名词。
+4. 违反字数限制的输出将被视为无效，必须重新生成。
+5. 务必记住讲稿中提到的主讲人姓名、课程/讲座/项目名称等关键专有名词，并在所有需要这些信息的字段保持完全一致，不要改写。
+
 该模板包含如下文本字段（按照顺序对应）：
 {text_desc}
 
@@ -314,6 +346,10 @@ def _build_prompt(
 讲稿内容：
 {raw_text}
 """
+    # Append user prompt if provided
+    if user_prompt:
+        prompt += f"\n\n用户额外要求：\n{user_prompt}"
+
     return prompt
 
 
@@ -335,19 +371,15 @@ def _encode_image(image_path: str) -> Optional[str]:
 
 
 def _build_multimodal_messages(
-    template_info: Dict, raw_text: str, images: List[str]
+    template_info: Dict,
+    raw_text: str,
+    images: List[str],
+    user_prompt: Optional[str] = None,
 ) -> List[Dict]:
-    """Construct multimodal messages for Taichu-VL.
-
-    Args:
-        template_info: Template configuration
-        raw_text: Text content from DOCX
-        images: List of image paths
-
-    Returns:
-        List of messages in OpenAI-compatible multimodal format
-    """
-    prompt_text = _build_prompt(template_info, raw_text, images, is_multimodal=True)
+    """构建多模态消息，用于 Taichu-VL 或 GLMV。"""
+    prompt_text = _build_prompt(
+        template_info, raw_text, images, is_multimodal=True, user_prompt=user_prompt
+    )
 
     content: List[Dict[str, Any]] = [{"type": "text", "text": prompt_text}]
 
@@ -400,22 +432,28 @@ def _lookup_field_value(field, payload, fallback_list, idx):
 
 
 def llm_fill_slide(
-    llm: BaseLLM, template_info: Dict, raw_text: str, images: List[str]
+    llm: BaseLLM,
+    template_info: Dict,
+    raw_text: str,
+    images: List[str],
+    user_prompt: Optional[str] = None,
 ) -> Dict:
     if not llm:
         return _simple_fill(template_info, raw_text, images)
 
-    if isinstance(llm, TaichuLLM) and images:
-        messages = _build_multimodal_messages(template_info, raw_text, images)
+    if _is_multimodal_llm(llm) and images:
+        messages = _build_multimodal_messages(
+            template_info, raw_text, images, user_prompt
+        )
     else:
-        prompt = _build_prompt(template_info, raw_text, images)
+        prompt = _build_prompt(template_info, raw_text, images, user_prompt=user_prompt)
         messages = [{"role": "user", "content": prompt}]
 
     if DEBUG_LLM:
         print(f"\n{'=' * 60}")
         print(f"🔍 [DEBUG] LLM 请求 (llm_fill_slide)")
         print(f"{'=' * 60}")
-        if isinstance(llm, TaichuLLM) and images:
+        if _is_multimodal_llm(llm) and images:
             print(f"📝 多模态消息 (文本 + {len(images)} 张图片)")
             # 只打印文本部分，图片太长不打印
             for msg in messages:
@@ -476,21 +514,30 @@ def llm_plan_slides(
     )
 
     # 对于多模态模型，不需要列出图片路径（图片已通过 base64 附加）
-    if isinstance(llm, TaichuLLM) and images:
+    if _is_multimodal_llm(llm) and images:
         image_section = f"已附加 {len(images)} 张图片供你参考"
     else:
         image_section = "无" if not images else "\n".join(images)
 
     multimodal_instruction = ""
-    if isinstance(llm, TaichuLLM) and images:
+    if _is_multimodal_llm(llm) and images:
         multimodal_instruction = f"""
-特别注意（多模态图片理解）：
-我已附带了 {len(images)} 张图片供你参考。
-- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置，你无需在输出中包含这些标记。
-- 请根据图片内容和上下文，决定将图片放入哪个模板的图片字段。
-- 图片应与其上下文文本（如相关段落或标题）放在同一页 PPT 中。
-- 在输出的 JSON 对象中，"images" 数组应包含你选择使用的图片完整路径。
-- 你可以根据图片内容优化文本描述，使其更准确、更生动。
+🖼️ 多模态图片理解（重要）：
+我已附带了 {len(images)} 张图片，这些图片是讲稿的重要组成部分，请务必认真处理。
+
+图片与文本的关系：
+- 每张图片都紧跟在相关文本段落的下方（图片在文本下方）
+- 图片是对上方文本的补充说明、示例或可视化
+- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置
+
+你的任务：
+1. 仔细查看每张图片的内容，理解图片传达的信息
+2. 分析图片与上下文文本的关系，确定图片所属的主题
+3. 将图片放入合适的模板的图片字段（通常与相关文本在同一页 PPT）
+4. 在输出的 JSON 对象中，"images" 数组应包含你选择使用的图片完整路径
+5. 根据图片内容优化文本描述，使其更准确、更生动
+
+⚠️ 重要：不要忽略图片！图片是讲稿的核心内容之一，必须合理使用。
 """
 
     prompt = f"""
@@ -519,7 +566,14 @@ def llm_plan_slides(
   ...
 ]
 
-生成内容时务必记住并重复使用讲稿中的主讲人姓名、课程/讲座/项目名称等关键专有名词，确保在所有幻灯片中需要填写专有名词的位置保持一致，不要随意改写或另造新名称。所有标记为“required”的字段都必须提供文字，且不得超过对应的 max_chars 限制。
+
+⚠️ 严格要求（必须遵守）：
+1. 所有标记为"required"的字段必须填写，绝对不得留空。
+2. 每个文本字段都有字数上限（max_chars），你生成的内容绝对不能超过这个限制。
+3. 如果原文内容过长，请精简压缩，但务必保留核心信息和关键专有名词。
+4. 违反字数限制的输出将被视为无效，必须重新生成。
+5. 务必记住并重复使用讲稿中的主讲人姓名、课程/讲座/项目名称等关键专有名词，确保在所有幻灯片中需要填写专有名词的位置保持一致，不要随意改写或另造新名称。
+
 讲稿全文：
 {doc_text}
 """
@@ -527,7 +581,7 @@ def llm_plan_slides(
     if user_prompt:
         prompt += f"\n\n用户额外要求：\n{user_prompt}"
 
-    if isinstance(llm, TaichuLLM) and images:
+    if _is_multimodal_llm(llm) and images:
         content: List[Dict[str, Any]] = [{"type": "text", "text": prompt}]
         for img_path in images:
             if not os.path.exists(img_path):
@@ -549,7 +603,7 @@ def llm_plan_slides(
         print(f"\n{'=' * 60}")
         print("🔍 [DEBUG] LLM 请求 (llm_plan_slides)")
         print(f"{'=' * 60}")
-        if isinstance(llm, TaichuLLM) and images:
+        if _is_multimodal_llm(llm) and images:
             print(f"📝 多模态消息 (文本 + {len(images)} 张图片)")
             # 只打印文本部分
             for msg in messages:
@@ -638,6 +692,7 @@ def choose_llm(
     if not enable:
         return None
     provider = (provider or "").lower()
+
     if provider == "deepseek":
         return DeepSeekLLM(model=model or "deepseek-chat")
     if provider == "local":
@@ -650,7 +705,11 @@ def choose_llm(
             )
         return QwenVLLM(base_url=endpoint)
     if provider == "taichu":
-        return TaichuLLM(model=model or "taichu_vl", base_url=base_url)
+        final_model = model or "taichu4_vl_32b"
+        return TaichuLLM(model=final_model, base_url=base_url)
+    if provider == "glm" or provider == "zhipu":
+        final_model = model or "glm-4.5v"
+        return GLMLLM(model=final_model, base_url=base_url)
     raise ValueError(f"暂不支持的大模型提供商：{provider}")
 
 
@@ -679,9 +738,14 @@ def _fill_with_template(
     block: Dict,
     llm: Optional[BaseLLM],
     metadata: Dict,
+    user_prompt: Optional[str] = None,
 ) -> Dict:
     content = llm_fill_slide(
-        llm, template_info, block.get("text", ""), block.get("images", [])
+        llm,
+        template_info,
+        block.get("text", ""),
+        block.get("images", []),
+        user_prompt,
     )
     _apply_metadata_overrides(content, template_info, metadata)
     return {
@@ -731,6 +795,7 @@ def _fill_by_markers(
     templates: Dict[int, Dict],
     llm: Optional[BaseLLM],
     metadata: Dict,
+    user_prompt: Optional[str] = None,
 ) -> List[Dict]:
     pages: List[Dict] = []
     for block in blocks:
@@ -743,7 +808,7 @@ def _fill_by_markers(
             )
         pages.append(
             _fill_with_template(
-                template_num, templates[template_num], block, llm, metadata
+                template_num, templates[template_num], block, llm, metadata, user_prompt
             )
         )
     return pages
@@ -821,7 +886,7 @@ def generate_config_data(
     llm = choose_llm(use_llm, llm_provider, llm_model, llm_base_url)
 
     if has_marker:
-        pages = _fill_by_markers(blocks, templates, llm, metadata)
+        pages = _fill_by_markers(blocks, templates, llm, metadata, user_prompt)
     else:
         pages = _plan_without_markers(blocks, templates, llm, metadata, user_prompt)
 
