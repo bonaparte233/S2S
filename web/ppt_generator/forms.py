@@ -98,7 +98,7 @@ class PPTGenerationForm(forms.ModelForm):
         widget=forms.TextInput(
             attrs={
                 "class": "text-input",
-                "placeholder": "例如：deepseek-chat",
+                "placeholder": "模型名称请参考LLM供应商官方使用文档",
             }
         ),
         label="模型名称",
@@ -213,8 +213,8 @@ class PPTGenerationForm(forms.ModelForm):
             "lecturer_name": "讲师名称（可选）",
         }
         help_texts = {
-            "docx_file": "请上传包含讲稿内容的 Word 文档",
-            "template_file": '仅在选择"上传自定义模板"时需要',
+            "docx_file": "请上传包含讲稿内容的 Word 文档, 如讲稿中未用【PPTxx】进行页码标记，需要启用大模型智能规划功能",
+            "template_file": '如要启用大模型智能规划功能，需要有对应的配置模板文件',
             "config_template_file": "上传自定义 JSON 配置模板（可选，优先级高于下拉选择）",
             "use_llm": "使用大模型自动规划幻灯片内容布局",
         }

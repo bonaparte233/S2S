@@ -437,11 +437,25 @@ def llm_fill_slide(
     raw_text: str,
     images: List[str],
     user_prompt: Optional[str] = None,
+    use_multimodal: bool = True,
 ) -> Dict:
+    """
+    使用 LLM 填充单页幻灯片内容。
+
+    Args:
+        llm: LLM 实例
+        template_info: 模板信息
+        raw_text: 原始文本
+        images: 图片路径列表
+        user_prompt: 用户自定义 prompt
+        use_multimodal: 是否使用多模态消息（默认 True）
+                       当讲稿有 PPT 标记时，图片位置已确定，可设为 False
+    """
     if not llm:
         return _simple_fill(template_info, raw_text, images)
 
-    if _is_multimodal_llm(llm) and images:
+    # 只有在允许使用多模态且模型支持多模态且有图片时，才使用多模态消息
+    if use_multimodal and _is_multimodal_llm(llm) and images:
         messages = _build_multimodal_messages(
             template_info, raw_text, images, user_prompt
         )
@@ -453,7 +467,11 @@ def llm_fill_slide(
         print(f"\n{'=' * 60}")
         print(f"🔍 [DEBUG] LLM 请求 (llm_fill_slide)")
         print(f"{'=' * 60}")
-        if _is_multimodal_llm(llm) and images:
+        # 检查实际发送的消息类型
+        is_multimodal_message = messages and isinstance(
+            messages[0].get("content"), list
+        )
+        if is_multimodal_message:
             print(f"📝 多模态消息 (文本 + {len(images)} 张图片)")
             # 只打印文本部分，图片太长不打印
             for msg in messages:
@@ -739,13 +757,22 @@ def _fill_with_template(
     llm: Optional[BaseLLM],
     metadata: Dict,
     user_prompt: Optional[str] = None,
+    use_multimodal: bool = True,
 ) -> Dict:
+    """
+    使用模板填充单个 block 的内容。
+
+    Args:
+        use_multimodal: 是否使用多模态消息（默认 True）
+                       当讲稿有 PPT 标记时，图片位置已确定，建议设为 False
+    """
     content = llm_fill_slide(
         llm,
         template_info,
         block.get("text", ""),
         block.get("images", []),
         user_prompt,
+        use_multimodal,
     )
     _apply_metadata_overrides(content, template_info, metadata)
     return {
@@ -797,6 +824,12 @@ def _fill_by_markers(
     metadata: Dict,
     user_prompt: Optional[str] = None,
 ) -> List[Dict]:
+    """
+    按照讲稿中的 PPT 标记填充内容。
+
+    由于讲稿已有明确的标记，图片位置已经确定（每个 block 的 images 字段），
+    因此不需要使用多模态模型来界定图片位置，设置 use_multimodal=False。
+    """
     pages: List[Dict] = []
     for block in blocks:
         template_num = block.get("template_hint")
@@ -808,7 +841,13 @@ def _fill_by_markers(
             )
         pages.append(
             _fill_with_template(
-                template_num, templates[template_num], block, llm, metadata, user_prompt
+                template_num,
+                templates[template_num],
+                block,
+                llm,
+                metadata,
+                user_prompt,
+                use_multimodal=False,  # 有标记时图片位置已确定，不需要多模态
             )
         )
     return pages
