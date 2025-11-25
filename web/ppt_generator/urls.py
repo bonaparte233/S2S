@@ -28,4 +28,36 @@ urlpatterns = [
         views.ai_enrich_template_view,
         name="ai_enrich_template",
     ),
+    # Template Editor - Independent Page
+    path(
+        "developer-tools/template-editor/",
+        views.template_editor_page,
+        name="template_editor_page",
+    ),
+    # Template Editor - API Endpoints
+    path(
+        "developer-tools/parse-ppt/",
+        views.parse_ppt_template,
+        name="parse_ppt_template",
+    ),
+    path(
+        "developer-tools/update-shape-name/",
+        views.update_shape_name_api,
+        name="update_shape_name",
+    ),
+    path(
+        "developer-tools/generate-config/",
+        views.generate_template_config,
+        name="generate_template_config",
+    ),
+    path(
+        "developer-tools/download-ppt/<str:template_id>/",
+        views.download_template_ppt,
+        name="download_template_ppt",
+    ),
+    path(
+        "developer-tools/toggle-shape-visibility/",
+        views.toggle_shape_visibility,
+        name="toggle_shape_visibility",
+    ),
 ]

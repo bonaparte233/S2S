@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}开发者工具 - S2S{% endblock %}
 
@@ -170,6 +171,25 @@
     <button class="tab" data-tab="edit">编辑配置模板</button>
 </div>
 
+<!-- Template Editor Card -->
+<div class="card"
+    style="margin-bottom: var(--spacing-lg); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+    <div class="card-body" style="padding: var(--spacing-xl);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <h3 style="margin: 0 0 var(--spacing-sm) 0; color: white;">🎨 PPT 模板编辑器</h3>
+                <p style="margin: 0; opacity: 0.9; font-size: 1rem;">
+                    可视化编辑 PPT 模板元素，为每个元素命名并生成配置文件
+                </p>
+            </div>
+            <a href="{% url 'template_editor_page' %}" class="btn btn-large"
+                style="background: white; color: #667eea; font-weight: 600; padding: var(--spacing-md) var(--spacing-xl);">
+                打开编辑器 →
+            </a>
+        </div>
+    </div>
+</div>
+
 <!-- Tab 1: Generate -->
 <div id="generateTab" class="tab-content active">
     <div class="card">
@@ -292,15 +312,176 @@
     </div>
 </div>
 
+<!-- Template Editor has been moved to a separate page: /developer-tools/template-editor/ -->
+
 {% endblock %}
 
 {% block extra_js %}
+{% load static %}
+<script src="{% static 'js/template-editor.js' %}"></script>
 <script>
-    // Global state
+    // ========================================
+    // Utility Functions
+    // ========================================
+
+    // Loading overlay
+    function showLoading(message = '处理中...') {
+        let overlay = document.getElementById('loadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                color: white;
+                font-size: 1.2rem;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="margin-bottom: 1rem;">
+                        <div class="spinner" style="
+                            border: 4px solid rgba(255, 255, 255, 0.3);
+                            border-top: 4px solid white;
+                            border-radius: 50%;
+                            width: 50px;
+                            height: 50px;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto;
+                        "></div>
+                    </div>
+                    <div id="loadingMessage">${message}</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Add spinner animation
+            if (!document.getElementById('spinnerStyle')) {
+                const style = document.createElement('style');
+                style.id = 'spinnerStyle';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        } else {
+            overlay.querySelector('#loadingMessage').textContent = message;
+            overlay.style.display = 'flex';
+        }
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+    // Toast notifications
+    function showToast(message, type = 'info') {
+        const colors = {
+            success: '#2ecc71',
+            error: '#e74c3c',
+            warning: '#f39c12',
+            info: '#3498db'
+        };
+
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+        `;
+        toast.textContent = message;
+
+        // Add animation
+        if (!document.getElementById('toastStyle')) {
+            const style = document.createElement('style');
+            style.id = 'toastStyle';
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(400px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function showSuccess(message) {
+        showToast(message, 'success');
+    }
+
+    function showError(message) {
+        showToast(message, 'error');
+    }
+
+    function showWarning(message) {
+        showToast(message, 'warning');
+    }
+
+    function showInfo(message) {
+        showToast(message, 'info');
+    }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // ========================================
+    // Global State
+    // ========================================
+
     let templateData = null;
     let currentPageIndex = 0;
 
-    // Tab switching
+    // ========================================
+    // Tab Switching
+    // ========================================
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function () {
             const tabName = this.dataset.tab;
@@ -666,5 +847,11 @@
         a.click();
         URL.revokeObjectURL(url);
     }
+
+    // ========================================
+    // Template Editor has been moved to a separate page
+    // See: /developer-tools/template-editor/
+    // ========================================
 </script>
+
 {% endblock %}

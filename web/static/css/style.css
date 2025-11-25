@@ -725,3 +725,250 @@ input[type="checkbox"] {
         padding: var(--spacing-sm);
     }
 }
+
+/* ========== Template Editor Styles ========== */
+
+.editor-container {
+    display: flex;
+    gap: var(--spacing-md);
+    height: 600px;
+    width: 100%;
+}
+
+.page-list {
+    width: 240px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-color);
+}
+
+.property-panel {
+    width: 320px;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow-y: auto;
+    background: white;
+}
+
+.page-item {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-item:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.page-item.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.page-item.active * {
+    color: white !important;
+}
+
+/* Canvas container */
+#canvasContainer {
+    background: #f5f5f5;
+    position: relative;
+}
+
+#previewCanvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Property panel */
+#propertyPanel .form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+#propertyPanel .form-label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+#propertyPanel .form-label.required::after {
+    content: ' *';
+    color: var(--danger-color);
+}
+
+#propertyPanel .text-input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+}
+
+#propertyPanel .text-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+#propertyPanel .form-help {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+#propertyPanel .form-actions {
+    margin-top: var(--spacing-lg);
+}
+
+/* Progress section */
+#progressSection {
+    margin-top: var(--spacing-lg);
+}
+
+#progressBar {
+    transition: width 0.3s ease;
+}
+
+/* File upload styling */
+.file-upload-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.file-upload-wrapper input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+.file-upload-label {
+    display: block;
+    padding: var(--spacing-md);
+    background: var(--bg-color);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-upload-label:hover {
+    border-color: var(--primary-color);
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.file-upload-wrapper input[type="file"]:focus+.file-upload-label {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Property panel tabs */
+.property-tab {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-color);
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.property-tab:hover {
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.property-tab.active {
+    background: white;
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Element list item */
+.element-list-item {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.element-list-item:hover {
+    background: rgba(52, 152, 219, 0.05);
+    border-color: var(--primary-color);
+}
+
+.element-list-item.selected {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: var(--primary-color);
+}
+
+.element-list-item.named {
+    border-left: 4px solid var(--success-color);
+}
+
+.element-list-item.unnamed {
+    border-left: 4px solid var(--warning-color);
+}
+
+/* ========== Template Editor Fullscreen Mode ========== */
+.template-editor-fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--bg-color) !important;
+    display: block !important;
+}
+
+.template-editor-fullscreen .card {
+    height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.template-editor-fullscreen .card-body {
+    height: calc(100vh - 70px) !important;
+}
+
+.template-editor-fullscreen .editor-container {
+    height: 100% !important;
+}
+
+.template-editor-fullscreen .page-list {
+    width: 200px !important;
+    height: 100% !important;
+}
+
+.template-editor-fullscreen .property-panel {
+    width: 280px !important;
+    height: 100% !important;
+}
+
+/* 全屏模式下 Canvas 容器占据更多空间 */
+.template-editor-fullscreen .editor-container>div:nth-child(2) {
+    flex: 1 !important;
+}
+
+/* Fullscreen button state */
+#fullscreenBtn.active {
+    background: var(--danger-color) !important;
+    border-color: var(--danger-color) !important;
+}
+
+#fullscreenBtn.active:hover {
+    background: #c0392b !important;
+    border-color: #c0392b !important;
+}

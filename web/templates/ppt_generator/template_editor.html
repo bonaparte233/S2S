@@ -1,0 +1,1094 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PPT 模板编辑器 - S2S{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 隐藏默认的容器，使用全屏布局 */
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 全屏编辑器容器 */
+    .template-editor-fullscreen-container {
+        position: fixed;
+        top: 60px;
+        /* 导航栏高度 */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 顶部工具栏 */
+    .editor-toolbar {
+        height: 60px;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--spacing-lg);
+        flex-shrink: 0;
+    }
+
+    .editor-toolbar h2 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: var(--text-primary);
+    }
+
+    .toolbar-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    /* 主编辑区域 */
+    .editor-main {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+    }
+
+    /* 左侧页面列表 */
+    .editor-sidebar-left {
+        width: 220px;
+        background: white;
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    /* 中间 Canvas 预览区 */
+    .editor-canvas-area {
+        flex: 1;
+        background: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .canvas-toolbar {
+        height: 50px;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--spacing-md);
+        flex-shrink: 0;
+    }
+
+    .canvas-container {
+        flex: 1;
+        overflow: auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 右侧属性面板 */
+    .editor-sidebar-right {
+        width: 320px;
+        background: white;
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 页面列表项 */
+    .page-item {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .page-item:hover {
+        background: var(--bg-hover);
+    }
+
+    .page-item.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .page-item-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .page-item-info {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+
+    /* 属性面板 Tab */
+    .property-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .property-tab {
+        flex: 1;
+        padding: var(--spacing-sm);
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+    }
+
+    .property-tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .property-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--spacing-md);
+    }
+
+    /* 元素列表 */
+    .element-item {
+        padding: var(--spacing-sm);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .element-item:hover {
+        border-color: var(--primary-color);
+        background: var(--bg-hover);
+    }
+
+    .element-item.selected {
+        border-color: var(--primary-color);
+        background: rgba(52, 152, 219, 0.1);
+    }
+
+    .element-number {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: var(--spacing-sm);
+    }
+
+    .element-item.unnamed .element-number {
+        background: var(--warning-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 上传区域（初始显示） -->
+<div id="uploadSection" class="template-editor-fullscreen-container">
+    <div class="editor-toolbar">
+        <div>
+            <a href="{% url 'developer_tools' %}" class="btn btn-secondary">
+                ← 返回开发者工具
+            </a>
+        </div>
+        <h2>🎨 PPT 模板编辑器</h2>
+        <div></div>
+    </div>
+
+    <div class="editor-main" style="align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 600px; width: 100%; margin: var(--spacing-xl);">
+            <div class="card-header">
+                <h3>📤 上传 PPT 模板</h3>
+            </div>
+            <div class="card-body">
+                <form id="uploadTemplateForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label">选择 PPT 文件</label>
+                        <input type="file" name="ppt_file" accept=".pptx" class="text-input" required>
+                        <p style="margin-top: var(--spacing-sm); font-size: 0.9rem; color: var(--text-secondary);">
+                            支持 .pptx 格式，系统会自动转换为 PDF 并生成预览
+                        </p>
+                    </div>
+
+                    <div style="margin-top: var(--spacing-lg);">
+                        <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">
+                            🚀 开始编辑
+                        </button>
+                    </div>
+                </form>
+
+                <div
+                    style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--bg-secondary); border-radius: var(--border-radius);">
+                    <h4 style="margin-top: 0;">📖 使用说明</h4>
+                    <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                        <li>上传 PPT 模板文件（.pptx 格式）</li>
+                        <li>系统会自动使用 LibreOffice 转换为 PDF 并生成预览</li>
+                        <li>系统会自动提取所有可编辑元素并标注编号（①②③...）</li>
+                        <li>点击预览区的元素或编号，在右侧面板为元素命名</li>
+                        <li>使用语义化名称，如"标题区"、"作者名"、"主要内容"等</li>
+                        <li>完成后点击"保存 PPT"和"生成配置 JSON"</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑器区域（上传成功后显示） -->
+<div id="editorSection" class="template-editor-fullscreen-container" style="display: none;">
+    <div class="editor-toolbar">
+        <div>
+            <a href="{% url 'developer_tools' %}" class="btn btn-secondary">
+                ← 返回开发者工具
+            </a>
+        </div>
+        <h2 id="editorTitle">🎨 PPT 模板编辑器</h2>
+        <div class="toolbar-actions">
+            <button id="saveTemplateBtn" class="btn btn-success">
+                💾 保存 PPT
+            </button>
+            <button id="generateConfigBtn" class="btn btn-primary">
+                📄 生成配置 JSON
+            </button>
+            <button id="uploadNewBtn" class="btn btn-secondary">
+                📂 上传其他模板
+            </button>
+        </div>
+    </div>
+
+    <div class="editor-main">
+        <!-- 左侧页面列表 -->
+        <div class="editor-sidebar-left">
+            <div
+                style="padding: var(--spacing-md); border-bottom: 1px solid var(--border-color); background: var(--bg-secondary);">
+                <h4 style="margin: 0; font-size: 0.95rem;">📑 页面列表</h4>
+            </div>
+            <div id="pageList">
+                <!-- Pages will be populated here -->
+            </div>
+        </div>
+
+        <!-- 中间 Canvas 预览区 -->
+        <div class="editor-canvas-area">
+            <div class="canvas-toolbar">
+                <h4 id="currentPageTitle" style="margin: 0;">第 1 页</h4>
+                <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                    <button id="zoomOutBtn" class="btn btn-secondary btn-small">🔍-</button>
+                    <span id="zoomLevel">100%</span>
+                    <button id="zoomInBtn" class="btn btn-secondary btn-small">🔍+</button>
+                    <button id="fitToWindowBtn" class="btn btn-secondary btn-small">⚙️ 适应窗口</button>
+                </div>
+            </div>
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="previewCanvas" style="display: block; cursor: crosshair;"></canvas>
+            </div>
+            <div
+                style="padding: var(--spacing-sm); background: white; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
+                💡 快捷键: 点击元素编辑 | ←→ 切换页面 | +/- 缩放 | 0 适应窗口 | Shift+拖拽 平移
+            </div>
+        </div>
+
+        <!-- 右侧属性面板 -->
+        <div class="editor-sidebar-right">
+            <div class="property-tabs">
+                <button id="elementListTabBtn" class="property-tab active" onclick="switchPropertyTab('list')">
+                    📋 元素列表
+                </button>
+                <button id="elementEditTabBtn" class="property-tab" onclick="switchPropertyTab('edit')">
+                    ✏️ 编辑属性
+                </button>
+            </div>
+
+            <!-- 元素列表视图 -->
+            <div id="elementListView" class="property-content">
+                <p style="color: var(--text-secondary); text-align: center; padding: var(--spacing-xl);">
+                    请先选择一个页面
+                </p>
+            </div>
+
+            <!-- 编辑属性视图 -->
+            <div id="elementEditView" class="property-content" style="display: none;">
+                <p style="color: var(--text-secondary); text-align: center; padding: var(--spacing-xl);">
+                    请点击左侧预览区的元素开始编辑
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'js/template-editor.js' %}"></script>
+<script>
+    // ========================================
+    // Template Editor State
+    // ========================================
+
+    let templateEditorState = {
+        templateId: null,
+        pptPath: null,
+        pages: [],
+        currentPageNum: 1,
+        canvasPreview: null,
+        imageCache: new Map() // 图片缓存，避免重复加载
+    };
+
+    // ========================================
+    // Utility Functions
+    // ========================================
+
+    // Loading overlay
+    function showLoading(message = '处理中...') {
+        let overlay = document.getElementById('loadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex; flex-direction: column;
+                justify-content: center; align-items: center;
+                z-index: 9999; color: white; font-size: 1.2rem;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                    <div id="loadingMessage">${message}</div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            document.body.appendChild(overlay);
+        } else {
+            overlay.style.display = 'flex';
+            document.getElementById('loadingMessage').textContent = message;
+        }
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+    // Toast notifications
+    function showToast(message, type = 'info') {
+        const colors = {
+            success: '#2ecc71',
+            error: '#e74c3c',
+            warning: '#f39c12',
+            info: '#3498db'
+        };
+
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed; top: 20px; right: 20px;
+            background: ${colors[type]}; color: white;
+            padding: 1rem 1.5rem; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000; font-size: 1rem;
+            animation: slideIn 0.3s ease;
+        `;
+        toast.innerHTML = `
+            <style>
+                @keyframes slideIn {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            </style>
+            ${message}
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function showSuccess(message) { showToast(message, 'success'); }
+    function showError(message) { showToast(message, 'error'); }
+    function showWarning(message) { showToast(message, 'warning'); }
+    function showInfo(message) { showToast(message, 'info'); }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Download JSON
+    function downloadJSON(data, filename) {
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // ========================================
+    // Template Upload
+    // ========================================
+
+    document.getElementById('uploadTemplateForm')?.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const pptFile = formData.get('ppt_file');
+        if (!pptFile) {
+            showWarning('请选择 PPT 文件');
+            return;
+        }
+
+        // 禁用提交按钮
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ 处理中...';
+
+        try {
+            showLoading('📤 正在上传 PPT 文件...');
+
+            const response = await fetch('/developer-tools/parse-ppt/', {
+                method: 'POST',
+                body: formData
+            });
+
+            document.getElementById('loadingMessage').textContent = '🔄 正在使用 LibreOffice 转换 PDF...';
+
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('loadingMessage').textContent = '🖼️ 正在生成预览图片...';
+
+                templateEditorState.templateId = data.template_id;
+                templateEditorState.pptPath = data.ppt_path;
+                templateEditorState.pages = data.pages;
+                templateEditorState.currentPageNum = 1;
+                templateEditorState.imageCache.clear();
+
+                // 显示编辑器
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('editorSection').style.display = 'block';
+
+                // 渲染页面列表
+                renderPageList();
+
+                // 加载第一页
+                loadPage(1);
+
+                hideLoading();
+                showSuccess(`✅ 模板解析成功！共 ${data.pages.length} 页，使用懒加载提升速度`);
+            } else {
+                hideLoading();
+                showError('❌ 解析失败: ' + (data.error || '未知错误'));
+            }
+        } catch (error) {
+            hideLoading();
+            showError('❌ 上传失败: ' + error.message);
+            console.error('Upload error:', error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+
+    // ========================================
+    // Page List Rendering
+    // ========================================
+
+    function renderPageList() {
+        const pageList = document.getElementById('pageList');
+        pageList.innerHTML = '';
+
+        templateEditorState.pages.forEach((page, index) => {
+            const totalShapes = page.shapes.filter(s => !s.is_hidden).length;
+            const namedShapes = page.shapes.filter(s => !s.is_hidden && s.is_named).length;
+            const percent = totalShapes > 0 ? Math.round(namedShapes / totalShapes * 100) : 0;
+
+            const pageItem = document.createElement('div');
+            pageItem.className = 'page-item' + (page.page_num === templateEditorState.currentPageNum ? ' active' : '');
+            pageItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: bold;">第 ${page.page_num} 页</span>
+                    <span style="font-size: 0.85rem; color: ${percent === 100 ? 'var(--success-color)' : 'var(--text-secondary)'};">
+                        ${percent}%
+                    </span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    ${namedShapes} / ${totalShapes} 已命名
+                </div>
+                <div style="height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden;">
+                    <div style="height: 100%; background: var(--success-color); width: ${percent}%; transition: width 0.3s ease;"></div>
+                </div>
+            `;
+            pageItem.onclick = () => loadPage(page.page_num);
+            pageList.appendChild(pageItem);
+        });
+    }
+
+    // ========================================
+    // Page Loading (Lazy Loading + Caching)
+    // ========================================
+
+    function loadPage(pageNum) {
+        const page = templateEditorState.pages.find(p => p.page_num === pageNum);
+        if (!page) return;
+
+        templateEditorState.currentPageNum = pageNum;
+
+        // 更新页面标题
+        document.getElementById('currentPageTitle').textContent = `第 ${pageNum} 页`;
+
+        // 更新页面列表高亮
+        document.querySelectorAll('#pageList .page-item').forEach((item, index) => {
+            item.classList.toggle('active', index + 1 === pageNum);
+        });
+
+        // 检查缓存
+        if (templateEditorState.imageCache.has(page.image_url)) {
+            renderCanvas(page);
+            return;
+        }
+
+        // 显示加载提示
+        showLoading(`🖼️ 正在加载第 ${pageNum} 页预览图片...`);
+
+        // 懒加载图片
+        const img = new Image();
+        img.onload = () => {
+            templateEditorState.imageCache.set(page.image_url, img);
+            renderCanvas(page);
+            hideLoading();
+        };
+
+        img.onerror = () => {
+            hideLoading();
+            showError(`加载第 ${pageNum} 页图片失败`);
+        };
+
+        img.src = page.image_url;
+    }
+
+    // ========================================
+    // Canvas Rendering
+    // ========================================
+
+    function renderCanvas(page) {
+        if (templateEditorState.canvasPreview) {
+            templateEditorState.canvasPreview.screenshotUrl = page.image_url;
+            templateEditorState.canvasPreview.shapes = page.shapes;
+            templateEditorState.canvasPreview.init();
+        } else {
+            templateEditorState.canvasPreview = new CanvasPreview(
+                'previewCanvas',
+                page.image_url,
+                page.shapes
+            );
+
+            // 监听元素选中事件
+            document.getElementById('previewCanvas').addEventListener('shapeSelected', (e) => {
+                renderPropertyPanel(e.detail);
+            });
+        }
+
+        // 渲染元素列表
+        renderElementList();
+
+        // 更新进度
+        updateProgress();
+
+        // 预加载下一页
+        preloadNextPage(page.page_num);
+    }
+
+    // 预加载下一页图片
+    function preloadNextPage(currentPageNum) {
+        const nextPage = templateEditorState.pages.find(p => p.page_num === currentPageNum + 1);
+        if (!nextPage) return;
+
+        if (templateEditorState.imageCache.has(nextPage.image_url)) return;
+
+        const img = new Image();
+        img.onload = () => {
+            templateEditorState.imageCache.set(nextPage.image_url, img);
+            console.log(`✅ 预加载第 ${nextPage.page_num} 页完成`);
+        };
+        img.onerror = () => {
+            console.warn(`⚠️ 预加载第 ${nextPage.page_num} 页失败`);
+        };
+        img.src = nextPage.image_url;
+    }
+
+    // ========================================
+    // Property Panel
+    // ========================================
+
+    // Switch property tabs
+    function switchPropertyTab(tab) {
+        const tabs = document.querySelectorAll('.property-tab');
+        const listView = document.getElementById('elementListView');
+        const editView = document.getElementById('elementEditView');
+
+        if (tab === 'list') {
+            tabs[0].classList.add('active');
+            tabs[1].classList.remove('active');
+            listView.style.display = 'block';
+            editView.style.display = 'none';
+        } else {
+            tabs[0].classList.remove('active');
+            tabs[1].classList.add('active');
+            listView.style.display = 'none';
+            editView.style.display = 'block';
+        }
+    }
+
+    // Render element list
+    function renderElementList() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        const listView = document.getElementById('elementListView');
+
+        if (page.shapes.length === 0) {
+            listView.innerHTML = `
+                <p style="color: var(--text-secondary); text-align: center; padding: var(--spacing-xl);">
+                    该页面没有可编辑的元素
+                </p>
+            `;
+            return;
+        }
+
+        let html = '';
+
+        page.shapes.forEach((shape, index) => {
+            if (shape.is_hidden) return;
+
+            const isNamed = shape.is_named;
+            const isSelected = templateEditorState.canvasPreview?.selectedShapeId === shape.shape_id;
+
+            html += `
+                <div class="element-list-item ${isNamed ? 'named' : 'unnamed'} ${isSelected ? 'selected' : ''}"
+                     onclick="selectElementFromList(${shape.shape_id})"
+                     onmouseenter="highlightElement(${shape.shape_id})"
+                     onmouseleave="unhighlightElement()">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                        <span style="font-weight: bold;">
+                            ${isNamed ? '✅' : '⚠️'} #${index + 1}
+                        </span>
+                        <span style="font-size: 0.75rem; padding: 0.125rem 0.5rem; background: var(--bg-color); border-radius: 12px;">
+                            ${shape.type === 'text' ? '📝 文本' : '🖼️ 图片'}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: ${isNamed ? 'var(--text-primary)' : 'var(--text-secondary)'};">
+                        ${shape.name || '未命名'}
+                    </div>
+                </div>
+            `;
+        });
+
+        listView.innerHTML = html;
+    }
+
+    // Select element from list
+    function selectElementFromList(shapeId) {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        const shape = page.shapes.find(s => s.shape_id === shapeId);
+
+        if (shape && templateEditorState.canvasPreview) {
+            templateEditorState.canvasPreview.selectShape(shape);
+            renderElementList();
+            switchPropertyTab('edit');
+            renderPropertyPanel(shape);
+        }
+    }
+
+    // Highlight element on hover
+    function highlightElement(shapeId) {
+        if (templateEditorState.canvasPreview) {
+            templateEditorState.canvasPreview.hoveredShapeId = shapeId;
+            templateEditorState.canvasPreview.render();
+        }
+    }
+
+    // Unhighlight element
+    function unhighlightElement() {
+        if (templateEditorState.canvasPreview) {
+            templateEditorState.canvasPreview.hoveredShapeId = null;
+            templateEditorState.canvasPreview.render();
+        }
+    }
+
+    // Render property panel
+    function renderPropertyPanel(shape) {
+        const panel = document.getElementById('elementEditView');
+
+        const shapeIndex = templateEditorState.pages
+            .find(p => p.page_num === templateEditorState.currentPageNum)
+            .shapes.findIndex(s => s.shape_id === shape.shape_id) + 1;
+
+        panel.innerHTML = `
+            <div style="margin-bottom: var(--spacing-lg);">
+                <h4 style="margin-bottom: var(--spacing-md);">元素 #${shapeIndex}</h4>
+
+                <div class="form-group">
+                    <label class="form-label">类型</label>
+                    <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
+                        ${shape.type === 'text' ? '📝 文本框' : '🖼️ 图片'}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">元素名称</label>
+                    <input type="text" id="shapeNameInput" class="text-input"
+                           value="${shape.name || ''}"
+                           placeholder="例如：标题区、作者名、主要内容">
+                    <small class="form-help">使用语义化名称，方便后续配置</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">位置和尺寸</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">
+                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
+                            <div style="color: var(--text-secondary);">X</div>
+                            <div>${Math.round(shape.left / 914400 * 2.54 * 10) / 10} cm</div>
+                        </div>
+                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
+                            <div style="color: var(--text-secondary);">Y</div>
+                            <div>${Math.round(shape.top / 914400 * 2.54 * 10) / 10} cm</div>
+                        </div>
+                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
+                            <div style="color: var(--text-secondary);">宽度</div>
+                            <div>${Math.round(shape.width / 914400 * 2.54 * 10) / 10} cm</div>
+                        </div>
+                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
+                            <div style="color: var(--text-secondary);">高度</div>
+                            <div>${Math.round(shape.height / 914400 * 2.54 * 10) / 10} cm</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary btn-block" onclick="saveShapeName(${shape.shape_id})">
+                        💾 保存名称
+                    </button>
+                    <button class="btn btn-${shape.is_hidden ? 'success' : 'secondary'} btn-block"
+                            onclick="toggleShapeVisibility(${shape.shape_id})">
+                        ${shape.is_hidden ? '👁️ 显示元素' : '🙈 隐藏元素'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // ========================================
+    // Element Actions
+    // ========================================
+
+    // Save shape name
+    async function saveShapeName(shapeId) {
+        const newName = document.getElementById('shapeNameInput').value.trim();
+
+        if (!newName) {
+            showWarning('请输入元素名称');
+            return;
+        }
+
+        try {
+            const response = await fetch('/developer-tools/update-shape-name/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    template_id: templateEditorState.templateId,
+                    page_num: templateEditorState.currentPageNum,
+                    shape_id: shapeId,
+                    new_name: newName
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+                const shape = page.shapes.find(s => s.shape_id === shapeId);
+                shape.name = newName;
+                shape.is_named = true;
+
+                templateEditorState.canvasPreview.updateShapes(page.shapes);
+                renderElementList();
+                renderPageList();
+                updateProgress();
+
+                showSuccess('✅ 名称已保存');
+            } else {
+                showError('保存失败: ' + data.error);
+            }
+        } catch (error) {
+            showError('保存失败: ' + error.message);
+        }
+    }
+
+    // Toggle shape visibility
+    async function toggleShapeVisibility(shapeId) {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        const shape = page.shapes.find(s => s.shape_id === shapeId);
+
+        if (!shape) return;
+
+        const newHiddenState = !shape.is_hidden;
+
+        try {
+            const response = await fetch('/developer-tools/toggle-shape-visibility/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    template_id: templateEditorState.templateId,
+                    page_num: templateEditorState.currentPageNum,
+                    shape_id: shapeId,
+                    is_hidden: newHiddenState
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                shape.is_hidden = newHiddenState;
+                templateEditorState.canvasPreview.updateShapes(page.shapes);
+                renderElementList();
+                renderPageList();
+                renderPropertyPanel(shape);
+                updateProgress();
+
+                showSuccess(newHiddenState ? '元素已隐藏' : '元素已显示');
+            } else {
+                showError('操作失败: ' + data.error);
+            }
+        } catch (error) {
+            showError('操作失败: ' + error.message);
+        }
+    }
+
+    // Update progress
+    function updateProgress() {
+        let totalShapes = 0;
+        let namedShapes = 0;
+
+        templateEditorState.pages.forEach(page => {
+            page.shapes.forEach(shape => {
+                if (!shape.is_hidden) {
+                    totalShapes++;
+                    if (shape.is_named) {
+                        namedShapes++;
+                    }
+                }
+            });
+        });
+
+        const percent = totalShapes > 0 ? Math.round(namedShapes / totalShapes * 100) : 0;
+        document.getElementById('namedCount').textContent = `${namedShapes} / ${totalShapes}`;
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressPercent').textContent = percent + '%';
+    }
+
+    // ========================================
+    // Toolbar Actions
+    // ========================================
+
+    // Zoom controls
+    document.getElementById('zoomInBtn')?.addEventListener('click', () => {
+        templateEditorState.canvasPreview?.zoomIn();
+    });
+
+    document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
+        templateEditorState.canvasPreview?.zoomOut();
+    });
+
+    // Upload new template
+    document.getElementById('uploadNewBtn')?.addEventListener('click', () => {
+        document.getElementById('uploadSection').style.display = 'block';
+        document.getElementById('editorSection').style.display = 'none';
+        document.getElementById('uploadTemplateForm').reset();
+    });
+
+    // Save PPT
+    document.getElementById('saveTemplateBtn')?.addEventListener('click', async () => {
+        if (!templateEditorState.templateId) {
+            showWarning('没有可保存的模板');
+            return;
+        }
+
+        try {
+            showLoading('正在保存 PPT...');
+
+            const url = `/developer-tools/download-ppt/${templateEditorState.templateId}/`;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'template.pptx';
+            a.click();
+
+            hideLoading();
+            showSuccess('PPT 已保存！');
+        } catch (error) {
+            hideLoading();
+            showError('保存失败: ' + error.message);
+        }
+    });
+
+    // Generate config JSON
+    document.getElementById('generateConfigBtn')?.addEventListener('click', async () => {
+        if (!templateEditorState.templateId) {
+            showWarning('没有可生成的配置');
+            return;
+        }
+
+        try {
+            showLoading('正在生成配置 JSON...');
+
+            const response = await fetch('/developer-tools/generate-config/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    template_id: templateEditorState.templateId
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                downloadJSON(data.config, 'template_config.json');
+                hideLoading();
+                showSuccess('配置 JSON 已生成！');
+            } else {
+                hideLoading();
+                showError('生成失败: ' + data.error);
+            }
+        } catch (error) {
+            hideLoading();
+            showError('生成失败: ' + error.message);
+        }
+    });
+
+    // ========================================
+    // Keyboard Shortcuts
+    // ========================================
+
+    document.addEventListener('keydown', function (e) {
+        // Ignore if typing in input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        // Ctrl+S: Save PPT
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            document.getElementById('saveTemplateBtn')?.click();
+        }
+
+        // Ctrl+G: Generate config
+        if (e.ctrlKey && e.key === 'g') {
+            e.preventDefault();
+            document.getElementById('generateConfigBtn')?.click();
+        }
+
+        // Arrow keys: Switch pages
+        if (e.key === 'ArrowLeft') {
+            const prevPage = templateEditorState.currentPageNum - 1;
+            if (prevPage >= 1) {
+                loadPage(prevPage);
+            }
+        }
+        if (e.key === 'ArrowRight') {
+            const nextPage = templateEditorState.currentPageNum + 1;
+            if (nextPage <= templateEditorState.pages.length) {
+                loadPage(nextPage);
+            }
+        }
+
+        // +/-: Zoom
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            templateEditorState.canvasPreview?.zoomIn();
+        }
+        if (e.key === '-') {
+            e.preventDefault();
+            templateEditorState.canvasPreview?.zoomOut();
+        }
+
+        // 0: Fit to window
+        if (e.key === '0') {
+            e.preventDefault();
+            templateEditorState.canvasPreview?.fitToWindow();
+        }
+    });
+
+    // ========================================
+    // File Upload UI Enhancement
+    // ========================================
+
+    document.getElementById('ppt_file')?.addEventListener('change', function () {
+        const label = this.nextElementSibling;
+        if (this.files.length > 0) {
+            label.textContent = this.files[0].name;
+        }
+    });
+
+    // ========================================
+    // Property Tab Switching
+    // ========================================
+
+    document.querySelectorAll('.property-tab').forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+            switchPropertyTab(index === 0 ? 'list' : 'edit');
+        });
+    });
+</script>
+{% endblock %}
