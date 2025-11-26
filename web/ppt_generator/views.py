@@ -587,7 +587,7 @@ def ai_enrich_template_view(request):
 
 
 @login_required
-@permission_required("ppt_generator.can_use_developer_tools", raise_exception=True)
+@permission_required("ppt_generator.is_developer", raise_exception=True)
 @require_http_methods(["POST"])
 def parse_ppt_template(request):
     """
@@ -673,6 +673,8 @@ def parse_ppt_template(request):
             {
                 "template_id": template_id,
                 "ppt_path": str(ppt_path.relative_to(settings.MEDIA_ROOT)),
+                "slide_width": shapes_data.get("slide_width", 12192000),
+                "slide_height": shapes_data.get("slide_height", 6858000),
                 "pages": pages,
             }
         )
@@ -686,7 +688,7 @@ def parse_ppt_template(request):
 
 
 @login_required
-@permission_required("ppt_generator.can_use_developer_tools", raise_exception=True)
+@permission_required("ppt_generator.is_developer", raise_exception=True)
 @require_http_methods(["POST"])
 def update_shape_name_api(request):
     """
@@ -696,7 +698,7 @@ def update_shape_name_api(request):
         {
             "template_id": "uuid",
             "page_num": 1,
-            "shape_id": 0,
+            "shape_index": 3,  # 元素在 slide.shapes 中的索引
             "new_name": "标题区"
         }
 
@@ -710,10 +712,13 @@ def update_shape_name_api(request):
         data = json.loads(request.body)
         template_id = data.get("template_id")
         page_num = data.get("page_num")
-        shape_id = data.get("shape_id")
+        # 支持新的 shape_index 参数，同时兼容旧的 shape_id
+        shape_index = data.get("shape_index", data.get("shape_id"))
         new_name = data.get("new_name")
 
-        if not all([template_id, page_num is not None, shape_id is not None, new_name]):
+        if not all(
+            [template_id, page_num is not None, shape_index is not None, new_name]
+        ):
             return JsonResponse({"error": "缺少必要参数"}, status=400)
 
         # 获取 PPT 文件路径
@@ -724,7 +729,7 @@ def update_shape_name_api(request):
             return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
 
         # 更新元素名称
-        update_shape_name(ppt_files[0], page_num, shape_id, new_name)
+        update_shape_name(ppt_files[0], page_num, shape_index, new_name)
 
         return JsonResponse({"success": True})
 
@@ -737,7 +742,7 @@ def update_shape_name_api(request):
 
 
 @login_required
-@permission_required("ppt_generator.can_use_developer_tools", raise_exception=True)
+@permission_required("ppt_generator.is_developer", raise_exception=True)
 @require_http_methods(["POST"])
 def generate_template_config(request):
     """
@@ -810,7 +815,7 @@ def generate_template_config(request):
 
 
 @login_required
-@permission_required("ppt_generator.can_use_developer_tools", raise_exception=True)
+@permission_required("ppt_generator.is_developer", raise_exception=True)
 @require_http_methods(["GET"])
 def download_template_ppt(request, template_id):
     """
@@ -850,7 +855,7 @@ def download_template_ppt(request, template_id):
 
 
 @login_required
-@permission_required("ppt_generator.can_use_developer_tools", raise_exception=True)
+@permission_required("ppt_generator.is_developer", raise_exception=True)
 @require_http_methods(["POST"])
 def toggle_shape_visibility(request):
     """
@@ -860,7 +865,7 @@ def toggle_shape_visibility(request):
         {
             "template_id": "uuid",
             "page_num": 1,
-            "shape_id": 0,
+            "shape_index": 3,  # 元素在 slide.shapes 中的索引
             "is_hidden": true
         }
 
@@ -875,14 +880,15 @@ def toggle_shape_visibility(request):
         data = json.loads(request.body)
         template_id = data.get("template_id")
         page_num = data.get("page_num")
-        shape_id = data.get("shape_id")
+        # 支持新的 shape_index 参数，同时兼容旧的 shape_id
+        shape_index = data.get("shape_index", data.get("shape_id"))
         is_hidden = data.get("is_hidden")
 
         if not all(
             [
                 template_id,
                 page_num is not None,
-                shape_id is not None,
+                shape_index is not None,
                 is_hidden is not None,
             ]
         ):

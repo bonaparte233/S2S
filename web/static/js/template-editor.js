@@ -9,7 +9,7 @@
  */
 
 class CanvasPreview {
-    constructor(canvasId, screenshotUrl, shapesData) {
+    constructor(canvasId, screenshotUrl, shapesData, slideWidth, slideHeight) {
         this.canvas = document.getElementById(canvasId);
         if (!this.canvas) {
             console.error('Canvas element not found:', canvasId);
@@ -19,6 +19,10 @@ class CanvasPreview {
         this.ctx = this.canvas.getContext('2d');
         this.screenshotUrl = screenshotUrl;
         this.shapes = shapesData || [];
+
+        // 幻灯片原始尺寸（EMU 单位）
+        this.slideWidth = slideWidth || 12192000;  // 默认 16:9 宽度
+        this.slideHeight = slideHeight || 6858000; // 默认 16:9 高度
 
         // 状态
         this.selectedShapeId = null;
@@ -30,9 +34,12 @@ class CanvasPreview {
         this.lastMouseX = 0;
         this.lastMouseY = 0;
 
+        // 图片实际尺寸（加载后设置）
+        this.imageWidth = 0;
+        this.imageHeight = 0;
+
         // 常量
         this.EMU_PER_INCH = 914400;
-        this.DPI = 300;
 
         this.init();
     }
@@ -42,6 +49,8 @@ class CanvasPreview {
         const img = new Image();
         img.onload = () => {
             this.screenshot = img;
+            this.imageWidth = img.width;
+            this.imageHeight = img.height;
             this.canvas.width = img.width;
             this.canvas.height = img.height;
             this.render();
@@ -61,6 +70,18 @@ class CanvasPreview {
             this.isPanning = false;
             this.canvas.style.cursor = 'crosshair';
         });
+    }
+
+    /**
+     * 将 EMU 坐标转换为图片像素坐标
+     * 使用幻灯片尺寸和图片尺寸的比例进行缩放
+     */
+    emuToPixel(emuValue, isWidth) {
+        if (isWidth) {
+            return (emuValue / this.slideWidth) * this.imageWidth;
+        } else {
+            return (emuValue / this.slideHeight) * this.imageHeight;
+        }
     }
 
     render() {
@@ -87,10 +108,11 @@ class CanvasPreview {
     }
 
     drawShape(shape, number) {
-        const x = shape.left / this.EMU_PER_INCH * this.DPI;
-        const y = shape.top / this.EMU_PER_INCH * this.DPI;
-        const w = shape.width / this.EMU_PER_INCH * this.DPI;
-        const h = shape.height / this.EMU_PER_INCH * this.DPI;
+        // 使用比例缩放而不是固定 DPI
+        const x = this.emuToPixel(shape.left, true);
+        const y = this.emuToPixel(shape.top, false);
+        const w = this.emuToPixel(shape.width, true);
+        const h = this.emuToPixel(shape.height, false);
 
         // 确定状态
         const isSelected = this.selectedShapeId === shape.shape_id;
@@ -157,6 +179,35 @@ class CanvasPreview {
         this.ctx.fillText(number, circleX, circleY);
     }
 
+    /**
+     * 查找包含指定点的所有元素，并按面积排序（小的在前）
+     * 这样可以优先选择较小的元素，避免大元素遮挡小元素
+     */
+    findShapesAtPoint(x, y) {
+        const matchingShapes = [];
+
+        for (const shape of this.shapes) {
+            if (shape.is_hidden) continue;
+
+            const sx = this.emuToPixel(shape.left, true);
+            const sy = this.emuToPixel(shape.top, false);
+            const sw = this.emuToPixel(shape.width, true);
+            const sh = this.emuToPixel(shape.height, false);
+
+            if (x >= sx && x <= sx + sw && y >= sy && y <= sy + sh) {
+                matchingShapes.push({
+                    shape,
+                    area: sw * sh
+                });
+            }
+        }
+
+        // 按面积排序，小的在前（优先选择小元素）
+        matchingShapes.sort((a, b) => a.area - b.area);
+
+        return matchingShapes.map(m => m.shape);
+    }
+
     handleClick(e) {
         if (this.isPanning) return;
 
@@ -164,20 +215,12 @@ class CanvasPreview {
         const x = (e.clientX - rect.left - this.offsetX) / this.scale;
         const y = (e.clientY - rect.top - this.offsetY) / this.scale;
 
-        // 查找点击的元素
-        const clickedShape = this.shapes.find(shape => {
-            if (shape.is_hidden) return false;
+        // 查找点击的元素（优先选择较小的元素）
+        const matchingShapes = this.findShapesAtPoint(x, y);
 
-            const sx = shape.left / this.EMU_PER_INCH * this.DPI;
-            const sy = shape.top / this.EMU_PER_INCH * this.DPI;
-            const sw = shape.width / this.EMU_PER_INCH * this.DPI;
-            const sh = shape.height / this.EMU_PER_INCH * this.DPI;
-
-            return x >= sx && x <= sx + sw && y >= sy && y <= sy + sh;
-        });
-
-        if (clickedShape) {
-            this.selectShape(clickedShape);
+        if (matchingShapes.length > 0) {
+            // 选择最小的元素
+            this.selectShape(matchingShapes[0]);
         }
     }
 
@@ -197,21 +240,12 @@ class CanvasPreview {
         const x = (e.clientX - rect.left - this.offsetX) / this.scale;
         const y = (e.clientY - rect.top - this.offsetY) / this.scale;
 
-        // 查找悬停的元素
-        const hoveredShape = this.shapes.find(shape => {
-            if (shape.is_hidden) return false;
+        // 查找悬停的元素（优先选择较小的元素）
+        const matchingShapes = this.findShapesAtPoint(x, y);
 
-            const sx = shape.left / this.EMU_PER_INCH * this.DPI;
-            const sy = shape.top / this.EMU_PER_INCH * this.DPI;
-            const sw = shape.width / this.EMU_PER_INCH * this.DPI;
-            const sh = shape.height / this.EMU_PER_INCH * this.DPI;
-
-            return x >= sx && x <= sx + sw && y >= sy && y <= sy + sh;
-        });
-
-        if (hoveredShape) {
+        if (matchingShapes.length > 0) {
             this.canvas.style.cursor = 'pointer';
-            this.hoveredShapeId = hoveredShape.shape_id;
+            this.hoveredShapeId = matchingShapes[0].shape_id;
         } else {
             this.canvas.style.cursor = this.isPanning ? 'grabbing' : 'crosshair';
             this.hoveredShapeId = null;
