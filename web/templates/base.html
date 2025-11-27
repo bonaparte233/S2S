@@ -22,7 +22,7 @@
                 </li>
                 {% if user.is_authenticated %}
                 {% if is_developer %}
-                <li><a href="{% url 'developer_tools' %}"
+                <li><a href="{% url 'developer_tools_page' %}"
                         class="{% if 'developer-tools' in request.path %}active{% endif %}">🔧 开发者工具</a></li>
                 {% endif %}
                 <li class="nav-user">

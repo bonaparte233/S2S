@@ -22,6 +22,16 @@ class GlobalLLMConfig(models.Model):
         verbose_name="默认配置",
         help_text="勾选后，此配置将成为系统默认配置",
     )
+    is_multimodal_default = models.BooleanField(
+        default=False,
+        verbose_name="默认多模态配置",
+        help_text="勾选后，此配置将成为多模态（图像理解）任务的默认配置",
+    )
+    supports_multimodal = models.BooleanField(
+        default=False,
+        verbose_name="支持多模态",
+        help_text="勾选表示此模型支持图像理解（如 GLM-4V、Taichu-VL 等视觉模型）",
+    )
     llm_provider = models.CharField(
         max_length=50,
         choices=[
@@ -78,6 +88,17 @@ class GlobalLLMConfig(models.Model):
         # 如果这是第一个配置，自动设为默认
         elif not self.pk and not GlobalLLMConfig.objects.exists():
             self.is_default = True
+
+        # 多模态默认配置：必须勾选了"支持多模态"
+        if self.is_multimodal_default:
+            if not self.supports_multimodal:
+                self.is_multimodal_default = False
+            else:
+                # 取消其他配置的多模态默认状态
+                GlobalLLMConfig.objects.filter(is_multimodal_default=True).exclude(
+                    pk=self.pk
+                ).update(is_multimodal_default=False)
+
         return super().save(*args, **kwargs)
 
     def get_model_for_provider(self):
@@ -126,6 +147,22 @@ class GlobalLLMConfig(models.Model):
             llm_model="deepseek-chat",
         )
         return config
+
+    @classmethod
+    def get_multimodal_config(cls):
+        """获取默认多模态配置"""
+        # 尝试获取多模态默认配置
+        config = cls.objects.filter(is_multimodal_default=True).first()
+        if config:
+            return config
+
+        # 如果没有多模态默认配置，尝试获取第一个支持多模态的配置
+        config = cls.objects.filter(supports_multimodal=True).first()
+        if config:
+            return config
+
+        # 没有可用的多模态配置
+        return None
 
     def __str__(self):
         default_mark = " [默认]" if self.is_default else ""
@@ -286,3 +323,88 @@ class PPTGeneration(models.Model):
         self.status = "failed"
         self.error_message = error_msg
         self.save(update_fields=["status", "error_message", "updated_at"])
+
+
+class TemplateEditSession(models.Model):
+    """模板编辑会话记录 - 用于保存和恢复编辑进度"""
+
+    EDITOR_TYPE_CHOICES = [
+        ("ppt", "PPT 模板编辑器"),
+        ("config", "配置模板编辑器"),
+    ]
+
+    # 用户
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="template_edit_sessions",
+        verbose_name="用户",
+    )
+
+    # 编辑器类型
+    editor_type = models.CharField(
+        max_length=20,
+        choices=EDITOR_TYPE_CHOICES,
+        default="ppt",
+        verbose_name="编辑器类型",
+    )
+
+    # 会话 ID（对应 media/template_editor/{session_id} 或前端保存的数据）
+    session_id = models.CharField(
+        max_length=100,
+        verbose_name="会话 ID",
+        help_text="PPT 编辑器使用 UUID，配置编辑器使用前端生成的 ID",
+    )
+
+    # 模板名称（从文件名提取）
+    template_name = models.CharField(
+        max_length=255,
+        verbose_name="模板名称",
+    )
+
+    # 编辑进度（JSON 格式存储状态）
+    progress_data = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="编辑进度数据",
+        help_text="存储编辑进度，如已命名元素数、总元素数等",
+    )
+
+    # 缩略图路径（可选，用于预览）
+    thumbnail_url = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="缩略图 URL",
+    )
+
+    # 时间戳
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        verbose_name = "模板编辑会话"
+        verbose_name_plural = "模板编辑会话"
+        ordering = ["-updated_at"]
+        # 同一用户同一会话 ID 只能有一条记录
+        unique_together = ["user", "session_id"]
+
+    def __str__(self):
+        return f"{self.get_editor_type_display()} - {self.template_name} ({self.user.username})"
+
+    @property
+    def progress_summary(self):
+        """返回进度摘要字符串"""
+        data = self.progress_data or {}
+        if self.editor_type == "ppt":
+            named = data.get("named_count", 0)
+            total = data.get("total_count", 0)
+            if total > 0:
+                percent = int(named / total * 100)
+                return f"{named}/{total} 已命名 ({percent}%)"
+            return "未开始"
+        elif self.editor_type == "config":
+            pages = data.get("page_count", 0)
+            filled = data.get("filled_count", 0)
+            return f"{pages} 页, {filled} 个字段已填充"
+        return ""

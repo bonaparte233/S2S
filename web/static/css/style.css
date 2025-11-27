@@ -411,6 +411,28 @@ input[type="checkbox"] {
     background-color: #27ae60;
 }
 
+.btn-warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline-warning {
+    background-color: transparent;
+    color: var(--warning-color);
+    border: 2px solid var(--warning-color);
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--warning-color);
+    color: white;
+}
+
 .btn-large {
     padding: var(--spacing-md) var(--spacing-lg);
     font-size: 1.125rem;

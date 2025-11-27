@@ -206,6 +206,137 @@
         padding: var(--spacing-md);
     }
 
+    /* 批量操作栏 */
+    .batch-actions-bar {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .batch-actions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .batch-actions-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .element-stats {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        background: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+    }
+
+    .batch-actions-buttons {
+        display: flex;
+        gap: var(--spacing-xs);
+        flex-wrap: wrap;
+    }
+
+    .batch-btn {
+        flex: 1;
+        min-width: 0;
+        padding: 6px 8px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background: white;
+        color: var(--text-color);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .batch-btn:hover {
+        border-color: var(--primary-color);
+        background: var(--bg-hover);
+        color: var(--primary-color);
+    }
+
+    .batch-btn-accent {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .batch-btn-accent:hover {
+        opacity: 0.9;
+        color: white;
+        border-color: transparent;
+    }
+
+    .batch-btn-ai {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        border-color: transparent;
+        flex: 1 1 100%;
+    }
+
+    .batch-btn-ai:hover {
+        opacity: 0.9;
+        color: white;
+        border-color: transparent;
+    }
+
+    .batch-btn-small {
+        flex: 0 0 auto;
+        min-width: auto;
+        padding: 4px 8px;
+    }
+
+    /* 多选模式切换 */
+    .select-mode-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        user-select: none;
+    }
+
+    .select-mode-toggle input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: var(--primary-color);
+    }
+
+    .select-mode-toggle:hover {
+        color: var(--primary-color);
+    }
+
+    /* 元素复选框 */
+    .element-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--primary-color);
+        flex-shrink: 0;
+    }
+
+    .element-item.multi-select-mode {
+        cursor: default;
+    }
+
+    .element-item.multi-selected {
+        border-color: var(--primary-color);
+        background: rgba(52, 152, 219, 0.1);
+    }
+
     /* 元素列表 */
     .element-item {
         padding: var(--spacing-sm);
@@ -251,7 +382,7 @@
 <div id="uploadSection" class="template-editor-fullscreen-container">
     <div class="editor-toolbar">
         <div>
-            <a href="{% url 'developer_tools' %}" class="btn btn-secondary">
+            <a href="{% url 'developer_tools_page' %}" class="btn btn-secondary">
                 ← 返回开发者工具
             </a>
         </div>
@@ -308,20 +439,23 @@
 <div id="editorSection" class="template-editor-fullscreen-container" style="display: none;">
     <div class="editor-toolbar">
         <div>
-            <a href="{% url 'developer_tools' %}" class="btn btn-secondary">
+            <a href="{% url 'developer_tools_page' %}" class="btn btn-secondary">
                 ← 返回开发者工具
             </a>
         </div>
         <h2 id="editorTitle">🎨 PPT 模板编辑器</h2>
         <div class="toolbar-actions">
+            <button id="aiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 自动为所有页面元素命名（逐页处理）">
+                🤖 AI 一键命名
+            </button>
             <button id="saveTemplateBtn" class="btn btn-success">
-                💾 保存 PPT
+                💾 保存
             </button>
             <button id="generateConfigBtn" class="btn btn-primary">
-                📄 生成配置 JSON
+                📄 生成配置
             </button>
             <button id="uploadNewBtn" class="btn btn-secondary">
-                📂 上传其他模板
+                📂 上传新模板
             </button>
         </div>
     </div>
@@ -350,7 +484,7 @@
             </div>
         </div>
 
-        <!-- 中间 Canvas 预览区 -->
+        <!-- 中间预览区 -->
         <div class="editor-canvas-area">
             <div class="canvas-toolbar">
                 <h4 id="currentPageTitle" style="margin: 0;">第 1 页</h4>
@@ -362,11 +496,12 @@
                 </div>
             </div>
             <div class="canvas-container" id="canvasContainer">
-                <canvas id="previewCanvas" style="display: block; cursor: crosshair;"></canvas>
+                <!-- 使用后端生成的标注图片，不需要 Canvas 交互 -->
+                <img id="previewImage" src="" alt="PPT 预览" style="max-width: 100%; max-height: 100%; display: block;">
             </div>
             <div
                 style="padding: var(--spacing-sm); background: white; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
-                💡 快捷键: 点击元素编辑 | ←→ 切换页面 | +/- 缩放 | 0 适应窗口 | Shift+拖拽 平移
+                💡 快捷键: ←→ 切换页面 | 在右侧列表中选择元素进行命名
             </div>
         </div>
 
@@ -379,6 +514,47 @@
                 <button id="elementEditTabBtn" class="property-tab" onclick="switchPropertyTab('edit')">
                     ✏️ 编辑属性
                 </button>
+            </div>
+
+            <!-- 批量操作栏 -->
+            <div id="batchActionsBar" class="batch-actions-bar" style="display: none;">
+                <div class="batch-actions-header">
+                    <label class="select-mode-toggle">
+                        <input type="checkbox" id="selectModeToggle" onchange="toggleSelectMode()">
+                        <span>多选模式</span>
+                    </label>
+                    <span id="elementStats" class="element-stats"></span>
+                </div>
+                <!-- 多选模式下的操作按钮 -->
+                <div id="batchSelectActions" class="batch-actions-buttons" style="display: none;">
+                    <button class="batch-btn batch-btn-small" onclick="selectAllElements()" title="全选">
+                        ☑️ 全选
+                    </button>
+                    <button class="batch-btn batch-btn-small" onclick="deselectAllElements()" title="取消全选">
+                        ⬜ 取消
+                    </button>
+                    <button class="batch-btn" onclick="batchHideSelected()" title="隐藏选中的元素">
+                        🙈 隐藏选中
+                    </button>
+                    <button class="batch-btn" onclick="batchShowSelected()" title="显示选中的元素">
+                        👁️ 显示选中
+                    </button>
+                </div>
+                <!-- 快捷操作按钮（非多选模式） -->
+                <div id="batchQuickActions" class="batch-actions-buttons">
+                    <button class="batch-btn" onclick="batchShowAll()" title="显示全部元素">
+                        👁️ 全部显示
+                    </button>
+                    <button class="batch-btn" onclick="batchHideAll()" title="隐藏全部元素">
+                        🙈 全部隐藏
+                    </button>
+                    <button class="batch-btn batch-btn-accent" onclick="batchHideUnnamed()" title="只隐藏未命名的元素">
+                        🎯 隐藏未命名
+                    </button>
+                    <button id="aiAutoNameBtn" class="batch-btn batch-btn-ai" title="使用 AI 自动为本页元素命名">
+                        🤖 AI 命名本页
+                    </button>
+                </div>
             </div>
 
             <!-- 元素列表视图 -->
@@ -400,8 +576,6 @@
 {% endblock %}
 
 {% block extra_js %}
-{% load static %}
-<script src="{% static 'js/template-editor.js' %}"></script>
 <script>
     console.log('🚀 模板编辑器脚本开始加载...');
 
@@ -412,12 +586,10 @@
     let templateEditorState = {
         templateId: null,
         pptPath: null,
-        slideWidth: 12192000,   // 幻灯片宽度（EMU）
-        slideHeight: 6858000,   // 幻灯片高度（EMU）
         pages: [],
         currentPageNum: 1,
-        canvasPreview: null,
-        imageCache: new Map() // 图片缓存，避免重复加载
+        selectedShapeId: null,  // 当前选中的元素
+        imageCache: new Map()   // 图片缓存，避免重复加载
     };
 
     // ========================================
@@ -532,6 +704,253 @@
     }
 
     // ========================================
+    // 多选模式功能
+    // ========================================
+
+    // 切换多选模式
+    function toggleSelectMode() {
+        const checkbox = document.getElementById('selectModeToggle');
+        templateEditorState.multiSelectMode = checkbox.checked;
+        templateEditorState.selectedShapeIds = [];  // 清空选中列表
+
+        // 切换按钮显示
+        const selectActions = document.getElementById('batchSelectActions');
+        const quickActions = document.getElementById('batchQuickActions');
+
+        if (templateEditorState.multiSelectMode) {
+            selectActions.style.display = 'flex';
+            quickActions.style.display = 'none';
+        } else {
+            selectActions.style.display = 'none';
+            quickActions.style.display = 'flex';
+        }
+
+        renderElementList();
+        updateElementStats();
+    }
+
+    // 切换单个元素的选中状态
+    function toggleElementSelection(shapeId) {
+        if (!templateEditorState.selectedShapeIds) {
+            templateEditorState.selectedShapeIds = [];
+        }
+
+        const index = templateEditorState.selectedShapeIds.indexOf(shapeId);
+        if (index > -1) {
+            templateEditorState.selectedShapeIds.splice(index, 1);
+        } else {
+            templateEditorState.selectedShapeIds.push(shapeId);
+        }
+
+        renderElementList();
+        updateElementStats();
+    }
+
+    // 全选元素
+    function selectAllElements() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        templateEditorState.selectedShapeIds = page.shapes.map(s => s.shape_id);
+        renderElementList();
+        updateElementStats();
+    }
+
+    // 取消全选
+    function deselectAllElements() {
+        templateEditorState.selectedShapeIds = [];
+        renderElementList();
+        updateElementStats();
+    }
+
+    // 隐藏选中的元素
+    async function batchHideSelected() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        const selectedIds = templateEditorState.selectedShapeIds || [];
+        if (selectedIds.length === 0) {
+            showWarning('请先选择要隐藏的元素');
+            return;
+        }
+
+        // 隐藏选中的元素
+        page.shapes.forEach(s => {
+            if (selectedIds.includes(s.shape_id)) {
+                s.is_hidden = true;
+            }
+        });
+
+        await refreshPreviewAfterBatch(page);
+        templateEditorState.selectedShapeIds = [];  // 清空选中
+        showSuccess(`已隐藏 ${selectedIds.length} 个元素`);
+    }
+
+    // 显示选中的元素
+    async function batchShowSelected() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        const selectedIds = templateEditorState.selectedShapeIds || [];
+        if (selectedIds.length === 0) {
+            showWarning('请先选择要显示的元素');
+            return;
+        }
+
+        // 显示选中的元素
+        page.shapes.forEach(s => {
+            if (selectedIds.includes(s.shape_id)) {
+                s.is_hidden = false;
+            }
+        });
+
+        await refreshPreviewAfterBatch(page);
+        templateEditorState.selectedShapeIds = [];  // 清空选中
+        showSuccess(`已显示 ${selectedIds.length} 个元素`);
+    }
+
+    // ========================================
+    // 编辑会话管理
+    // ========================================
+
+    // 保存编辑会话到服务器
+    async function saveEditSession() {
+        if (!templateEditorState.templateId) return;
+
+        // 计算进度数据
+        let totalCount = 0;
+        let namedCount = 0;
+        templateEditorState.pages.forEach(page => {
+            const visibleShapes = page.shapes.filter(s => !s.is_hidden);
+            totalCount += visibleShapes.length;
+            namedCount += visibleShapes.filter(s => s.is_named).length;
+        });
+
+        // 获取第一页的缩略图作为预览
+        const firstPage = templateEditorState.pages[0];
+        const thumbnailUrl = firstPage ? firstPage.image_url : null;
+
+        // 保存每个元素的隐藏状态（用于恢复）
+        const hiddenShapes = {};
+        templateEditorState.pages.forEach(page => {
+            const pageHiddenIds = page.shapes
+                .filter(s => s.is_hidden)
+                .map(s => s.shape_id);
+            if (pageHiddenIds.length > 0) {
+                hiddenShapes[page.page_num] = pageHiddenIds;
+            }
+        });
+
+        try {
+            await fetch('/developer-tools/edit-sessions/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: templateEditorState.templateId,
+                    editor_type: 'ppt',
+                    template_name: templateEditorState.templateName || '未命名模板',
+                    progress_data: {
+                        total_count: totalCount,
+                        named_count: namedCount,
+                        page_count: templateEditorState.pages.length,
+                        hidden_shapes: hiddenShapes  // 保存隐藏状态
+                    },
+                    thumbnail_url: thumbnailUrl
+                })
+            });
+        } catch (e) {
+            console.error('保存编辑会话失败:', e);
+        }
+    }
+
+    // 恢复编辑会话
+    async function restoreEditSession(sessionId) {
+        try {
+            showLoading('正在恢复编辑会话...');
+
+            // 检查会话是否存在，并获取保存的隐藏状态
+            const checkResponse = await fetch(`/developer-tools/edit-sessions/${sessionId}/`);
+            const checkData = await checkResponse.json();
+
+            if (!checkResponse.ok || !checkData.exists) {
+                hideLoading();
+                showError('编辑会话已过期或文件已被删除');
+                return false;
+            }
+
+            // 获取保存的隐藏状态（在 session.progress_data 中）
+            const hiddenShapes = checkData.session?.progress_data?.hidden_shapes || {};
+
+            // 重新解析 PPT 获取数据
+            const pptPath = `/media/template_editor/${sessionId}`;
+
+            // 我们需要直接加载已有的数据
+            // 由于 PPT 已经解析过，数据存储在服务器上
+            // 需要一个 API 来获取已有会话的数据
+            const response = await fetch(`/developer-tools/restore-session/${sessionId}/`);
+            const data = await response.json();
+
+            if (response.ok) {
+                templateEditorState.templateId = data.template_id;
+                templateEditorState.templateName = data.template_name;
+                templateEditorState.pptPath = data.ppt_path;
+                templateEditorState.slideWidth = data.slide_width || 12192000;
+                templateEditorState.slideHeight = data.slide_height || 6858000;
+                templateEditorState.pages = data.pages;
+                templateEditorState.currentPageNum = 1;
+                templateEditorState.imageCache.clear();
+
+                // 恢复隐藏状态
+                if (Object.keys(hiddenShapes).length > 0) {
+                    templateEditorState.pages.forEach(page => {
+                        const pageHiddenIds = hiddenShapes[page.page_num] || [];
+                        page.shapes.forEach(shape => {
+                            if (pageHiddenIds.includes(shape.shape_id)) {
+                                shape.is_hidden = true;
+                            }
+                        });
+                    });
+                    console.log('[restoreEditSession] 已恢复隐藏状态:', hiddenShapes);
+                }
+
+                // 显示编辑器
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('editorSection').style.display = 'flex';
+
+                renderPageList();
+                loadPage(1);
+
+                hideLoading();
+                showSuccess(`✅ 已恢复编辑会话：${data.template_name}`);
+                return true;
+            } else {
+                hideLoading();
+                showError('恢复会话失败: ' + (data.error || '未知错误'));
+                return false;
+            }
+        } catch (error) {
+            hideLoading();
+            showError('恢复会话失败: ' + error.message);
+            return false;
+        }
+    }
+
+    // 检查 URL 中是否有要恢复的会话
+    function checkRestoreSession() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session');
+        if (sessionId) {
+            restoreEditSession(sessionId);
+        }
+    }
+
+    // 页面加载时检查是否需要恢复会话
+    checkRestoreSession();
+
+    // ========================================
     // Template Upload
     // ========================================
 
@@ -580,6 +999,7 @@
                     document.getElementById('loadingMessage').textContent = '🖼️ 正在生成预览图片...';
 
                     templateEditorState.templateId = data.template_id;
+                    templateEditorState.templateName = pptFile.name;  // 保存文件名
                     templateEditorState.pptPath = data.ppt_path;
                     // 保存幻灯片尺寸（用于正确计算元素位置）
                     templateEditorState.slideWidth = data.slide_width || 12192000;
@@ -597,6 +1017,9 @@
 
                     // 加载第一页
                     loadPage(1);
+
+                    // 保存编辑会话
+                    saveEditSession();
 
                     hideLoading();
                     showSuccess(`✅ 模板解析成功！共 ${data.pages.length} 页，使用懒加载提升速度`);
@@ -681,6 +1104,19 @@
 
         templateEditorState.currentPageNum = pageNum;
 
+        // 清除之前的选中状态
+        templateEditorState.selectedShapeId = null;
+
+        // 切换到元素列表视图（而不是编辑视图）
+        switchPropertyTab('list');
+
+        // 清空编辑面板
+        document.getElementById('elementEditView').innerHTML = `
+            <p style="color: var(--text-secondary); text-align: center; padding: var(--spacing-xl);">
+                请从左侧列表选择一个元素进行编辑
+            </p>
+        `;
+
         // 更新页面标题
         document.getElementById('currentPageTitle').textContent = `第 ${pageNum} 页`;
 
@@ -715,31 +1151,13 @@
     }
 
     // ========================================
-    // Canvas Rendering
+    // 图片预览渲染
     // ========================================
 
     function renderCanvas(page) {
-        if (templateEditorState.canvasPreview) {
-            templateEditorState.canvasPreview.screenshotUrl = page.image_url;
-            templateEditorState.canvasPreview.shapes = page.shapes;
-            // 更新幻灯片尺寸（以防不同模板尺寸不同）
-            templateEditorState.canvasPreview.slideWidth = templateEditorState.slideWidth;
-            templateEditorState.canvasPreview.slideHeight = templateEditorState.slideHeight;
-            templateEditorState.canvasPreview.init();
-        } else {
-            templateEditorState.canvasPreview = new CanvasPreview(
-                'previewCanvas',
-                page.image_url,
-                page.shapes,
-                templateEditorState.slideWidth,
-                templateEditorState.slideHeight
-            );
-
-            // 监听元素选中事件
-            document.getElementById('previewCanvas').addEventListener('shapeSelected', (e) => {
-                renderPropertyPanel(e.detail);
-            });
-        }
+        // 简单地设置图片 URL（后端已生成带标注的图片）
+        const previewImage = document.getElementById('previewImage');
+        previewImage.src = page.image_url;
 
         // 渲染元素列表
         renderElementList();
@@ -798,6 +1216,7 @@
         if (!page) return;
 
         const listView = document.getElementById('elementListView');
+        const batchActionsBar = document.getElementById('batchActionsBar');
 
         if (page.shapes.length === 0) {
             listView.innerHTML = `
@@ -805,32 +1224,71 @@
                     该页面没有可编辑的元素
                 </p>
             `;
+            if (batchActionsBar) batchActionsBar.style.display = 'none';
             return;
         }
 
+        // 显示批量操作栏
+        if (batchActionsBar) {
+            batchActionsBar.style.display = 'block';
+            updateElementStats();
+        }
+
+        const isMultiSelectMode = templateEditorState.multiSelectMode || false;
         let html = '';
+        let visibleIndex = 0;  // 用于显示可见元素的编号
 
-        page.shapes.forEach((shape, index) => {
-            if (shape.is_hidden) return;
-
+        page.shapes.forEach((shape) => {
+            const isHidden = shape.is_hidden;
             const isNamed = shape.is_named;
-            const isSelected = templateEditorState.canvasPreview?.selectedShapeId === shape.shape_id;
+            const isSelected = templateEditorState.selectedShapeId === shape.shape_id;
+            const isMultiSelected = templateEditorState.selectedShapeIds?.includes(shape.shape_id) || false;
+
+            // 只给可见元素分配编号
+            if (!isHidden) {
+                visibleIndex++;
+            }
+
+            // 显示文本预览（截断）
+            const textPreview = shape.text_sample
+                ? (shape.text_sample.length > 30 ? shape.text_sample.substring(0, 30) + '...' : shape.text_sample)
+                : '';
+
+            // 隐藏元素显示为灰色样式
+            const hiddenStyle = isHidden ? 'opacity: 0.5; background: #f5f5f5;' : '';
+            const nameStyle = isHidden ? 'color: #999; text-decoration: line-through;' : (isNamed ? '' : 'color: var(--warning-color);');
+
+            // 多选模式下的类名和点击事件
+            const multiSelectClass = isMultiSelectMode ? 'multi-select-mode' : '';
+            const multiSelectedClass = isMultiSelected ? 'multi-selected' : '';
+            const clickHandler = isMultiSelectMode
+                ? `toggleElementSelection(${shape.shape_id})`
+                : `selectElement(${shape.shape_id})`;
 
             html += `
-                <div class="element-list-item ${isNamed ? 'named' : 'unnamed'} ${isSelected ? 'selected' : ''}"
-                     onclick="selectElementFromList(${shape.shape_id})"
-                     onmouseenter="highlightElement(${shape.shape_id})"
-                     onmouseleave="unhighlightElement()">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                        <span style="font-weight: bold;">
-                            ${isNamed ? '✅' : '⚠️'} #${index + 1}
+                <div class="element-item ${isNamed ? '' : 'unnamed'} ${isSelected && !isMultiSelectMode ? 'selected' : ''} ${isHidden ? 'hidden-element' : ''} ${multiSelectClass} ${multiSelectedClass}"
+                     style="${hiddenStyle}"
+                     onclick="${clickHandler}">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        ${isMultiSelectMode ? `
+                            <input type="checkbox" class="element-checkbox"
+                                   ${isMultiSelected ? 'checked' : ''}
+                                   onclick="event.stopPropagation(); toggleElementSelection(${shape.shape_id})">
+                        ` : ''}
+                        <span class="element-number" style="${isHidden ? 'background: #ccc; color: #999;' : ''}">
+                            ${isHidden ? '—' : visibleIndex}
                         </span>
-                        <span style="font-size: 0.75rem; padding: 0.125rem 0.5rem; background: var(--bg-color); border-radius: 12px;">
-                            ${shape.type === 'text' ? '📝 文本' : '🖼️ 图片'}
-                        </span>
-                    </div>
-                    <div style="font-size: 0.85rem; color: ${isNamed ? 'var(--text-primary)' : 'var(--text-secondary)'};">
-                        ${shape.name || '未命名'}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600; ${nameStyle}">
+                                    ${shape.name || '未命名'}
+                                </span>
+                                <span style="font-size: 0.75rem; padding: 0.125rem 0.5rem; background: ${isHidden ? '#eee' : 'var(--bg-color)'}; border-radius: 12px; ${isHidden ? 'color: #999;' : ''}">
+                                    ${isHidden ? '🙈 已隐藏' : (shape.type === 'text' ? '📝 文本' : '🖼️ 图片')}
+                                </span>
+                            </div>
+                            ${textPreview ? `<div style="font-size: 0.8rem; color: ${isHidden ? '#bbb' : 'var(--text-secondary)'}; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${textPreview}</div>` : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -840,31 +1298,15 @@
     }
 
     // Select element from list
-    function selectElementFromList(shapeId) {
+    function selectElement(shapeId) {
         const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
         const shape = page.shapes.find(s => s.shape_id === shapeId);
 
-        if (shape && templateEditorState.canvasPreview) {
-            templateEditorState.canvasPreview.selectShape(shape);
+        if (shape) {
+            templateEditorState.selectedShapeId = shapeId;
             renderElementList();
             switchPropertyTab('edit');
             renderPropertyPanel(shape);
-        }
-    }
-
-    // Highlight element on hover
-    function highlightElement(shapeId) {
-        if (templateEditorState.canvasPreview) {
-            templateEditorState.canvasPreview.hoveredShapeId = shapeId;
-            templateEditorState.canvasPreview.render();
-        }
-    }
-
-    // Unhighlight element
-    function unhighlightElement() {
-        if (templateEditorState.canvasPreview) {
-            templateEditorState.canvasPreview.hoveredShapeId = null;
-            templateEditorState.canvasPreview.render();
         }
     }
 
@@ -962,7 +1404,7 @@
                 body: JSON.stringify({
                     template_id: templateEditorState.templateId,
                     page_num: templateEditorState.currentPageNum,
-                    shape_index: shape.shape_index,  // 使用 shape_index 而不是 shape_id
+                    shape_id: shape.shape_id,  // 使用 shape_id 支持 GROUP 内元素
                     new_name: newName
                 })
             });
@@ -973,10 +1415,13 @@
                 shape.name = newName;
                 shape.is_named = true;
 
-                templateEditorState.canvasPreview.updateShapes(page.shapes);
                 renderElementList();
                 renderPageList();
                 updateProgress();
+                renderPropertyPanel(shape);
+
+                // 更新编辑会话进度
+                saveEditSession();
 
                 showSuccess('✅ 名称已保存');
             } else {
@@ -997,7 +1442,11 @@
         const newHiddenState = !shape.is_hidden;
 
         try {
-            const response = await fetch('/developer-tools/toggle-shape-visibility/', {
+            // 1. 更新前端状态
+            shape.is_hidden = newHiddenState;
+
+            // 2. 通知后端（可选，用于持久化）
+            await fetch('/developer-tools/toggle-shape-visibility/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1006,26 +1455,57 @@
                 body: JSON.stringify({
                     template_id: templateEditorState.templateId,
                     page_num: templateEditorState.currentPageNum,
-                    shape_index: shape.shape_index,  // 使用 shape_index 而不是 shape_id
+                    shape_id: shape.shape_id,
                     is_hidden: newHiddenState
                 })
             });
 
-            const data = await response.json();
+            // 3. 刷新预览图（更新标注）
+            console.log('[toggleShapeVisibility] 刷新预览图, shapes:', page.shapes.map(s => ({
+                name: s.name,
+                shape_id: s.shape_id,
+                is_hidden: s.is_hidden
+            })));
 
-            if (response.ok) {
-                shape.is_hidden = newHiddenState;
-                templateEditorState.canvasPreview.updateShapes(page.shapes);
-                renderElementList();
-                renderPageList();
-                renderPropertyPanel(shape);
-                updateProgress();
+            const previewResponse = await fetch('/developer-tools/refresh-preview/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    template_id: templateEditorState.templateId,
+                    page_num: templateEditorState.currentPageNum,
+                    shapes: page.shapes  // 传入完整的 shapes 列表（包含 is_hidden 状态）
+                })
+            });
 
-                showSuccess(newHiddenState ? '元素已隐藏' : '元素已显示');
+            const previewData = await previewResponse.json();
+            console.log('[toggleShapeVisibility] 预览图响应:', previewData);
+
+            if (previewResponse.ok && previewData.image_url) {
+                // 更新预览图
+                const newImageUrl = previewData.image_url + '?t=' + Date.now();  // 加时间戳防止缓存
+                console.log('[toggleShapeVisibility] 更新预览图:', newImageUrl);
+                page.image_url = newImageUrl;
+                document.getElementById('previewImage').src = newImageUrl;
             } else {
-                showError('操作失败: ' + data.error);
+                console.error('[toggleShapeVisibility] 刷新预览图失败:', previewData);
             }
+
+            // 4. 更新 UI
+            renderElementList();
+            renderPageList();
+            renderPropertyPanel(shape);
+            updateProgress();
+
+            // 5. 保存编辑会话（持久化隐藏状态）
+            saveEditSession();
+
+            showSuccess(newHiddenState ? '元素已隐藏' : '元素已显示');
         } catch (error) {
+            // 回滚状态
+            shape.is_hidden = !newHiddenState;
             showError('操作失败: ' + error.message);
         }
     }
@@ -1050,30 +1530,345 @@
         document.getElementById('namedCount').textContent = `${namedShapes} / ${totalShapes}`;
         document.getElementById('progressBar').style.width = percent + '%';
         document.getElementById('progressPercent').textContent = percent + '%';
+
+        // 更新当前页的元素统计
+        updateElementStats();
+    }
+
+    // 更新元素统计信息
+    function updateElementStats() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        const statsEl = document.getElementById('elementStats');
+        if (!page || !statsEl) return;
+
+        const total = page.shapes.length;
+        const visible = page.shapes.filter(s => !s.is_hidden).length;
+        const named = page.shapes.filter(s => !s.is_hidden && s.is_named).length;
+        const selectedCount = templateEditorState.selectedShapeIds?.length || 0;
+
+        if (templateEditorState.multiSelectMode && selectedCount > 0) {
+            statsEl.textContent = `已选 ${selectedCount} | 显示 ${visible}/${total}`;
+            statsEl.style.background = 'rgba(52, 152, 219, 0.2)';
+            statsEl.style.color = 'var(--primary-color)';
+        } else {
+            statsEl.textContent = `显示 ${visible}/${total} | 已命名 ${named}`;
+            statsEl.style.background = 'white';
+            statsEl.style.color = 'var(--text-secondary)';
+        }
+    }
+
+    // ========================================
+    // 批量操作功能
+    // ========================================
+
+    // 批量显示所有元素
+    async function batchShowAll() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        const hiddenShapes = page.shapes.filter(s => s.is_hidden);
+        if (hiddenShapes.length === 0) {
+            showInfo('没有隐藏的元素');
+            return;
+        }
+
+        await batchUpdateVisibility(page, page.shapes, false);
+        showSuccess(`已显示 ${hiddenShapes.length} 个元素`);
+    }
+
+    // 批量隐藏所有元素
+    async function batchHideAll() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        const visibleShapes = page.shapes.filter(s => !s.is_hidden);
+        if (visibleShapes.length === 0) {
+            showInfo('没有可隐藏的元素');
+            return;
+        }
+
+        await batchUpdateVisibility(page, page.shapes, true);
+        showSuccess(`已隐藏 ${visibleShapes.length} 个元素`);
+    }
+
+    // 批量隐藏未命名元素
+    async function batchHideUnnamed() {
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) return;
+
+        const unnamedShapes = page.shapes.filter(s => !s.is_named && !s.is_hidden);
+        if (unnamedShapes.length === 0) {
+            showInfo('没有未命名的可见元素');
+            return;
+        }
+
+        // 只隐藏未命名的元素
+        unnamedShapes.forEach(s => s.is_hidden = true);
+        await refreshPreviewAfterBatch(page);
+        showSuccess(`已隐藏 ${unnamedShapes.length} 个未命名元素`);
+    }
+
+    // 批量更新可见性
+    async function batchUpdateVisibility(page, shapes, isHidden) {
+        shapes.forEach(s => s.is_hidden = isHidden);
+        await refreshPreviewAfterBatch(page);
+    }
+
+    // 批量操作后刷新预览
+    async function refreshPreviewAfterBatch(page) {
+        try {
+            const previewResponse = await fetch('/developer-tools/refresh-preview/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    template_id: templateEditorState.templateId,
+                    page_num: templateEditorState.currentPageNum,
+                    shapes: page.shapes
+                })
+            });
+
+            const previewData = await previewResponse.json();
+
+            if (previewResponse.ok && previewData.image_url) {
+                const newImageUrl = previewData.image_url + '?t=' + Date.now();
+                page.image_url = newImageUrl;
+                document.getElementById('previewImage').src = newImageUrl;
+            }
+
+            // 更新 UI
+            renderElementList();
+            renderPageList();
+            updateProgress();
+
+            // 清除选中状态
+            templateEditorState.selectedShapeId = null;
+            switchPropertyTab('list');
+
+            // 保存编辑会话（持久化隐藏状态）
+            saveEditSession();
+
+        } catch (error) {
+            showError('刷新预览失败: ' + error.message);
+        }
     }
 
     // ========================================
     // Toolbar Actions
     // ========================================
 
+    // 图片缩放状态
+    let imageZoom = 100;
+
     // Zoom controls
     document.getElementById('zoomInBtn')?.addEventListener('click', () => {
-        templateEditorState.canvasPreview?.zoomIn();
+        imageZoom = Math.min(200, imageZoom + 25);
+        updateImageZoom();
     });
 
     document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
-        templateEditorState.canvasPreview?.zoomOut();
+        imageZoom = Math.max(25, imageZoom - 25);
+        updateImageZoom();
     });
 
     document.getElementById('fitToWindowBtn')?.addEventListener('click', () => {
-        templateEditorState.canvasPreview?.fitToWindow();
+        imageZoom = 100;
+        updateImageZoom();
     });
+
+    function updateImageZoom() {
+        const img = document.getElementById('previewImage');
+        if (img) {
+            img.style.transform = `scale(${imageZoom / 100})`;
+            img.style.transformOrigin = 'center center';
+        }
+        document.getElementById('zoomLevel').textContent = imageZoom + '%';
+    }
 
     // Upload new template
     document.getElementById('uploadNewBtn')?.addEventListener('click', () => {
         document.getElementById('uploadSection').style.display = 'block';
         document.getElementById('editorSection').style.display = 'none';
         document.getElementById('uploadTemplateForm').reset();
+    });
+
+    // AI 命名状态标志（防止重复点击）
+    let isAINaming = false;
+
+    // AI 命名单个页面的核心函数
+    async function aiNamePage(page, showProgress = true) {
+        const visibleShapes = page.shapes.filter(s => !s.is_hidden);
+        if (visibleShapes.length === 0) {
+            return { success: true, count: 0, skipped: true };
+        }
+
+        try {
+            const response = await fetch('/developer-tools/ai-auto-name/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    template_id: templateEditorState.templateId,
+                    page_num: page.page_num,
+                    image_url: page.image_url,
+                    shapes: page.shapes
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return { success: false, error: data.error || '未知错误' };
+            }
+
+            // 应用 AI 建议的名称（串行保存，避免并发）
+            const namedShapes = data.named_shapes || [];
+            let successCount = 0;
+
+            for (let i = 0; i < namedShapes.length; i++) {
+                const suggestion = namedShapes[i];
+                const shape = page.shapes.find(s => s.shape_index === suggestion.shape_index);
+                if (shape && suggestion.suggested_name) {
+                    shape.name = suggestion.suggested_name;
+                    shape.is_named = true;
+
+                    try {
+                        await fetch('/developer-tools/update-shape-name/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({
+                                template_id: templateEditorState.templateId,
+                                page_num: page.page_num,
+                                shape_index: suggestion.shape_index,
+                                new_name: suggestion.suggested_name
+                            })
+                        });
+                        successCount++;
+
+                        // 短延迟避免触发后端限流（每保存一个等50ms）
+                        if (i < namedShapes.length - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                        }
+                    } catch (e) {
+                        console.error('保存失败:', suggestion, e);
+                    }
+                }
+            }
+
+            return { success: true, count: successCount };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    // AI 命名本页
+    document.getElementById('aiAutoNameBtn')?.addEventListener('click', async () => {
+        if (isAINaming) {
+            showWarning('AI 正在处理中，请稍候...');
+            return;
+        }
+
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
+        if (!page) {
+            showWarning('请先选择一个页面');
+            return;
+        }
+
+        const visibleShapes = page.shapes.filter(s => !s.is_hidden);
+        if (visibleShapes.length === 0) {
+            showWarning('当前页面没有可命名的元素');
+            return;
+        }
+
+        isAINaming = true;
+        showLoading('🤖 AI 正在分析当前页面元素...');
+
+        try {
+            const result = await aiNamePage(page);
+            hideLoading();
+
+            if (result.success) {
+                renderElementList();
+                renderPageList();
+                updateProgress();
+                showSuccess(`✅ AI 成功命名 ${result.count} 个元素`);
+            } else {
+                showError('AI 命名失败: ' + result.error);
+            }
+        } finally {
+            isAINaming = false;
+        }
+    });
+
+    // AI 命名全部页面（逐页串行处理，避免并发限制）
+    document.getElementById('aiAutoNameAllBtn')?.addEventListener('click', async () => {
+        if (isAINaming) {
+            showWarning('AI 正在处理中，请稍候...');
+            return;
+        }
+
+        // 筛选需要命名的页面（有可见元素且未完成命名的）
+        const pagesToName = templateEditorState.pages.filter(p => {
+            const visibleShapes = p.shapes.filter(s => !s.is_hidden);
+            const namedCount = visibleShapes.filter(s => s.is_named).length;
+            return visibleShapes.length > 0 && namedCount < visibleShapes.length;
+        });
+
+        if (pagesToName.length === 0) {
+            showWarning('所有页面已完成命名');
+            return;
+        }
+
+        if (!confirm(`确定要使用 AI 命名 ${pagesToName.length} 个未完成的页面吗？\n\n这可能需要较长时间，请耐心等待。`)) {
+            return;
+        }
+
+        isAINaming = true;
+        let totalSuccess = 0;
+        let totalFailed = 0;
+
+        for (let i = 0; i < pagesToName.length; i++) {
+            const page = pagesToName[i];
+            showLoading(`🤖 AI 正在处理第 ${page.page_num} 页 (${i + 1}/${pagesToName.length})...`);
+
+            const result = await aiNamePage(page, false);
+
+            if (result.success) {
+                totalSuccess += result.count;
+            } else {
+                totalFailed++;
+                console.error(`第 ${page.page_num} 页命名失败:`, result.error);
+            }
+
+            // 更新 UI
+            renderPageList();
+            updateProgress();
+
+            // 延迟避免 API 限流（GLM 等 API 对并发要求严格）
+            if (i < pagesToName.length - 1) {
+                showLoading(`⏳ 等待 3 秒避免 API 限流...`);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+        }
+
+        hideLoading();
+        isAINaming = false;
+
+        // 刷新当前页面的元素列表
+        renderElementList();
+
+        if (totalFailed === 0) {
+            showSuccess(`✅ AI 批量命名完成！共命名 ${totalSuccess} 个元素`);
+        } else {
+            showWarning(`⚠️ 批量命名完成，成功 ${totalSuccess} 个元素，${totalFailed} 个页面失败`);
+        }
     });
 
     // Save PPT
@@ -1176,17 +1971,20 @@
         // +/-: Zoom
         if (e.key === '+' || e.key === '=') {
             e.preventDefault();
-            templateEditorState.canvasPreview?.zoomIn();
+            imageZoom = Math.min(200, imageZoom + 25);
+            updateImageZoom();
         }
         if (e.key === '-') {
             e.preventDefault();
-            templateEditorState.canvasPreview?.zoomOut();
+            imageZoom = Math.max(25, imageZoom - 25);
+            updateImageZoom();
         }
 
         // 0: Fit to window
         if (e.key === '0') {
             e.preventDefault();
-            templateEditorState.canvasPreview?.fitToWindow();
+            imageZoom = 100;
+            updateImageZoom();
         }
     });
 

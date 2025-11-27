@@ -17,7 +17,17 @@ urlpatterns = [
     path("generation/<int:pk>/download/", views.download_ppt, name="download_ppt"),
     path("history/", views.history, name="history"),
     # Developer only
-    path("developer-tools/", views.developer_tools, name="developer_tools"),
+    path("developer-tools/", views.developer_tools, name="developer_tools_page"),
+    path(
+        "developer-tools/config-generator/",
+        views.config_generator_page,
+        name="config_generator_page",
+    ),
+    path(
+        "developer-tools/config-editor/",
+        views.config_editor_page,
+        name="config_editor_page",
+    ),
     path(
         "developer-tools/generate/",
         views.generate_config_template,
@@ -59,5 +69,41 @@ urlpatterns = [
         "developer-tools/toggle-shape-visibility/",
         views.toggle_shape_visibility,
         name="toggle_shape_visibility",
+    ),
+    path(
+        "developer-tools/refresh-preview/",
+        views.refresh_page_preview,
+        name="refresh_page_preview",
+    ),
+    path(
+        "developer-tools/ai-auto-name/",
+        views.ai_auto_name_shapes,
+        name="ai_auto_name_shapes",
+    ),
+    # Edit Session Management
+    path(
+        "developer-tools/edit-sessions/",
+        views.list_edit_sessions,
+        name="list_edit_sessions",
+    ),
+    path(
+        "developer-tools/edit-sessions/save/",
+        views.save_edit_session,
+        name="save_edit_session",
+    ),
+    path(
+        "developer-tools/edit-sessions/<str:session_id>/",
+        views.get_edit_session,
+        name="get_edit_session",
+    ),
+    path(
+        "developer-tools/edit-sessions/<str:session_id>/delete/",
+        views.delete_edit_session,
+        name="delete_edit_session",
+    ),
+    path(
+        "developer-tools/restore-session/<str:session_id>/",
+        views.restore_edit_session,
+        name="restore_edit_session",
     ),
 ]

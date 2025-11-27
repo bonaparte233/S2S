@@ -107,15 +107,22 @@ def convert_pdf_to_images(
 
 
 def annotate_screenshot(
-    image_path: Path, shapes_info: List[Dict], dpi: int = 300
+    image_path: Path,
+    shapes_info: List[Dict],
+    slide_width: int = 12192000,
+    slide_height: int = 6858000,
 ) -> Path:
     """
     在 PPT 截图上标注元素编号
 
+    使用幻灯片尺寸和图片尺寸的比例来计算坐标，而不是固定 DPI。
+    这样可以确保标注位置准确，无论图片是如何生成的。
+
     Args:
         image_path: 截图路径
         shapes_info: 元素信息列表（已过滤背景元素）
-        dpi: 图片 DPI
+        slide_width: 幻灯片宽度（EMU 单位）
+        slide_height: 幻灯片高度（EMU 单位）
 
     Returns:
         标注后的图片路径
@@ -123,46 +130,64 @@ def annotate_screenshot(
     img = Image.open(image_path)
     draw = ImageDraw.Draw(img)
 
+    # 获取图片实际尺寸
+    img_width, img_height = img.size
+
+    # 计算缩放比例
+    scale_x = img_width / slide_width
+    scale_y = img_height / slide_height
+
     # 加载字体
     try:
         # macOS 系统字体
-        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 28)
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 24)
     except:
         try:
             # Linux 系统字体
             font = ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24
             )
         except:
             # 使用默认字体
             font = ImageFont.load_default()
 
-    EMU_PER_INCH = 914400
-
-    for idx, shape in enumerate(shapes_info, 1):
+    visible_idx = 0  # 只给可见元素分配编号
+    for shape in shapes_info:
         # 跳过隐藏元素
         if shape.get("is_hidden"):
             continue
 
-        # 计算坐标（EMU 转像素）
-        x = int(shape["left"] / EMU_PER_INCH * dpi)
-        y = int(shape["top"] / EMU_PER_INCH * dpi)
+        visible_idx += 1
+
+        # 使用比例计算坐标（而不是 DPI）
+        left = shape["left"] * scale_x
+        top = shape["top"] * scale_y
+        width = shape["width"] * scale_x
+        height = shape["height"] * scale_y
+
+        # 编号位置：元素左上角
+        x = int(left + 20)
+        y = int(top + 20)
+
+        # 确保编号在图片范围内
+        x = max(20, min(x, img_width - 20))
+        y = max(20, min(y, img_height - 20))
 
         # 确定颜色（根据是否已命名）
         is_named = shape.get("is_named", False)
         circle_color = "#007BFF" if is_named else "#FFC107"
 
         # 绘制圆形背景
-        radius = 22
+        radius = 18
         draw.ellipse(
             [x - radius, y - radius, x + radius, y + radius],
             fill=circle_color,
             outline="#FFFFFF",
-            width=3,
+            width=2,
         )
 
-        # 绘制编号
-        text = str(idx)
+        # 绘制编号（使用可见元素的序号）
+        text = str(visible_idx)
 
         # 计算文本位置（居中）
         try:
@@ -171,8 +196,8 @@ def annotate_screenshot(
             text_height = bbox[3] - bbox[1]
         except:
             # 如果 textbbox 不可用，使用估算
-            text_width = len(text) * 14
-            text_height = 20
+            text_width = len(text) * 12
+            text_height = 18
 
         draw.text(
             (x - text_width // 2, y - text_height // 2 - 2),
@@ -181,43 +206,15 @@ def annotate_screenshot(
             font=font,
         )
 
+        # 绘制元素边框（半透明虚线效果）
+        border_color = "#007BFF" if is_named else "#FFC107"
+        draw.rectangle(
+            [left, top, left + width, top + height],
+            outline=border_color,
+            width=2,
+        )
+
     # 保存标注后的图片
     annotated_path = image_path.parent / f"{image_path.stem}_annotated.png"
     img.save(annotated_path)
     return annotated_path
-
-
-def convert_pdf_to_images(
-    pdf_path: Path, output_dir: Path, dpi: int = 300
-) -> List[Path]:
-    """
-    将 PDF 转换为图片
-
-    Args:
-        pdf_path: PDF 文件路径
-        output_dir: 输出目录
-        dpi: 分辨率
-
-    Returns:
-        图片路径列表
-    """
-    from pdf2image import convert_from_path
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    images = convert_from_path(
-        str(pdf_path),
-        dpi=dpi,
-        fmt="png",
-        output_folder=str(output_dir),
-        paths_only=False,  # 返回 PIL Image 对象
-    )
-
-    # 保存图片
-    image_paths = []
-    for i, img in enumerate(images, 1):
-        img_path = output_dir / f"page_{i}.png"
-        img.save(img_path)
-        image_paths.append(img_path)
-
-    return image_paths

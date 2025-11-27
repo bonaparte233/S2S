@@ -5,156 +5,193 @@
 
 {% block extra_css %}
 <style>
-    .tabs {
-        display: flex;
-        border-bottom: 2px solid var(--border-color);
-        margin-bottom: var(--spacing-lg);
+    /* 工具卡片网格布局 */
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: var(--spacing-xl);
+        margin-bottom: var(--spacing-xl);
     }
 
-    .tab {
-        padding: var(--spacing-md) var(--spacing-lg);
-        cursor: pointer;
-        border: none;
-        background: none;
-        font-size: 1rem;
-        color: var(--text-secondary);
+    .tool-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
-        border-bottom: 3px solid transparent;
-        margin-bottom: -2px;
-    }
-
-    .tab:hover {
-        color: var(--primary-color);
-    }
-
-    .tab.active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-        font-weight: 600;
-    }
-
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    /* Editor layout */
-    .editor-container {
         display: flex;
-        gap: var(--spacing-lg);
-        height: calc(100vh - 300px);
-        min-height: 600px;
+        flex-direction: column;
     }
 
-    .page-list {
-        width: 280px;
-        flex-shrink: 0;
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        overflow-y: auto;
-        background: var(--bg-secondary);
+    .tool-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
     }
 
-    .page-item {
+    .tool-card-header {
+        padding: var(--spacing-lg);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tool-card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.1;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .tool-card-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--spacing-sm);
+        position: relative;
+        z-index: 1;
+    }
+
+    .tool-card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+        color: white;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tool-card-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin: var(--spacing-xs) 0 0 0;
+        color: white;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tool-card-body {
+        padding: var(--spacing-lg);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .tool-card-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: var(--spacing-lg);
+        flex: 1;
+    }
+
+    .tool-card-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 var(--spacing-lg) 0;
+    }
+
+    .tool-card-features li {
+        padding: var(--spacing-xs) 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .tool-card-features li::before {
+        content: '✓';
+        color: var(--success-color);
+        font-weight: bold;
+    }
+
+    .tool-card-action {
+        display: block;
+        width: 100%;
         padding: var(--spacing-md);
-        border-bottom: 1px solid var(--border-color);
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: background 0.2s ease;
+        transition: all 0.2s ease;
+        text-align: center;
+        text-decoration: none;
     }
 
-    .page-item:hover {
-        background: var(--bg-hover);
-    }
-
-    .page-item.active {
+    .tool-card-action-primary {
         background: var(--primary-color);
         color: white;
     }
 
-    .page-item-title {
-        font-weight: 600;
-        margin-bottom: 4px;
+    .tool-card-action-primary:hover {
+        background: var(--primary-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
     }
 
-    .page-item-meta {
-        font-size: 0.85rem;
-        opacity: 0.8;
-    }
-
-    .edit-area {
-        flex: 1;
+    .tool-card-action-secondary {
+        background: var(--bg-color);
+        color: var(--text-color);
         border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        padding: var(--spacing-lg);
-        overflow-y: auto;
-        background: white;
     }
 
-    .field-editor {
-        margin-bottom: var(--spacing-lg);
-        padding: var(--spacing-md);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        background: var(--bg-secondary);
-    }
-
-    .field-name {
-        font-weight: 600;
-        margin-bottom: var(--spacing-sm);
+    .tool-card-action-secondary:hover {
+        background: #dfe6e9;
+        border-color: var(--primary-color);
         color: var(--primary-color);
+        transform: translateY(-2px);
     }
 
-    .field-row {
-        display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: var(--spacing-sm);
-        margin-bottom: var(--spacing-sm);
-        align-items: center;
+    /* 不同卡片的渐变色 */
+    .tool-card-header.gradient-purple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    .field-label {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
+    .tool-card-header.gradient-blue {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     }
 
-    .field-input {
-        padding: 8px 12px;
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        font-size: 0.9rem;
+    .tool-card-header.gradient-green {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
     }
 
-    .field-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
+    .tool-card-header.gradient-orange {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
     }
 
-    .checkbox-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    .tool-card-header.gradient-pink {
+        background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
     }
 
-    .upload-zone {
-        border: 2px dashed var(--border-color);
-        border-radius: var(--border-radius);
-        padding: var(--spacing-xl);
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
+    .tool-card-header.gradient-teal {
+        background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
     }
 
-    .upload-zone:hover {
-        border-color: var(--primary-color);
-        background: var(--bg-hover);
+    /* 标签 */
+    .tool-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 4px;
+        margin-left: var(--spacing-sm);
+        position: relative;
+        z-index: 1;
     }
 
-    .upload-zone.dragover {
-        border-color: var(--primary-color);
-        background: var(--primary-light);
+    .tool-badge-new {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    .tool-badge-beta {
+        background: rgba(255, 193, 7, 0.3);
+        color: #fff3cd;
     }
 </style>
 {% endblock %}
@@ -162,301 +199,299 @@
 {% block content %}
 <div class="page-header">
     <h2>🔧 开发者工具</h2>
-    <p class="subtitle">大模型配置模板的生成与编辑（开发者功能）</p>
+    <p class="subtitle">PPT 模板开发与配置管理工具集</p>
 </div>
 
-<!-- Tabs -->
-<div class="tabs">
-    <button class="tab active" data-tab="generate">生成配置模板</button>
-    <button class="tab" data-tab="edit">编辑配置模板</button>
-</div>
-
-<!-- Template Editor Card -->
-<div class="card"
-    style="margin-bottom: var(--spacing-lg); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
-    <div class="card-body" style="padding: var(--spacing-xl);">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <h3 style="margin: 0 0 var(--spacing-sm) 0; color: white;">🎨 PPT 模板编辑器</h3>
-                <p style="margin: 0; opacity: 0.9; font-size: 1rem;">
-                    可视化编辑 PPT 模板元素，为每个元素命名并生成配置文件
-                </p>
-            </div>
-            <a href="{% url 'template_editor_page' %}" class="btn btn-large"
-                style="background: white; color: #667eea; font-weight: 600; padding: var(--spacing-md) var(--spacing-xl);">
+<!-- 工具卡片网格 -->
+<div class="tools-grid">
+    <!-- PPT 模板编辑器 -->
+    <div class="tool-card">
+        <div class="tool-card-header gradient-purple">
+            <div class="tool-card-icon">🎨</div>
+            <h3 class="tool-card-title">
+                PPT 模板编辑器
+                <span class="tool-badge tool-badge-new">推荐</span>
+            </h3>
+            <p class="tool-card-subtitle">可视化模板元素编辑工具</p>
+        </div>
+        <div class="tool-card-body">
+            <p class="tool-card-description">
+                上传 PPT 模板，可视化查看和编辑每个元素，为元素命名并自动生成配置文件。支持 AI 一键命名功能。
+            </p>
+            <ul class="tool-card-features">
+                <li>可视化预览 PPT 页面</li>
+                <li>交互式元素命名</li>
+                <li>AI 智能识别与命名</li>
+                <li>一键导出配置 JSON</li>
+            </ul>
+            <a href="{% url 'template_editor_page' %}" class="tool-card-action tool-card-action-primary">
                 打开编辑器 →
+            </a>
+        </div>
+    </div>
+
+    <!-- 配置模板生成 -->
+    <div class="tool-card">
+        <div class="tool-card-header gradient-blue">
+            <div class="tool-card-icon">📄</div>
+            <h3 class="tool-card-title">配置模板生成</h3>
+            <p class="tool-card-subtitle">快速生成 JSON 配置</p>
+        </div>
+        <div class="tool-card-body">
+            <p class="tool-card-description">
+                上传 PPT 模板文件，自动提取所有可编辑元素并生成 JSON 配置模板。支持语义模式和文本模式。
+            </p>
+            <ul class="tool-card-features">
+                <li>自动提取 PPT 元素</li>
+                <li>智能识别命名规范</li>
+                <li>生成标准 JSON 格式</li>
+            </ul>
+            <a href="{% url 'config_generator_page' %}" class="tool-card-action tool-card-action-secondary">
+                开始生成 →
+            </a>
+        </div>
+    </div>
+
+    <!-- 配置模板编辑 -->
+    <div class="tool-card">
+        <div class="tool-card-header gradient-green">
+            <div class="tool-card-icon">✏️</div>
+            <h3 class="tool-card-title">配置模板编辑</h3>
+            <p class="tool-card-subtitle">编辑现有 JSON 配置</p>
+        </div>
+        <div class="tool-card-body">
+            <p class="tool-card-description">
+                上传已有的 JSON 配置模板进行编辑，调整字段属性、添加提示信息。支持 AI 自动填充功能。
+            </p>
+            <ul class="tool-card-features">
+                <li>可视化编辑界面</li>
+                <li>AI 一键填充字段</li>
+                <li>实时预览与导出</li>
+            </ul>
+            <a href="{% url 'config_editor_page' %}" class="tool-card-action tool-card-action-secondary">
+                开始编辑 →
             </a>
         </div>
     </div>
 </div>
 
-<!-- Tab 1: Generate -->
-<div id="generateTab" class="tab-content active">
-    <div class="card">
-        <div class="card-header">
-            <h3>📤 上传 PPT 模板文件</h3>
-        </div>
-        <div class="card-body">
-            <form id="generateForm" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="template_file" class="form-label required">
-                        PPT模板文件
-                    </label>
-                    <div class="file-upload-wrapper">
-                        <input type="file" id="template_file" name="template_file" accept=".pptx" required>
-                        <span class="file-upload-label">选择模板文件 (.pptx)</span>
-                    </div>
-                    <small class="form-help">上传PPT模板文件以生成JSON描述</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="mode" class="form-label">导出模式</label>
-                    <select id="mode" name="mode" class="text-input">
-                        <option value="semantic">语义模式 - 仅导出命名规范的元素（推荐）</option>
-                        <option value="text">文本模式 - 导出所有可编辑文本框</option>
-                    </select>
-                    <small class="form-help">语义模式只导出包含"xx区"等命名的元素，文本模式导出所有文本框</small>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-large">
-                        🚀 生成配置模板
-                    </button>
-                </div>
-            </form>
-        </div>
+<!-- 编辑记录区域 -->
+<div id="editSessionsSection" class="edit-sessions-section" style="margin-top: var(--spacing-xl);">
+    <div class="section-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+        <h3 style="margin: 0;">📂 最近编辑记录</h3>
+        <button id="refreshSessionsBtn" class="btn-icon" title="刷新列表">🔄</button>
     </div>
-
-    <div id="generateResult" class="card" style="display: none; margin-top: var(--spacing-lg);">
-        <div class="card-header">
-            <h3>✅ 生成成功</h3>
-        </div>
-        <div class="card-body">
-            <p>配置模板已生成，包含 <strong id="pageCount"></strong> 个页面。</p>
-            <div class="form-actions">
-                <button id="downloadGeneratedBtn" class="btn btn-success">
-                    📥 下载 JSON 文件
-                </button>
-                <button id="editGeneratedBtn" class="btn btn-primary">
-                    ✏️ 编辑配置模板
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="generateError" class="card" style="display: none; margin-top: var(--spacing-lg);">
-        <div class="card-header">
-            <h3>❌ 生成失败</h3>
-        </div>
-        <div class="card-body">
-            <div id="generateErrorContent" class="error-details"></div>
-        </div>
+    <div id="editSessionsList" class="edit-sessions-list">
+        <p class="loading-text">加载中...</p>
     </div>
 </div>
 
-<!-- Tab 2: Edit -->
-<div id="editTab" class="tab-content">
-    <div id="uploadSection">
-        <div class="card">
-            <div class="card-header">
-                <h3>📂 上传配置模板 JSON</h3>
-            </div>
-            <div class="card-body">
-                <div class="upload-zone" id="uploadZone">
-                    <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📄</div>
-                    <p style="font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
-                        点击或拖拽 JSON 文件到此处
-                    </p>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
-                        支持 .json 格式的配置模板文件
-                    </p>
-                    <input type="file" id="jsonFile" accept=".json" style="display: none;">
-                </div>
-            </div>
-        </div>
-    </div>
+<style>
+    .edit-sessions-section {
+        background: white;
+        border-radius: 16px;
+        padding: var(--spacing-lg);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
 
-    <div id="editorSection" style="display: none;">
-        <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>✏️ 编辑配置模板</h3>
-                <div style="display: flex; gap: var(--spacing-sm);">
-                    <button id="aiEnrichBtn" class="btn btn-primary btn-small">
-                        🤖 AI 一键填充
-                    </button>
-                    <button id="uploadAnotherBtn" class="btn btn-secondary btn-small">
-                        📂 上传其他文件
-                    </button>
-                </div>
-            </div>
-            <div class="card-body" style="padding: 0;">
-                <div class="editor-container">
-                    <div class="page-list" id="pageList">
-                        <!-- Pages will be populated here -->
-                    </div>
-                    <div class="edit-area" id="editArea">
-                        <p style="color: var(--text-secondary); text-align: center; padding: var(--spacing-xl);">
-                            请从左侧选择一个页面开始编辑
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    .edit-sessions-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--spacing-md);
+    }
 
-        <div class="form-actions" style="margin-top: var(--spacing-lg);">
-            <button id="downloadEditedBtn" class="btn btn-success btn-large">
-                📥 下载编辑后的配置模板
-            </button>
-        </div>
-    </div>
-</div>
+    .session-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        display: flex;
+        gap: var(--spacing-md);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
 
-<!-- Template Editor has been moved to a separate page: /developer-tools/template-editor/ -->
+    .session-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+        transform: translateY(-2px);
+    }
 
-{% endblock %}
+    .session-thumbnail {
+        width: 80px;
+        height: 60px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-{% block extra_js %}
-{% load static %}
-<script src="{% static 'js/template-editor.js' %}"></script>
+    .session-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .session-thumbnail-placeholder {
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .session-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .session-name {
+        font-weight: 600;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .session-meta {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .session-progress {
+        font-size: 0.8rem;
+        color: var(--primary-color);
+        margin-top: 4px;
+    }
+
+    .session-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        transition: background 0.2s;
+    }
+
+    .btn-icon:hover {
+        background: var(--bg-hover);
+    }
+
+    .btn-icon-danger:hover {
+        background: #ffe0e0;
+    }
+
+    .empty-sessions {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+    }
+
+    .session-type-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        font-size: 0.7rem;
+        border-radius: 3px;
+        margin-left: 6px;
+    }
+
+    .session-type-ppt {
+        background: #e8d4f8;
+        color: #6b21a8;
+    }
+
+    .session-type-config {
+        background: #d4edda;
+        color: #155724;
+    }
+</style>
+
 <script>
-    // ========================================
-    // Utility Functions
-    // ========================================
+    // 加载编辑记录
+    async function loadEditSessions() {
+        const listEl = document.getElementById('editSessionsList');
+        listEl.innerHTML = '<p class="loading-text">加载中...</p>';
 
-    // Loading overlay
-    function showLoading(message = '处理中...') {
-        let overlay = document.getElementById('loadingOverlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'loadingOverlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.7);
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                z-index: 9999;
-                color: white;
-                font-size: 1.2rem;
-            `;
-            overlay.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="margin-bottom: 1rem;">
-                        <div class="spinner" style="
-                            border: 4px solid rgba(255, 255, 255, 0.3);
-                            border-top: 4px solid white;
-                            border-radius: 50%;
-                            width: 50px;
-                            height: 50px;
-                            animation: spin 1s linear infinite;
-                            margin: 0 auto;
-                        "></div>
+        try {
+            const response = await fetch('/developer-tools/edit-sessions/');
+            const data = await response.json();
+
+            if (data.sessions && data.sessions.length > 0) {
+                listEl.innerHTML = data.sessions.map(session => `
+                    <div class="session-card" onclick="openSession('${session.session_id}', '${session.editor_type}')">
+                        <div class="session-thumbnail">
+                            ${session.thumbnail_url
+                        ? `<img src="${session.thumbnail_url}" alt="预览">`
+                        : `<span class="session-thumbnail-placeholder">${session.editor_type === 'ppt' ? '🎨' : '📄'}</span>`
+                    }
+                        </div>
+                        <div class="session-info">
+                            <div class="session-name">
+                                ${escapeHtml(session.template_name)}
+                                <span class="session-type-badge session-type-${session.editor_type}">
+                                    ${session.editor_type === 'ppt' ? 'PPT' : '配置'}
+                                </span>
+                            </div>
+                            <div class="session-meta">更新于 ${session.updated_at}</div>
+                            <div class="session-progress">${session.progress_summary}</div>
+                        </div>
+                        <div class="session-actions" onclick="event.stopPropagation()">
+                            <button class="btn-icon btn-icon-danger" onclick="deleteSession('${session.session_id}')" title="删除">🗑️</button>
+                        </div>
                     </div>
-                    <div id="loadingMessage">${message}</div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            // Add spinner animation
-            if (!document.getElementById('spinnerStyle')) {
-                const style = document.createElement('style');
-                style.id = 'spinnerStyle';
-                style.textContent = `
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                `;
-                document.head.appendChild(style);
+                `).join('');
+            } else {
+                listEl.innerHTML = '<div class="empty-sessions">暂无编辑记录<br><small>上传模板后，编辑记录会自动保存在这里</small></div>';
             }
+        } catch (error) {
+            listEl.innerHTML = '<div class="empty-sessions">加载失败，请刷新重试</div>';
+            console.error('加载编辑记录失败:', error);
+        }
+    }
+
+    // 打开编辑会话
+    function openSession(sessionId, editorType) {
+        if (editorType === 'ppt') {
+            window.location.href = `/developer-tools/template-editor/?session=${sessionId}`;
         } else {
-            overlay.querySelector('#loadingMessage').textContent = message;
-            overlay.style.display = 'flex';
+            window.location.href = `/developer-tools/config-editor/?session=${sessionId}`;
         }
     }
 
-    function hideLoading() {
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.style.display = 'none';
+    // 删除编辑会话
+    async function deleteSession(sessionId) {
+        if (!confirm('确定要删除这条编辑记录吗？\n\n删除后无法恢复。')) {
+            return;
         }
-    }
 
-    // Toast notifications
-    function showToast(message, type = 'info') {
-        const colors = {
-            success: '#2ecc71',
-            error: '#e74c3c',
-            warning: '#f39c12',
-            info: '#3498db'
-        };
-
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${colors[type]};
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-md);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            animation: slideIn 0.3s ease-out;
-            max-width: 400px;
-        `;
-        toast.textContent = message;
-
-        // Add animation
-        if (!document.getElementById('toastStyle')) {
-            const style = document.createElement('style');
-            style.id = 'toastStyle';
-            style.textContent = `
-                @keyframes slideIn {
-                    from {
-                        transform: translateX(400px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
+        try {
+            const response = await fetch(`/developer-tools/edit-sessions/${sessionId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
                 }
-            `;
-            document.head.appendChild(style);
+            });
+
+            if (response.ok) {
+                loadEditSessions();
+            } else {
+                const data = await response.json();
+                alert('删除失败: ' + (data.error || '未知错误'));
+            }
+        } catch (error) {
+            alert('删除失败: ' + error.message);
         }
-
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.animation = 'slideIn 0.3s ease-out reverse';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
     }
 
-    function showSuccess(message) {
-        showToast(message, 'success');
-    }
-
-    function showError(message) {
-        showToast(message, 'error');
-    }
-
-    function showWarning(message) {
-        showToast(message, 'warning');
-    }
-
-    function showInfo(message) {
-        showToast(message, 'info');
-    }
-
-    // Get CSRF token
+    // 获取 CSRF Token
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -472,386 +507,17 @@
         return cookieValue;
     }
 
-    // ========================================
-    // Global State
-    // ========================================
-
-    let templateData = null;
-    let currentPageIndex = 0;
-
-    // ========================================
-    // Tab Switching
-    // ========================================
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', function () {
-            const tabName = this.dataset.tab;
-
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(tabName + 'Tab').classList.add('active');
-        });
-    });
-
-    // Generate Tab: Form submission
-    document.getElementById('generateForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        const resultDiv = document.getElementById('generateResult');
-        const errorDiv = document.getElementById('generateError');
-
-        resultDiv.style.display = 'none';
-        errorDiv.style.display = 'none';
-
-        try {
-            const response = await fetch('{% url "generate_config_template" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                templateData = data;
-                document.getElementById('pageCount').textContent = data.ppt_pages.length;
-                resultDiv.style.display = 'block';
-            } else {
-                let errorMsg = data.error || '生成失败';
-                if (data.traceback) {
-                    errorMsg += '\n\n详细错误信息：\n' + data.traceback;
-                }
-                document.getElementById('generateErrorContent').innerHTML = `<pre>${errorMsg}</pre>`;
-                errorDiv.style.display = 'block';
-            }
-        } catch (error) {
-            document.getElementById('generateErrorContent').innerHTML = `<pre>${error.message}</pre>`;
-            errorDiv.style.display = 'block';
-        }
-    });
-
-    // Download generated JSON
-    document.getElementById('downloadGeneratedBtn').addEventListener('click', function () {
-        downloadJSON(templateData, 'template.json');
-    });
-
-    // Edit generated JSON
-    document.getElementById('editGeneratedBtn').addEventListener('click', function () {
-        // Switch to edit tab
-        document.querySelector('.tab[data-tab="edit"]').click();
-        // Load the generated data
-        loadTemplateData(templateData);
-    });
-
-    // Edit Tab: Upload zone
-    const uploadZone = document.getElementById('uploadZone');
-    const jsonFileInput = document.getElementById('jsonFile');
-
-    uploadZone.addEventListener('click', () => jsonFileInput.click());
-
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
-
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('dragover');
-    });
-
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file && file.name.endsWith('.json')) {
-            loadJSONFile(file);
-        } else {
-            alert('请上传 .json 格式的文件');
-        }
-    });
-
-    jsonFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            loadJSONFile(file);
-        }
-    });
-
-    // Upload another file
-    document.getElementById('uploadAnotherBtn').addEventListener('click', function () {
-        document.getElementById('uploadSection').style.display = 'block';
-        document.getElementById('editorSection').style.display = 'none';
-        templateData = null;
-        currentPageIndex = 0;
-    });
-
-    // AI enrich button
-    document.getElementById('aiEnrichBtn').addEventListener('click', async function () {
-        if (!templateData) {
-            alert('请先上传配置模板文件');
-            return;
-        }
-
-        // Show warning dialog
-        const confirmed = confirm(
-            '⚠️ 警告：AI 生成的内容可能不准确，需要人工审核和修改。\n\n' +
-            '此操作将使用大模型自动填充所有页面的 hint、required、max_chars 和 notes 字段。\n\n' +
-            '是否继续？'
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        // Disable button and show loading
-        const btn = this;
-        const originalText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = '🤖 AI 填充中...';
-
-        try {
-            const response = await fetch('{% url "ai_enrich_template" %}', {
-                method: 'POST',
-                body: JSON.stringify(templateData),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            });
-
-            if (response.ok) {
-                const enrichedData = await response.json();
-                templateData = enrichedData;
-
-                // Re-render page list and current page
-                renderPageList();
-                renderEditArea();
-
-                alert('✅ AI 填充完成！请仔细检查并修改生成的内容。');
-            } else {
-                const error = await response.json();
-                alert('❌ AI 填充失败：' + (error.error || '未知错误'));
-            }
-        } catch (error) {
-            alert('❌ AI 填充失败：' + error.message);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = originalText;
-        }
-    });
-
-    // Load JSON file
-    function loadJSONFile(file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                loadTemplateData(data);
-            } catch (error) {
-                alert('JSON 文件格式错误：' + error.message);
-            }
-        };
-        reader.readAsText(file);
+    // HTML 转义
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
-    // Load template data into editor
-    function loadTemplateData(data) {
-        templateData = data;
-        document.getElementById('uploadSection').style.display = 'none';
-        document.getElementById('editorSection').style.display = 'block';
-
-        renderPageList();
-        if (data.ppt_pages && data.ppt_pages.length > 0) {
-            selectPage(0);
-        }
-    }
-
-    // Render page list
-    function renderPageList() {
-        const pageList = document.getElementById('pageList');
-        pageList.innerHTML = '';
-
-        templateData.ppt_pages.forEach((page, index) => {
-            const pageItem = document.createElement('div');
-            pageItem.className = 'page-item';
-            if (index === currentPageIndex) {
-                pageItem.classList.add('active');
-            }
-
-            const fieldCount = Object.keys(page.content || {}).length;
-
-            pageItem.innerHTML = `
-            <div class="page-item-title">${page.page_type}</div>
-            <div class="page-item-meta">
-                页码: ${page.template_page_num} | 字段: ${fieldCount}
-            </div>
-        `;
-
-            pageItem.addEventListener('click', () => selectPage(index));
-            pageList.appendChild(pageItem);
-        });
-    }
-
-    // Select a page
-    function selectPage(index) {
-        currentPageIndex = index;
-
-        // Update page list highlighting
-        document.querySelectorAll('.page-item').forEach((item, i) => {
-            if (i === index) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-
-        // Render edit area
-        renderEditArea();
-    }
-
-    // Render edit area for current page
-    function renderEditArea() {
-        const page = templateData.ppt_pages[currentPageIndex];
-        const editArea = document.getElementById('editArea');
-
-        let html = `
-        <h3 style="margin-bottom: var(--spacing-lg);">
-            ${page.page_type} <span style="color: var(--text-secondary); font-size: 0.9rem;">(页码: ${page.template_page_num})</span>
-        </h3>
-
-        <!-- Page Notes -->
-        <div class="field-editor" style="background: var(--primary-light); border-color: var(--primary-color);">
-            <div class="field-name" style="color: var(--primary-color);">📝 页面说明 (notes)</div>
-            <textarea
-                class="field-input"
-                style="width: 100%; min-height: 80px; resize: vertical;"
-                data-type="notes"
-                placeholder="帮助大模型理解这一页的具体用处..."
-            >${page.meta?.notes || ''}</textarea>
-            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                这段说明会帮助大模型理解该页面的用途和内容要求
-            </small>
-        </div>
-
-        <h4 style="margin: var(--spacing-lg) 0 var(--spacing-md) 0;">字段配置</h4>
-    `;
-
-        // Render fields
-        const content = page.content || {};
-        Object.keys(content).forEach(fieldName => {
-            const field = content[fieldName];
-
-            html += `
-            <div class="field-editor">
-                <div class="field-name">${fieldName}</div>
-
-                <div class="field-row">
-                    <div class="field-label">提示 (hint):</div>
-                    <input
-                        type="text"
-                        class="field-input"
-                        value="${field.hint || ''}"
-                        data-field="${fieldName}"
-                        data-prop="hint"
-                        placeholder="帮助大模型理解需要填什么..."
-                    >
-                </div>
-
-                <div class="field-row">
-                    <div class="field-label">是否必填:</div>
-                    <div class="checkbox-wrapper">
-                        <input
-                            type="checkbox"
-                            ${field.required ? 'checked' : ''}
-                            data-field="${fieldName}"
-                            data-prop="required"
-                        >
-                        <span style="font-size: 0.9rem;">必填字段</span>
-                    </div>
-                </div>
-
-                <div class="field-row">
-                    <div class="field-label">最大字数:</div>
-                    <input
-                        type="number"
-                        class="field-input"
-                        value="${field.max_chars || ''}"
-                        data-field="${fieldName}"
-                        data-prop="max_chars"
-                        placeholder="最大字符数..."
-                        min="1"
-                    >
-                </div>
-            </div>
-        `;
-        });
-
-        editArea.innerHTML = html;
-
-        // Add event listeners for all inputs
-        editArea.querySelectorAll('input, textarea').forEach(input => {
-            input.addEventListener('change', handleFieldChange);
-        });
-    }
-
-    // Handle field changes
-    function handleFieldChange(e) {
-        const input = e.target;
-        const fieldName = input.dataset.field;
-        const prop = input.dataset.prop;
-        const type = input.dataset.type;
-
-        if (type === 'notes') {
-            // Update page notes
-            if (!templateData.ppt_pages[currentPageIndex].meta) {
-                templateData.ppt_pages[currentPageIndex].meta = {};
-            }
-            templateData.ppt_pages[currentPageIndex].meta.notes = input.value;
-        } else if (fieldName && prop) {
-            // Update field property
-            const page = templateData.ppt_pages[currentPageIndex];
-            if (!page.content[fieldName]) {
-                page.content[fieldName] = {};
-            }
-
-            if (input.type === 'checkbox') {
-                page.content[fieldName][prop] = input.checked;
-            } else if (input.type === 'number') {
-                page.content[fieldName][prop] = parseInt(input.value) || 0;
-            } else {
-                page.content[fieldName][prop] = input.value;
-            }
-        }
-    }
-
-    // Download edited JSON
-    document.getElementById('downloadEditedBtn').addEventListener('click', function () {
-        downloadJSON(templateData, 'template_edited.json');
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function () {
+        loadEditSessions();
+        document.getElementById('refreshSessionsBtn').addEventListener('click', loadEditSessions);
     });
-
-    // Utility: Download JSON
-    function downloadJSON(data, filename) {
-        const jsonStr = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    // ========================================
-    // Template Editor has been moved to a separate page
-    // See: /developer-tools/template-editor/
-    // ========================================
 </script>
-
 {% endblock %}
