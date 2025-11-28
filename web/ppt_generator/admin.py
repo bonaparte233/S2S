@@ -14,30 +14,36 @@ class GlobalLLMConfigAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "is_default_badge",
+        "supports_multimodal_badge",
         "llm_provider",
         "llm_model",
         "has_api_key",
         "updated_at",
         "updated_by",
     ]
-    list_filter = ["is_default", "llm_provider"]
+    list_filter = [
+        "is_default",
+        "is_multimodal_default",
+        "supports_multimodal",
+        "llm_provider",
+    ]
     search_fields = ["name", "llm_model"]
     readonly_fields = ["updated_at", "updated_by"]
-    actions = ["set_as_default"]
+    actions = ["set_as_default", "set_as_multimodal_default"]
 
     fieldsets = [
         (
             "配置标识",
             {
-                "fields": ["name", "is_default"],
-                "description": "为配置命名，并选择是否设为默认配置",
+                "fields": ["name", "is_default", "is_multimodal_default"],
+                "description": "为配置命名，选择默认配置类型",
             },
         ),
         (
             "基本配置",
             {
-                "fields": ["llm_provider", "llm_model"],
-                "description": "配置LLM供应商和模型",
+                "fields": ["llm_provider", "llm_model", "supports_multimodal"],
+                "description": "配置LLM供应商和模型，勾选「支持多模态」表示此模型支持图像理解",
             },
         ),
         (
@@ -65,14 +71,31 @@ class GlobalLLMConfigAdmin(admin.ModelAdmin):
     ]
 
     def is_default_badge(self, obj):
-        """显示是否为默认配置"""
+        """显示默认配置状态（包括普通默认和多模态默认）"""
+        badges = []
         if obj.is_default:
-            return format_html(
-                '<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold;">✓ 默认</span>'
+            badges.append(
+                '<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold; margin-right: 4px;">✓ 默认</span>'
             )
+        if obj.is_multimodal_default:
+            badges.append(
+                '<span style="background-color: #9c27b0; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold;">🖼 多模态默认</span>'
+            )
+        if badges:
+            return format_html("".join(badges))
         return format_html('<span style="color: #999;">-</span>')
 
     is_default_badge.short_description = "默认配置"
+
+    def supports_multimodal_badge(self, obj):
+        """显示是否支持多模态"""
+        if obj.supports_multimodal:
+            return format_html(
+                '<span style="color: #9c27b0; font-weight: bold;">✓ 支持</span>'
+            )
+        return format_html('<span style="color: #999;">-</span>')
+
+    supports_multimodal_badge.short_description = "多模态"
 
     def has_api_key(self, obj):
         """显示是否配置了API密钥"""
@@ -100,6 +123,35 @@ class GlobalLLMConfigAdmin(admin.ModelAdmin):
         )
 
     set_as_default.short_description = "设为默认配置"
+
+    def set_as_multimodal_default(self, request, queryset):
+        """将选中的配置设为多模态默认配置"""
+        if queryset.count() != 1:
+            self.message_user(request, "请只选择一个配置设为多模态默认", level="error")
+            return
+
+        config = queryset.first()
+        if not config.supports_multimodal:
+            self.message_user(
+                request,
+                f"配置 '{config.name}' 未勾选「支持多模态」，请先勾选后再设为多模态默认",
+                level="error",
+            )
+            return
+
+        # 取消其他配置的多模态默认状态
+        GlobalLLMConfig.objects.filter(is_multimodal_default=True).update(
+            is_multimodal_default=False
+        )
+        # 设置当前配置为多模态默认
+        config.is_multimodal_default = True
+        config.save()
+
+        self.message_user(
+            request, f"已将 '{config.name}' 设为多模态默认配置", level="success"
+        )
+
+    set_as_multimodal_default.short_description = "设为多模态默认配置"
 
     def save_model(self, request, obj, form, change):
         """保存时记录更新者"""

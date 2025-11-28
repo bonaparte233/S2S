@@ -16,7 +16,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
-from .models import GlobalLLMConfig, PPTGeneration
+from .models import GlobalLLMConfig, PPTGeneration, TemplateEditSession
 from .forms import PPTGenerationForm
 
 # Add parent directory to path to import S2S modules
@@ -477,6 +477,73 @@ def developer_tools(request):
 
 @login_required
 @permission_required("ppt_generator.can_export_template_json", raise_exception=True)
+def config_generator_page(request):
+    """Config generator independent page."""
+    is_developer = (
+        request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
+    )
+
+    context = {
+        "is_developer": is_developer,
+    }
+    return render(request, "ppt_generator/config_generator.html", context)
+
+
+@login_required
+@permission_required("ppt_generator.can_export_template_json", raise_exception=True)
+def config_editor_page(request):
+    """Config editor independent page."""
+    is_developer = (
+        request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
+    )
+
+    # 检查是否是嵌入模式
+    embedded = request.GET.get("embedded") == "1"
+
+    # 检查是否有初始配置数据（来自向导的配置生成）
+    init_config = request.GET.get("init_config")
+
+    context = {
+        "is_developer": is_developer,
+        "embedded": embedded,
+        "init_config": init_config,
+    }
+
+    response = render(request, "ppt_generator/config_editor.html", context)
+
+    # 嵌入模式允许同源 iframe 加载
+    if embedded:
+        response["X-Frame-Options"] = "SAMEORIGIN"
+
+    return response
+
+
+@login_required
+@permission_required("ppt_generator.can_export_template_json", raise_exception=True)
+def template_editor_page(request):
+    """Template editor independent page."""
+    is_developer = (
+        request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
+    )
+
+    # 检查是否是嵌入模式（从向导页面的 iframe 加载）
+    embedded = request.GET.get("embedded") == "1"
+
+    context = {
+        "is_developer": is_developer,
+        "embedded": embedded,
+    }
+    response = render(request, "ppt_generator/template_editor.html", context)
+
+    # 如果是嵌入模式，允许在同源 iframe 中加载
+    if embedded:
+        response["X-Frame-Options"] = "SAMEORIGIN"
+
+    return response
+
+
+@login_required
+@permission_required("ppt_generator.can_export_template_json", raise_exception=True)
 def generate_config_template(request):
     """Generate config template from PPTX (AJAX endpoint)."""
     if request.method == "POST":
@@ -570,3 +637,1124 @@ def ai_enrich_template_view(request):
             )
 
     return JsonResponse({"error": "仅支持 POST 请求"}, status=405)
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def parse_ppt_template(request):
+    """
+    解析 PPT 模板，提取元素信息并生成标注截图
+
+    Request:
+        - ppt_file: PPT 模板文件
+
+    Response:
+        {
+            "template_id": "uuid",
+            "pages": [
+                {
+                    "page_num": 1,
+                    "image_url": "/media/temp/page_1_annotated.png",
+                    "shapes": [...]
+                }
+            ]
+        }
+    """
+    try:
+        import uuid
+        from .utils import (
+            extract_shapes_info,
+            convert_ppt_to_pdf,
+            convert_pdf_to_images,
+            annotate_screenshot,
+        )
+
+        # 获取上传的文件
+        ppt_file = request.FILES.get("ppt_file")
+
+        if not ppt_file:
+            return JsonResponse({"error": "请上传 PPT 文件"}, status=400)
+
+        # 创建临时目录
+        template_id = str(uuid.uuid4())
+        temp_dir = settings.MEDIA_ROOT / "template_editor" / template_id
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存 PPT 文件（统一命名为 template.pptx，便于后续发布）
+        ppt_path = temp_dir / "template.pptx"
+        with open(ppt_path, "wb+") as f:
+            for chunk in ppt_file.chunks():
+                f.write(chunk)
+
+        # 提取元素信息
+        shapes_data = extract_shapes_info(ppt_path)
+
+        # 使用 LibreOffice 将 PPT 转换为 PDF
+        pdf_path = convert_ppt_to_pdf(ppt_path, temp_dir)
+
+        # 转换 PDF 为图片（使用 150 DPI 以减小文件大小，加快加载速度）
+        images_dir = temp_dir / "images"
+        image_paths = convert_pdf_to_images(pdf_path, images_dir, dpi=150)
+
+        # 获取幻灯片尺寸
+        slide_width = shapes_data.get("slide_width", 12192000)
+        slide_height = shapes_data.get("slide_height", 6858000)
+
+        # 为每个页面生成标注图片
+        pages = []
+        for page_data in shapes_data["pages"]:
+            page_num = page_data["page_num"]
+
+            if page_num <= len(image_paths):
+                image_path = image_paths[page_num - 1]
+
+                # 生成标注图片（使用幻灯片尺寸计算坐标）
+                annotated_path = annotate_screenshot(
+                    image_path,
+                    page_data["shapes"],
+                    slide_width=slide_width,
+                    slide_height=slide_height,
+                )
+
+                # 生成相对 URL
+                relative_path = annotated_path.relative_to(settings.MEDIA_ROOT)
+                image_url = f"/media/{relative_path}"
+
+                pages.append(
+                    {
+                        "page_num": page_num,
+                        "image_url": image_url,
+                        "shapes": page_data["shapes"],
+                    }
+                )
+
+        return JsonResponse(
+            {
+                "template_id": template_id,
+                "ppt_path": str(ppt_path.relative_to(settings.MEDIA_ROOT)),
+                "slide_width": shapes_data.get("slide_width", 12192000),
+                "slide_height": shapes_data.get("slide_height", 6858000),
+                "pages": pages,
+            }
+        )
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def update_shape_name_api(request):
+    """
+    更新元素名称
+
+    Request:
+        {
+            "template_id": "uuid",
+            "page_num": 1,
+            "shape_index": 3,  # 元素在 slide.shapes 中的索引
+            "new_name": "标题区"
+        }
+
+    Response:
+        {"success": true}
+    """
+    try:
+        import json
+        from .utils import update_shape_name
+
+        data = json.loads(request.body)
+        template_id = data.get("template_id")
+        page_num = data.get("page_num")
+        # 使用 shape_id 定位元素（支持 GROUP 内的元素）
+        shape_id = data.get("shape_id")
+        new_name = data.get("new_name")
+
+        if not all([template_id, page_num is not None, shape_id is not None, new_name]):
+            return JsonResponse({"error": "缺少必要参数"}, status=400)
+
+        # 获取 PPT 文件路径
+        ppt_path = settings.MEDIA_ROOT / "template_editor" / template_id
+        ppt_files = list(ppt_path.glob("*.pptx"))
+
+        if not ppt_files:
+            return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
+
+        # 更新元素名称（使用 shape_id 支持 GROUP 内元素）
+        update_shape_name(ppt_files[0], page_num, shape_id, new_name)
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def generate_template_config(request):
+    """
+    生成配置 JSON（符合 S2S 标准格式）
+
+    Request:
+        {
+            "template_id": "uuid"
+        }
+
+    Response:
+        {
+            "config": {
+                "manifest": [...],
+                "ppt_pages": [...]
+            }
+        }
+    """
+    try:
+        import json
+        from .utils import extract_shapes_info
+
+        data = json.loads(request.body)
+        template_id = data.get("template_id")
+
+        if not template_id:
+            return JsonResponse({"error": "缺少 template_id"}, status=400)
+
+        # 获取 PPT 文件路径
+        ppt_path = settings.MEDIA_ROOT / "template_editor" / template_id
+        ppt_files = list(ppt_path.glob("*.pptx"))
+
+        if not ppt_files:
+            return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
+
+        # 提取元素信息
+        shapes_data = extract_shapes_info(ppt_files[0])
+
+        # 生成符合 S2S 标准的配置 JSON
+        manifest = []
+        ppt_pages = []
+
+        for page_data in shapes_data["pages"]:
+            page_num = page_data["page_num"]
+            text_slots = 0
+            image_slots = 0
+            content = {}
+
+            for shape in page_data["shapes"]:
+                # 只包含已命名的元素（非隐藏）
+                if shape.get("is_named") and not shape.get("is_hidden"):
+                    name = shape["name"]
+                    is_text = shape["type"] == "text"
+
+                    if is_text:
+                        text_slots += 1
+                        max_chars = (shape.get("char_count") or 10) * 2
+                        content[name] = {
+                            "type": "text",
+                            "hint": f"填写{name}的内容",
+                            "required": True,
+                            "value": "",
+                            "max_chars": max_chars,
+                        }
+                    else:
+                        image_slots += 1
+                        content[name] = {
+                            "type": "image",
+                            "hint": "插入与本页主题相关的图片路径",
+                            "required": True,
+                            "value": "",
+                            "preferred_format": "png/jpg",
+                        }
+
+            # 只添加有内容的页面
+            if content:
+                # 根据内容推断页面类型
+                page_type = f"第{page_num}页"
+                if text_slots == 0 and image_slots > 0:
+                    page_type = "纯图页"
+                elif text_slots <= 3 and image_slots == 0:
+                    page_type = "标题页"
+                elif image_slots > 0:
+                    page_type = "图文页"
+                else:
+                    page_type = "文字页"
+
+                manifest.append(
+                    {
+                        "template_page_num": page_num,
+                        "page_type": page_type,
+                        "text_slots": text_slots,
+                        "image_slots": image_slots,
+                    }
+                )
+
+                ppt_pages.append(
+                    {
+                        "page_type": page_type,
+                        "template_page_num": page_num,
+                        "content": content,
+                        "meta": {
+                            "layout": page_type,
+                            "scene": [],
+                            "style": "",
+                            "text_slots": text_slots,
+                            "image_slots": image_slots,
+                            "notes": "请根据实际需要填写内容",
+                        },
+                    }
+                )
+
+        config = {"manifest": manifest, "ppt_pages": ppt_pages}
+
+        return JsonResponse({"config": config})
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["GET"])
+def download_template_ppt(request, template_id):
+    """
+    下载编辑后的 PPT 模板
+
+    Args:
+        template_id: 模板 ID
+
+    Response:
+        PPT 文件下载
+    """
+    try:
+        from django.http import FileResponse
+
+        # 获取 PPT 文件路径
+        ppt_path = settings.MEDIA_ROOT / "template_editor" / template_id
+        ppt_files = list(ppt_path.glob("*.pptx"))
+
+        if not ppt_files:
+            return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
+
+        # 返回文件下载
+        response = FileResponse(
+            open(ppt_files[0], "rb"),
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{ppt_files[0].name}"'
+
+        return response
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def toggle_shape_visibility(request):
+    """
+    切换元素的隐藏/显示状态
+
+    Request:
+        {
+            "template_id": "uuid",
+            "page_num": 1,
+            "shape_id": 123,  # 元素的 shape_id（支持 GROUP 内元素）
+            "is_hidden": true
+        }
+
+    Response:
+        {"success": true}
+
+    Note: 这个功能只是在前端标记，不修改 PPT 文件
+    """
+    try:
+        import json
+
+        data = json.loads(request.body)
+        template_id = data.get("template_id")
+        page_num = data.get("page_num")
+        shape_id = data.get("shape_id")
+        is_hidden = data.get("is_hidden")
+
+        if not all(
+            [
+                template_id,
+                page_num is not None,
+                shape_id is not None,
+                is_hidden is not None,
+            ]
+        ):
+            return JsonResponse({"error": "缺少必要参数"}, status=400)
+
+        # 这个功能只在前端维护状态，不需要修改 PPT 文件
+        # 前端会在生成配置 JSON 时自动过滤隐藏的元素
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def refresh_page_preview(request):
+    """
+    刷新页面预览图（用于隐藏/显示元素后更新标注）
+
+    Request:
+        {
+            "template_id": "uuid",
+            "page_num": 1,
+            "shapes": [...]  // 包含 is_hidden 状态的元素列表
+        }
+
+    Response:
+        {"success": true, "image_url": "/media/..."}
+    """
+    try:
+        import json
+        import logging
+        from .utils import annotate_screenshot
+
+        logger = logging.getLogger(__name__)
+
+        data = json.loads(request.body)
+        template_id = data.get("template_id")
+        page_num = data.get("page_num")
+        shapes = data.get("shapes", [])
+
+        # 调试日志
+        hidden_shapes = [s for s in shapes if s.get("is_hidden")]
+        logger.info(
+            f"[refresh_preview] page={page_num}, total={len(shapes)}, hidden={len(hidden_shapes)}"
+        )
+        for s in hidden_shapes:
+            logger.info(f"  隐藏元素: {s.get('name')} (id={s.get('shape_id')})")
+
+        if not all([template_id, page_num is not None]):
+            return JsonResponse({"error": "缺少必要参数"}, status=400)
+
+        # 获取原始截图路径（图片在 images 子目录中）
+        template_path = settings.MEDIA_ROOT / "template_editor" / template_id
+        images_dir = template_path / "images"
+        original_image = images_dir / f"page_{page_num}.png"
+
+        logger.info(f"[refresh_preview] 查找图片: {original_image}")
+
+        if not original_image.exists():
+            return JsonResponse(
+                {"error": f"找不到页面 {page_num} 的截图: {original_image}"}, status=404
+            )
+
+        # 获取 PPT 文件以获取幻灯片尺寸
+        ppt_files = list(template_path.glob("*.pptx"))
+        if not ppt_files:
+            return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
+
+        from pptx import Presentation
+
+        prs = Presentation(str(ppt_files[0]))
+        slide_width = prs.slide_width
+        slide_height = prs.slide_height
+
+        # 重新生成标注图片
+        annotated_path = annotate_screenshot(
+            original_image,
+            shapes,
+            slide_width=slide_width,
+            slide_height=slide_height,
+        )
+
+        # 生成相对 URL
+        relative_path = annotated_path.relative_to(settings.MEDIA_ROOT)
+        image_url = f"/media/{relative_path}"
+
+        return JsonResponse({"success": True, "image_url": image_url})
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def ai_auto_name_shapes(request):
+    """
+    使用多模态 AI 自动为页面元素命名
+
+    Request:
+        {
+            "template_id": "uuid",
+            "page_num": 1,
+            "image_url": "/media/...",
+            "shapes": [...],  # 当前页面的元素列表
+            "llm_provider": "glm",  # 可选，默认使用全局配置
+            "llm_model": "glm-4v-plus"  # 可选
+        }
+
+    Response:
+        {
+            "success": true,
+            "named_shapes": [
+                {"shape_index": 3, "suggested_name": "章节标题"},
+                ...
+            ]
+        }
+    """
+    import base64
+    import json
+    import mimetypes
+    import os
+    import sys
+    from pathlib import Path
+
+    try:
+        data = json.loads(request.body)
+        template_id = data.get("template_id")
+        page_num = data.get("page_num")
+        image_url = data.get("image_url")
+        shapes = data.get("shapes", [])
+
+        if not all([template_id, page_num, image_url, shapes]):
+            return JsonResponse({"error": "缺少必要参数"}, status=400)
+
+        # 获取 LLM 配置
+        llm_provider = data.get("llm_provider")
+        llm_model = data.get("llm_model")
+
+        # 如果没有指定，使用多模态默认配置
+        if not llm_provider:
+            from .models import GlobalLLMConfig
+
+            # 优先使用多模态默认配置
+            multimodal_config = GlobalLLMConfig.get_multimodal_config()
+            if multimodal_config:
+                llm_provider = multimodal_config.llm_provider
+                # 使用 get_model_for_provider() 获取正确的模型名
+                llm_model = llm_model or multimodal_config.get_model_for_provider()
+                # 设置 API Key
+                if multimodal_config.llm_api_key:
+                    if llm_provider == "glm":
+                        os.environ["GLM_API_KEY"] = multimodal_config.llm_api_key
+                    elif llm_provider == "taichu":
+                        os.environ["TAICHU_API_KEY"] = multimodal_config.llm_api_key
+
+                print(
+                    f"[AI命名] 使用多模态配置: provider={llm_provider}, model={llm_model}"
+                )
+            else:
+                return JsonResponse(
+                    {
+                        "error": "未配置多模态 LLM，请先在管理后台配置 glm 或 taichu 模型并设为多模态默认"
+                    },
+                    status=400,
+                )
+
+        # 注意：多模态支持由用户在配置中标记，这里不再硬编码检查
+        # get_multimodal_config 已确保返回的配置支持多模态
+
+        # 加载图片（去除可能的时间戳参数）
+        clean_image_url = image_url.split("?")[0]  # 移除 ?t=xxx 等参数
+        image_path = settings.MEDIA_ROOT / clean_image_url.lstrip("/media/")
+        if not image_path.exists():
+            return JsonResponse({"error": f"图片不存在: {clean_image_url}"}, status=404)
+
+        # 读取并编码图片
+        with open(image_path, "rb") as f:
+            image_data = f.read()
+        base64_image = base64.b64encode(image_data).decode("utf-8")
+        mime_type, _ = mimetypes.guess_type(str(image_path))
+        if not mime_type:
+            mime_type = "image/png"
+
+        # 过滤出可见元素（隐藏的元素不显示在图片上也不需要命名）
+        visible_shapes = [s for s in shapes if not s.get("is_hidden")]
+
+        # 构建元素描述（编号与图片上的标注一致，从1开始）
+        shapes_desc = []
+        for i, shape in enumerate(visible_shapes, 1):
+            desc = f"#{i}: 类型={shape.get('type', '未知')}"
+            if shape.get("text_sample"):
+                desc += f', 文本预览="{shape["text_sample"][:30]}..."'
+            shapes_desc.append(desc)
+
+        # 构建 Prompt
+        prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，为每个标注了编号的元素提供一个语义化的名称。
+
+**重要说明**：图片上只标注了当前可见的元素，编号从 1 到 {len(visible_shapes)}。请只关注图片上有编号标注的元素，忽略其他没有标注的部分。
+
+页面上有 {len(visible_shapes)} 个可编辑元素，用黄色/蓝色编号圈标注：
+
+{chr(10).join(shapes_desc)}
+
+命名规则：
+1. 名称应该反映元素的用途，如"章节标题"、"正文内容区"、"作者姓名"、"日期"等
+2. 名称简洁明了，不超过10个字
+3. 如果元素内容已经暗示了用途，使用对应的名称
+4. 图片元素命名为"封面图片"、"内容配图"、"logo图标"等
+5. 只为图片上有编号标注的 {len(visible_shapes)} 个元素命名
+
+请以 JSON 格式返回，格式如下：
+```json
+[
+  {{"index": 1, "name": "章节标题"}},
+  {{"index": 2, "name": "正文内容"}}
+]
+```
+
+只返回 JSON，不要其他解释。确保返回的 index 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
+
+        # 初始化 LLM（使用管理后台配置的多模态模型）
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
+        from llm_client import GLMLLM, TaichuLLM
+
+        # llm_model 已从 multimodal_config.llm_model 获取，不再使用硬编码默认值
+        if not llm_model:
+            return JsonResponse(
+                {"error": "未配置多模态模型名称，请在管理后台设置"},
+                status=400,
+            )
+
+        if llm_provider == "glm":
+            llm = GLMLLM(model=llm_model)
+        else:
+            llm = TaichuLLM(model=llm_model)
+
+        # 构建多模态消息
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{mime_type};base64,{base64_image}"},
+                    },
+                ],
+            }
+        ]
+
+        # 调用 LLM（带重试机制，处理 429 限流）
+        import time
+
+        max_retries = 5
+        retry_delay = 5  # 初始延迟秒数（增加到5秒）
+        response = None
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                response = llm.generate(messages)
+                break  # 成功则跳出循环
+            except Exception as e:
+                last_error = e
+                error_str = str(e)
+                # 检查是否是 429 限流错误（支持中英文关键词）
+                is_rate_limit = (
+                    "429" in error_str
+                    or "rate" in error_str.lower()
+                    or "limit" in error_str.lower()
+                    or "1302" in error_str  # GLM 的限流错误码
+                    or "并发" in error_str
+                    or "频率" in error_str
+                )
+                if is_rate_limit and attempt < max_retries - 1:
+                    # 固定延迟重试（不用指数退避，避免等太久）
+                    wait_time = retry_delay + attempt * 2  # 5, 7, 9, 11 秒
+                    print(
+                        f"[AI命名] 遇到限流，等待 {wait_time} 秒后重试 ({attempt + 1}/{max_retries})..."
+                    )
+                    time.sleep(wait_time)
+                    continue
+                # 其他错误或重试耗尽，返回友好错误
+                if is_rate_limit:
+                    raise Exception(
+                        "AI 服务繁忙，请稍后重试（已尝试多次重试）"
+                    ) from last_error
+                raise
+
+        if response is None:
+            if last_error:
+                error_str = str(last_error)
+                if "429" in error_str or "1302" in error_str or "并发" in error_str:
+                    raise Exception("AI 服务繁忙，请稍后重试")
+            raise last_error or Exception("LLM 调用失败")
+
+        # 解析响应
+        # 提取 JSON 部分
+        json_match = response
+        if "```json" in response:
+            json_match = response.split("```json")[1].split("```")[0].strip()
+        elif "```" in response:
+            json_match = response.split("```")[1].split("```")[0].strip()
+
+        suggested_names = json.loads(json_match)
+
+        # 映射到 shape_index（visible_shapes 已在上面定义）
+        named_shapes = []
+
+        for suggestion in suggested_names:
+            idx = suggestion.get("index", 0) - 1  # 转为0-based
+            if 0 <= idx < len(visible_shapes):
+                shape = visible_shapes[idx]
+                named_shapes.append(
+                    {
+                        "shape_index": shape.get("shape_index"),
+                        "shape_id": shape.get("shape_id"),
+                        "suggested_name": suggestion.get("name", ""),
+                    }
+                )
+
+        return JsonResponse({"success": True, "named_shapes": named_shapes})
+
+    except json.JSONDecodeError as e:
+        return JsonResponse(
+            {"error": f"AI 返回格式错误: {str(e)}", "raw_response": response},
+            status=500,
+        )
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+# ============ 编辑记录管理 API ============
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["GET"])
+def list_edit_sessions(request):
+    """
+    获取当前用户的编辑记录列表
+
+    Query Params:
+        editor_type: 可选，'ppt' 或 'config'，不传则返回所有类型
+
+    Response:
+        {
+            "sessions": [
+                {
+                    "id": 1,
+                    "session_id": "uuid",
+                    "editor_type": "ppt",
+                    "editor_type_display": "PPT 模板编辑器",
+                    "template_name": "template1.pptx",
+                    "progress_summary": "10/20 已命名 (50%)",
+                    "thumbnail_url": "/media/...",
+                    "created_at": "2024-01-01 12:00:00",
+                    "updated_at": "2024-01-01 13:00:00"
+                }
+            ]
+        }
+    """
+    editor_type = request.GET.get("editor_type")
+
+    sessions = TemplateEditSession.objects.filter(user=request.user)
+    if editor_type:
+        sessions = sessions.filter(editor_type=editor_type)
+
+    sessions = sessions.order_by("-updated_at")[:20]  # 最多返回20条
+
+    result = []
+    for session in sessions:
+        result.append(
+            {
+                "id": session.id,
+                "session_id": session.session_id,
+                "editor_type": session.editor_type,
+                "editor_type_display": session.get_editor_type_display(),
+                "template_name": session.template_name,
+                "progress_summary": session.progress_summary,
+                "progress_data": session.progress_data,
+                "thumbnail_url": session.thumbnail_url,
+                "created_at": session.created_at.strftime("%Y-%m-%d %H:%M"),
+                "updated_at": session.updated_at.strftime("%Y-%m-%d %H:%M"),
+            }
+        )
+
+    return JsonResponse({"sessions": result})
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["POST"])
+def save_edit_session(request):
+    """
+    保存/更新编辑会话记录
+
+    Request:
+        {
+            "session_id": "uuid",
+            "editor_type": "ppt" | "config",
+            "template_name": "template.pptx",
+            "progress_data": {...},
+            "thumbnail_url": "/media/..."  // 可选
+        }
+
+    Response:
+        {"success": true, "id": 1}
+    """
+    try:
+        data = json.loads(request.body)
+        session_id = data.get("session_id")
+        editor_type = data.get("editor_type", "ppt")
+        template_name = data.get("template_name", "未命名模板")
+        progress_data = data.get("progress_data", {})
+        thumbnail_url = data.get("thumbnail_url")
+
+        if not session_id:
+            return JsonResponse({"error": "缺少 session_id"}, status=400)
+
+        # 创建或更新
+        session, created = TemplateEditSession.objects.update_or_create(
+            user=request.user,
+            session_id=session_id,
+            defaults={
+                "editor_type": editor_type,
+                "template_name": template_name,
+                "progress_data": progress_data,
+                "thumbnail_url": thumbnail_url,
+            },
+        )
+
+        return JsonResponse({"success": True, "id": session.id, "created": created})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["DELETE", "POST"])
+def delete_edit_session(request, session_id):
+    """
+    删除编辑会话记录
+
+    Response:
+        {"success": true}
+    """
+    try:
+        session = TemplateEditSession.objects.get(
+            user=request.user, session_id=session_id
+        )
+
+        # 如果是 PPT 编辑器，同时删除临时文件
+        if session.editor_type == "ppt":
+            import shutil
+
+            temp_dir = settings.MEDIA_ROOT / "template_editor" / session_id
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
+
+        session.delete()
+        return JsonResponse({"success": True})
+
+    except TemplateEditSession.DoesNotExist:
+        return JsonResponse({"error": "记录不存在"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["GET"])
+def get_edit_session(request, session_id):
+    """
+    获取单个编辑会话的详细信息
+
+    Response:
+        {
+            "session": {...},
+            "exists": true  // 对于 PPT 编辑器，检查临时文件是否还存在
+        }
+    """
+    try:
+        session = TemplateEditSession.objects.get(
+            user=request.user, session_id=session_id
+        )
+
+        # 检查文件是否还存在
+        exists = True
+        if session.editor_type == "ppt":
+            temp_dir = settings.MEDIA_ROOT / "template_editor" / session_id
+            exists = temp_dir.exists()
+
+        return JsonResponse(
+            {
+                "session": {
+                    "id": session.id,
+                    "session_id": session.session_id,
+                    "editor_type": session.editor_type,
+                    "template_name": session.template_name,
+                    "progress_data": session.progress_data,
+                    "thumbnail_url": session.thumbnail_url,
+                    "created_at": session.created_at.strftime("%Y-%m-%d %H:%M"),
+                    "updated_at": session.updated_at.strftime("%Y-%m-%d %H:%M"),
+                },
+                "exists": exists,
+            }
+        )
+
+    except TemplateEditSession.DoesNotExist:
+        return JsonResponse({"error": "记录不存在"}, status=404)
+
+
+@login_required
+@permission_required("ppt_generator.is_developer", raise_exception=True)
+@require_http_methods(["GET"])
+def restore_edit_session(request, session_id):
+    """
+    恢复 PPT 编辑会话 - 重新加载已上传的模板数据
+
+    Response:
+        与 parse_ppt_template 相同的结构
+    """
+    try:
+        from .utils import extract_shapes_info, annotate_screenshot
+
+        # 尝试查找会话（ppt 类型或从向导传入的直接加载）
+        session = TemplateEditSession.objects.filter(
+            user=request.user, session_id=session_id, editor_type="ppt"
+        ).first()
+
+        # 获取 PPT 文件路径
+        template_path = settings.MEDIA_ROOT / "template_editor" / session_id
+        if not template_path.exists():
+            return JsonResponse({"error": "编辑会话文件已过期"}, status=404)
+
+        ppt_files = list(template_path.glob("*.pptx"))
+        if not ppt_files:
+            return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
+
+        ppt_path = ppt_files[0]
+
+        # 提取元素信息
+        shapes_data = extract_shapes_info(ppt_path)
+
+        # 获取幻灯片尺寸
+        slide_width = shapes_data.get("slide_width", 12192000)
+        slide_height = shapes_data.get("slide_height", 6858000)
+
+        # 构建页面数据（使用已有的标注图片）
+        images_dir = template_path / "images"
+        pages = []
+
+        for page_data in shapes_data["pages"]:
+            page_num = page_data["page_num"]
+
+            # 查找已有的标注图片
+            annotated_image = images_dir / f"page_{page_num}_annotated.png"
+            if annotated_image.exists():
+                image_url = f"/media/template_editor/{session_id}/images/page_{page_num}_annotated.png"
+            else:
+                # 如果没有标注图片，使用原始图片重新标注
+                original_image = images_dir / f"page_{page_num}.png"
+                if original_image.exists():
+                    annotated_path = annotate_screenshot(
+                        original_image,
+                        page_data["shapes"],
+                        slide_width,
+                        slide_height,
+                    )
+                    image_url = (
+                        f"/media/template_editor/{session_id}/images/"
+                        + annotated_path.name
+                    )
+                else:
+                    image_url = None
+
+            pages.append(
+                {
+                    "page_num": page_num,
+                    "image_url": image_url,
+                    "shapes": page_data["shapes"],
+                }
+            )
+
+        # 获取模板名称（从 session 或 ppt 文件名）
+        template_name = session.template_name if session else ppt_path.stem
+
+        return JsonResponse(
+            {
+                "template_id": session_id,
+                "template_name": template_name,
+                "ppt_path": str(ppt_path.relative_to(settings.MEDIA_ROOT)),
+                "slide_width": slide_width,
+                "slide_height": slide_height,
+                "pages": pages,
+            }
+        )
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )
+
+
+@login_required
+def template_wizard_page(request):
+    """模板制作向导页面"""
+    # 只有通过 URL 参数指定 session 时才恢复会话
+    # 直接点击卡片进入时不传 session 参数，开始新的向导
+    session_id = request.GET.get("session")
+
+    existing_session = None
+    existing_session_json = None
+    if session_id:
+        existing_session = TemplateEditSession.objects.filter(
+            user=request.user, session_id=session_id, editor_type="wizard"
+        ).first()
+        # 如果已发布，不恢复
+        if existing_session and existing_session.progress_data.get("published"):
+            existing_session = None
+
+        # 转换为 JSON 友好的格式
+        if existing_session:
+            existing_session_json = json.dumps(
+                {
+                    "session_id": existing_session.session_id,
+                    "template_name": existing_session.template_name,
+                    "updated_at": existing_session.updated_at.strftime(
+                        "%Y-%m-%d %H:%M"
+                    ),
+                    "progress_data": existing_session.progress_data or {},
+                }
+            )
+
+    context = {
+        "existing_session": existing_session,
+        "existing_session_json": existing_session_json,
+    }
+    return render(request, "ppt_generator/template_wizard.html", context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def publish_template(request):
+    """
+    发布模板到 templates 目录
+
+    请求体:
+    {
+        "template_name": "课程介绍模板",
+        "ppt_session_id": "xxx",
+        "config_data": {...}
+    }
+    """
+    try:
+        data = json.loads(request.body)
+        template_name = data.get("template_name", "").strip()
+        ppt_session_id = data.get("ppt_session_id")
+        config_data = data.get("config_data")
+
+        if not template_name:
+            return JsonResponse({"error": "模板名称不能为空"}, status=400)
+        if not ppt_session_id:
+            return JsonResponse({"error": "缺少 PPT 会话 ID"}, status=400)
+        if not config_data:
+            return JsonResponse({"error": "缺少配置数据"}, status=400)
+
+        # 验证模板名称（只允许中文、英文、数字、下划线、横线）
+        import re
+
+        if not re.match(r"^[\u4e00-\u9fa5a-zA-Z0-9_-]+$", template_name):
+            return JsonResponse(
+                {"error": "模板名称只能包含中文、英文、数字、下划线和横线"}, status=400
+            )
+
+        # 目标目录
+        target_dir = settings.S2S_TEMPLATE_DIR / template_name
+        if target_dir.exists():
+            return JsonResponse(
+                {"error": f"模板 '{template_name}' 已存在，请使用其他名称"}, status=400
+            )
+
+        # 获取 PPT 文件路径
+        ppt_source_dir = settings.MEDIA_ROOT / "template_editor" / ppt_session_id
+        ppt_source_path = ppt_source_dir / "template.pptx"
+
+        # 如果 template.pptx 不存在，尝试查找任意 .pptx 文件（兼容旧会话）
+        if not ppt_source_path.exists():
+            ppt_files = list(ppt_source_dir.glob("*.pptx"))
+            if ppt_files:
+                ppt_source_path = ppt_files[0]
+            else:
+                return JsonResponse({"error": "PPT 文件不存在，请重新上传"}, status=400)
+
+        # 创建目标目录
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # 复制 PPT 文件
+        import shutil
+
+        pptx_target = target_dir / "template.pptx"
+        shutil.copy2(ppt_source_path, pptx_target)
+
+        # 保存 JSON 配置
+        json_target = target_dir / "template.json"
+        json_target.write_text(
+            json.dumps(config_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        # 更新 wizard 会话状态
+        wizard_session = (
+            TemplateEditSession.objects.filter(user=request.user, editor_type="wizard")
+            .order_by("-updated_at")
+            .first()
+        )
+
+        if wizard_session:
+            progress = wizard_session.progress_data or {}
+            progress["published"] = True
+            progress["published_path"] = str(target_dir)
+            progress["current_step"] = 4
+            wizard_session.progress_data = progress
+            wizard_session.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"模板 '{template_name}' 发布成功！",
+                "template_path": str(target_dir),
+                "pptx_path": str(pptx_target),
+                "json_path": str(json_target),
+            }
+        )
+
+    except Exception as e:
+        import traceback
+
+        return JsonResponse(
+            {"error": str(e), "traceback": traceback.format_exc()}, status=500
+        )

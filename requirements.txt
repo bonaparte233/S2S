@@ -3,6 +3,7 @@ python-pptx
 python-docx
 requests
 Pillow
+pdf2image
 
 # Django web framework
 Django>=5.2

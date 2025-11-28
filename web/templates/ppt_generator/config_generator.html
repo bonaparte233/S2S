@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}配置模板生成 - 开发者工具{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tool-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .tool-header-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+
+    .tool-header-info h2 {
+        margin: 0 0 var(--spacing-xs) 0;
+    }
+
+    .tool-header-info p {
+        margin: 0;
+        color: var(--text-secondary);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: var(--spacing-md);
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--primary-color);
+    }
+
+    .file-upload-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-upload-wrapper input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-upload-label {
+        display: block;
+        padding: var(--spacing-lg);
+        border: 2px dashed var(--border-color);
+        border-radius: var(--border-radius);
+        text-align: center;
+        background: var(--bg-secondary);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .file-upload-wrapper:hover .file-upload-label {
+        border-color: var(--primary-color);
+        background: var(--bg-hover);
+    }
+
+    .file-upload-label.has-file {
+        border-color: var(--success-color);
+        background: rgba(46, 204, 113, 0.1);
+    }
+
+    .result-card {
+        margin-top: var(--spacing-lg);
+    }
+
+    .error-details {
+        background: rgba(231, 76, 60, 0.1);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        color: var(--danger-color);
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'developer_tools_page' %}" class="back-link">← 返回开发者工具</a>
+
+<div class="tool-header">
+    <div class="tool-header-icon">📄</div>
+    <div class="tool-header-info">
+        <h2>配置模板生成</h2>
+        <p>上传 PPT 模板文件，自动提取所有可编辑元素并生成 JSON 配置模板</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>📤 上传 PPT 模板文件</h3>
+    </div>
+    <div class="card-body">
+        <form id="generateForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="template_file" class="form-label required">PPT模板文件</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="template_file" name="template_file" accept=".pptx" required>
+                    <span class="file-upload-label" id="fileLabel">📂 点击选择或拖拽 PPT 模板文件 (.pptx)</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="mode" class="form-label">导出模式</label>
+                <select id="mode" name="mode" class="text-input">
+                    <option value="semantic">语义模式 - 仅导出命名规范的元素（推荐）</option>
+                    <option value="text">文本模式 - 导出所有可编辑文本框</option>
+                </select>
+                <small class="form-help">语义模式只导出包含"xx区"等命名的元素</small>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large" id="submitBtn">🚀 生成配置模板</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="generateResult" class="card result-card" style="display: none;">
+    <div class="card-header">
+        <h3>✅ 生成成功</h3>
+    </div>
+    <div class="card-body">
+        <p>配置模板已生成，包含 <strong id="pageCount"></strong> 个页面。</p>
+        <div class="form-actions">
+            <button id="downloadGeneratedBtn" class="btn btn-success">📥 下载 JSON 文件</button>
+            <a id="goToEditBtn" href="{% url 'config_editor_page' %}" class="btn btn-primary">✏️ 前往编辑</a>
+        </div>
+    </div>
+</div>
+
+<div id="generateError" class="card result-card" style="display: none;">
+    <div class="card-header">
+        <h3>❌ 生成失败</h3>
+    </div>
+    <div class="card-body">
+        <div id="generateErrorContent" class="error-details"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let generatedData = null;
+    let generatedSessionId = null;
+
+    // 获取 CSRF Token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 生成 UUID
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // 保存编辑会话
+    async function saveGeneratedSession(data, fileName) {
+        const sessionId = generateUUID();
+
+        // 计算字段数
+        let totalFields = 0;
+        (data.ppt_pages || []).forEach(page => {
+            const content = page.content || {};
+            totalFields += Object.keys(content).length;
+        });
+
+        try {
+            await fetch('/developer-tools/edit-sessions/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    editor_type: 'config',
+                    template_name: fileName || '新生成的配置模板',
+                    progress_data: {
+                        total_count: totalFields,
+                        named_count: 0,
+                        page_count: (data.ppt_pages || []).length,
+                        template_data: data  // 保存完整数据以便恢复
+                    },
+                    thumbnail_url: null
+                })
+            });
+            return sessionId;
+        } catch (e) {
+            console.error('保存编辑会话失败:', e);
+            return null;
+        }
+    }
+
+    document.getElementById('template_file').addEventListener('change', function () {
+        const label = document.getElementById('fileLabel');
+        if (this.files && this.files[0]) {
+            label.textContent = '📄 ' + this.files[0].name;
+            label.classList.add('has-file');
+        } else {
+            label.textContent = '📂 点击选择或拖拽 PPT 模板文件 (.pptx)';
+            label.classList.remove('has-file');
+        }
+    });
+
+    document.getElementById('generateForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const resultDiv = document.getElementById('generateResult');
+        const errorDiv = document.getElementById('generateError');
+        const submitBtn = document.getElementById('submitBtn');
+
+        resultDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ 处理中...';
+
+        try {
+            const response = await fetch('{% url "generate_config_template" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                generatedData = data;
+                document.getElementById('pageCount').textContent = data.ppt_pages ? data.ppt_pages.length : 0;
+                resultDiv.style.display = 'block';
+
+                // 获取文件名
+                const fileInput = document.getElementById('template_file');
+                const fileName = fileInput.files[0] ? fileInput.files[0].name.replace('.pptx', '') : '配置模板';
+
+                // 保存会话并更新链接
+                generatedSessionId = await saveGeneratedSession(data, fileName);
+                if (generatedSessionId) {
+                    const goToEditBtn = document.getElementById('goToEditBtn');
+                    goToEditBtn.href = '{% url "config_editor_page" %}?session=' + generatedSessionId;
+                }
+            } else {
+                let errorMsg = data.error || '生成失败';
+                if (data.traceback) {
+                    errorMsg += '\n\n详细错误信息：\n' + data.traceback;
+                }
+                document.getElementById('generateErrorContent').textContent = errorMsg;
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            document.getElementById('generateErrorContent').textContent = '网络错误: ' + error.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 生成配置模板';
+        }
+    });
+
+    document.getElementById('downloadGeneratedBtn').addEventListener('click', function () {
+        if (!generatedData) return;
+        const jsonStr = JSON.stringify(generatedData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ppt_config_template.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+</script>
+{% endblock %}
