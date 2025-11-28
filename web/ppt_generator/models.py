@@ -331,6 +331,7 @@ class TemplateEditSession(models.Model):
     EDITOR_TYPE_CHOICES = [
         ("ppt", "PPT 模板编辑器"),
         ("config", "配置模板编辑器"),
+        ("wizard", "模板制作向导"),
     ]
 
     # 用户

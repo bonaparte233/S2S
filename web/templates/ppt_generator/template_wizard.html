@@ -1,0 +1,894 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}模板制作向导 - S2S{% endblock %}
+
+{% block extra_css %}
+<style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .navbar {
+        display: none !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .main-content>.container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .footer {
+        display: none !important;
+    }
+
+    /* 向导容器 */
+    .wizard-container {
+        flex: 1;
+        background: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* 顶部栏 */
+    .wizard-header {
+        height: 70px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        flex-shrink: 0;
+        color: white;
+    }
+
+    .wizard-header h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .wizard-header .back-btn {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0.9;
+    }
+
+    .wizard-header .back-btn:hover {
+        opacity: 1;
+    }
+
+    /* 步骤指示器 */
+    .steps-indicator {
+        background: white;
+        padding: 20px 40px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        flex-shrink: 0;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 20px;
+        color: #999;
+        font-size: 0.95rem;
+    }
+
+    .step-item.active {
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .step-item.completed {
+        color: #22c55e;
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .step-item.active .step-number {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+
+    .step-item.completed .step-number {
+        background: #22c55e;
+        color: white;
+    }
+
+    .step-connector {
+        width: 60px;
+        height: 2px;
+        background: #e5e7eb;
+        margin: 0 5px;
+    }
+
+    .step-connector.completed {
+        background: #22c55e;
+    }
+
+    /* 步骤内容区 */
+    .step-content {
+        flex: 1;
+        overflow: auto;
+        padding: 30px;
+    }
+
+    .step-panel {
+        display: none;
+    }
+
+    .step-panel.active {
+        display: block;
+    }
+
+    /* 上传区域 */
+    .upload-zone {
+        max-width: 600px;
+        margin: 60px auto;
+        padding: 60px;
+        border: 3px dashed #d1d5db;
+        border-radius: 16px;
+        text-align: center;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-zone:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .upload-zone.dragover {
+        border-color: #667eea;
+        background: #eef2ff;
+    }
+
+    .upload-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+
+    .upload-title {
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .upload-hint {
+        color: #666;
+        font-size: 0.95rem;
+    }
+
+    /* 步骤工具栏 */
+    .wizard-step-toolbar {
+        background: white;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .wizard-step-toolbar .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .wizard-step-toolbar .btn-warning:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        transform: translateY(-1px);
+    }
+
+    .wizard-step-toolbar .btn-warning:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* 嵌入式编辑器容器 */
+    .embedded-editor {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        height: calc(100vh - 250px);
+        overflow: hidden;
+    }
+
+    /* 当有工具栏时调整编辑器样式 */
+    .wizard-step-toolbar+.embedded-editor {
+        border-radius: 0 0 12px 12px;
+        height: calc(100vh - 310px);
+    }
+
+    .embedded-editor iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    /* 底部操作栏 */
+    .wizard-footer {
+        height: 70px;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        flex-shrink: 0;
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wizard-container">
+    <!-- 顶部栏 -->
+    <div class="wizard-header">
+        <a href="{% url 'developer_tools_page' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> 返回
+        </a>
+        <h2>🧙‍♂️ 模板制作向导</h2>
+        <div style="width: 80px;"></div>
+    </div>
+
+    <!-- 步骤指示器 -->
+    <div class="steps-indicator">
+        <div class="step-item active" data-step="1">
+            <span class="step-number">1</span>
+            <span>上传 PPT</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" data-step="2">
+            <span class="step-number">2</span>
+            <span>元素命名</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" data-step="3">
+            <span class="step-number">3</span>
+            <span>配置模板</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" data-step="4">
+            <span class="step-number">4</span>
+            <span>发布模板</span>
+        </div>
+    </div>
+
+    <!-- 步骤内容区 -->
+    <div class="step-content">
+        <!-- Step 1: 上传 PPT -->
+        <div class="step-panel active" id="step-1">
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📤</div>
+                <div class="upload-title">上传 PPT 模板文件</div>
+                <div class="upload-hint">支持 .pptx 格式，拖拽或点击选择文件</div>
+                <input type="file" id="pptFileInput" accept=".pptx" style="display:none;">
+            </div>
+        </div>
+
+        <!-- Step 2: 元素命名 -->
+        <div class="step-panel" id="step-2">
+            <!-- 元素命名工具栏 -->
+            <div class="wizard-step-toolbar" id="step2Toolbar" style="display:none;">
+                <button id="wizardAiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 自动为所有页面元素命名">
+                    🤖 AI 一键命名全部页
+                </button>
+                <span id="wizardAiProgress" style="margin-left: 15px; color: #666; display: none;"></span>
+            </div>
+            <div class="embedded-editor" id="pptEditorContainer">
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
+                    <div class="text-center">
+                        <div style="font-size:3rem;margin-bottom:20px;">⏳</div>
+                        <div>正在加载 PPT 编辑器...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: 配置模板 -->
+        <div class="step-panel" id="step-3">
+            <div class="embedded-editor" id="configEditorContainer">
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
+                    <div class="text-center">
+                        <div style="font-size:3rem;margin-bottom:20px;">⏳</div>
+                        <div>正在生成配置模板...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: 发布模板 -->
+        <div class="step-panel" id="step-4">
+            <div style="max-width:600px;margin:60px auto;">
+                <div style="background:white;border-radius:16px;padding:40px;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
+                    <div style="text-align:center;margin-bottom:30px;">
+                        <div style="font-size:4rem;margin-bottom:15px;">🚀</div>
+                        <h3 style="margin:0;color:#333;">发布模板到模板库</h3>
+                        <p style="color:#666;margin-top:10px;">模板将保存到 templates 目录，可直接用于 PPT 生成</p>
+                    </div>
+                    <div style="margin-bottom:25px;">
+                        <label style="display:block;margin-bottom:8px;font-weight:600;color:#333;">
+                            模板名称 <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="text" id="templateName" class="form-control" placeholder="例如：课程介绍模板、实验报告模板"
+                            style="font-size:1.1rem;padding:12px 16px;">
+                        <small style="color:#666;margin-top:5px;display:block;">
+                            只能包含中文、英文、数字、下划线和横线
+                        </small>
+                    </div>
+                    <div id="publishStatus" style="margin-bottom:20px;display:none;"></div>
+                    <button id="publishBtn" class="btn btn-lg w-100"
+                        style="background:linear-gradient(135deg,#22c55e,#16a34a);color:white;border:none;padding:14px;">
+                        <i class="fas fa-rocket"></i> 发布模板
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="wizard-footer">
+        <button id="prevBtn" class="btn btn-outline-secondary" style="display:none;">
+            <i class="fas fa-arrow-left"></i> 上一步
+        </button>
+        <button id="nextBtn" class="btn btn-primary" style="display:none;">
+            下一步 <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 向导状态
+    const wizardState = {
+        currentStep: 1,
+        pptSessionId: null,
+        templateName: '',
+        configData: null,
+        wizardSessionId: null,
+        existingSession: {% if existing_session_json %}JSON.parse('{{ existing_session_json|escapejs }}'){% else %} null{% endif %}
+    };
+
+    // DOM 元素（延迟初始化）
+    let stepPanels, stepItems, stepConnectors, prevBtn, nextBtn, uploadZone, pptFileInput;
+
+    // CSRF Token
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value
+            || document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    }
+
+    // 切换步骤
+    function goToStep(step) {
+        if (step < 1 || step > 4) return;
+
+        wizardState.currentStep = step;
+
+        // 更新步骤指示器
+        stepItems.forEach((item, idx) => {
+            const itemStep = idx + 1;
+            item.classList.remove('active', 'completed');
+            if (itemStep < step) {
+                item.classList.add('completed');
+            } else if (itemStep === step) {
+                item.classList.add('active');
+            }
+        });
+
+        // 更新连接线
+        stepConnectors.forEach((conn, idx) => {
+            conn.classList.toggle('completed', idx < step - 1);
+        });
+
+        // 显示对应面板
+        stepPanels.forEach((panel, idx) => {
+            panel.classList.toggle('active', idx + 1 === step);
+        });
+
+        // 更新按钮
+        prevBtn.style.display = step > 1 ? 'inline-block' : 'none';
+        nextBtn.style.display = (step === 2 || step === 3) ? 'inline-block' : 'none';
+
+        // 保存会话
+        saveWizardSession();
+    }
+
+    // 保存向导会话
+    async function saveWizardSession() {
+        console.log('[saveWizardSession] 调用, pptSessionId:', wizardState.pptSessionId);
+        if (!wizardState.pptSessionId) {
+            console.log('[saveWizardSession] 没有 pptSessionId，跳过保存');
+            return;
+        }
+
+        // 确保 wizardSessionId 已设置
+        if (!wizardState.wizardSessionId) {
+            wizardState.wizardSessionId = 'wizard-' + wizardState.pptSessionId;
+        }
+
+        const payload = {
+            session_id: wizardState.wizardSessionId,
+            editor_type: 'wizard',
+            template_name: wizardState.templateName || '未命名模板',
+            progress_data: {
+                current_step: wizardState.currentStep,
+                ppt_session_id: wizardState.pptSessionId,
+                template_name: wizardState.templateName,
+                config_data: wizardState.configData,
+                published: false
+            }
+        };
+        console.log('[saveWizardSession] 保存数据:', payload);
+
+        try {
+            const response = await fetch("{% url 'save_edit_session' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            console.log('[saveWizardSession] 保存结果:', result);
+        } catch (e) {
+            console.error('[saveWizardSession] 保存会话失败:', e);
+        }
+    }
+
+    // 上传 PPT
+    async function uploadPPT(file) {
+        uploadZone.innerHTML = `
+        <div class="upload-icon">⏳</div>
+        <div class="upload-title">正在解析 PPT...</div>
+        <div class="upload-hint">${file.name}</div>
+    `;
+
+        const formData = new FormData();
+        formData.append('ppt_file', file);
+
+        try {
+            const response = await fetch("{% url 'parse_ppt_template' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCSRFToken() },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            wizardState.pptSessionId = data.template_id;
+            wizardState.templateName = data.template_name;
+
+            // 加载 PPT 编辑器 iframe（不需要预创建 session，直接传递 template_id）
+            loadPPTEditor(data.template_id);
+
+            // 进入第二步
+            goToStep(2);
+
+        } catch (e) {
+            uploadZone.innerHTML = `
+            <div class="upload-icon">❌</div>
+            <div class="upload-title">上传失败</div>
+            <div class="upload-hint">${e.message}</div>
+        `;
+        }
+    }
+
+    // 加载 PPT 编辑器
+    function loadPPTEditor(sessionId) {
+        const container = document.getElementById('pptEditorContainer');
+        container.innerHTML = `<iframe id="pptEditorIframe" src="{% url 'template_editor_page' %}?session=${sessionId}&embedded=1"></iframe>`;
+
+        // 显示工具栏
+        const toolbar = document.getElementById('step2Toolbar');
+        if (toolbar) {
+            toolbar.style.display = 'flex';
+        }
+    }
+
+    // AI 一键命名全部页（通过 postMessage 与 iframe 通信）
+    let wizardAiNaming = false;
+
+    document.getElementById('wizardAiAutoNameAllBtn')?.addEventListener('click', function () {
+        if (wizardAiNaming) {
+            alert('AI 正在处理中，请稍候...');
+            return;
+        }
+
+        const iframe = document.getElementById('pptEditorIframe');
+        if (!iframe || !iframe.contentWindow) {
+            alert('编辑器尚未加载完成，请稍候...');
+            return;
+        }
+
+        // 发送消息给 iframe 触发 AI 命名
+        iframe.contentWindow.postMessage({ type: 'triggerAiAutoNameAll' }, '*');
+
+        // 更新按钮状态
+        wizardAiNaming = true;
+        this.disabled = true;
+        this.textContent = '🤖 AI 处理中...';
+        document.getElementById('wizardAiProgress').style.display = 'inline';
+    });
+
+    // 监听来自 iframe 的消息
+    window.addEventListener('message', function (event) {
+        // AI 命名进度更新
+        if (event.data.type === 'aiNamingProgress') {
+            const progressSpan = document.getElementById('wizardAiProgress');
+            if (progressSpan) {
+                progressSpan.textContent = event.data.message;
+            }
+        }
+
+        // AI 命名完成
+        if (event.data.type === 'aiNamingComplete') {
+            wizardAiNaming = false;
+            const btn = document.getElementById('wizardAiAutoNameAllBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '🤖 AI 一键命名全部页';
+            }
+            document.getElementById('wizardAiProgress').style.display = 'none';
+        }
+    });
+
+    // 加载配置编辑器（使用 iframe 嵌入现有的配置编辑器）
+    async function loadConfigEditor() {
+        const container = document.getElementById('configEditorContainer');
+        container.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
+            <div class="text-center">
+                <div style="font-size:3rem;margin-bottom:20px;">⏳</div>
+                <div>正在生成配置模板...</div>
+            </div>
+        </div>
+    `;
+
+        try {
+            // 调用生成配置 API
+            const response = await fetch("{% url 'generate_template_config' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    template_id: wizardState.pptSessionId
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            wizardState.configData = data.config;
+
+            // 使用 iframe 嵌入配置编辑器
+            container.innerHTML = `<iframe id="configEditorIframe" src="{% url 'config_editor_page' %}?embedded=1" style="width:100%;height:100%;border:none;"></iframe>`;
+
+            // 等待 iframe 加载完成后发送配置数据
+            const iframe = document.getElementById('configEditorIframe');
+            iframe.onload = function () {
+                // 给 iframe 一点时间初始化
+                setTimeout(() => {
+                    iframe.contentWindow.postMessage({
+                        type: 'loadConfig',
+                        config: data.config,
+                        sessionId: wizardState.wizardSessionId
+                    }, '*');
+                }, 500);
+            };
+
+        } catch (e) {
+            container.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;">
+                <div class="text-center">
+                    <div style="font-size:3rem;margin-bottom:20px;">❌</div>
+                    <div>生成失败: ${e.message}</div>
+                    <button class="btn btn-primary" style="margin-top:15px;" onclick="loadConfigEditor()">重试</button>
+                </div>
+            </div>
+        `;
+        }
+    }
+
+    // 从配置编辑器获取最新配置（用于发布前）
+    function getConfigFromEditor() {
+        return new Promise((resolve) => {
+            const iframe = document.getElementById('configEditorIframe');
+            if (!iframe) {
+                resolve(wizardState.configData);
+                return;
+            }
+
+            // 监听来自 iframe 的响应
+            const handler = function (event) {
+                if (event.data && event.data.type === 'configData') {
+                    window.removeEventListener('message', handler);
+                    resolve(event.data.config);
+                }
+            };
+            window.addEventListener('message', handler);
+
+            // 请求配置数据
+            iframe.contentWindow.postMessage({ type: 'getConfig' }, '*');
+
+            // 超时后返回缓存的配置
+            setTimeout(() => {
+                window.removeEventListener('message', handler);
+                resolve(wizardState.configData);
+            }, 1000);
+        });
+    }
+
+    // 发布模板
+    async function publishTemplate() {
+        const templateName = document.getElementById('templateName').value.trim();
+        const statusDiv = document.getElementById('publishStatus');
+        const publishBtn = document.getElementById('publishBtn');
+
+        if (!templateName) {
+            statusDiv.innerHTML = '<div class="alert alert-danger">请输入模板名称</div>';
+            statusDiv.style.display = 'block';
+            return;
+        }
+
+        // 验证名称格式
+        if (!/^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/.test(templateName)) {
+            statusDiv.innerHTML = '<div class="alert alert-danger">模板名称只能包含中文、英文、数字、下划线和横线</div>';
+            statusDiv.style.display = 'block';
+            return;
+        }
+
+        // 从配置编辑器获取最新的配置数据
+        const latestConfig = await getConfigFromEditor();
+        if (latestConfig) {
+            wizardState.configData = latestConfig;
+        }
+
+        if (!wizardState.configData) {
+            statusDiv.innerHTML = '<div class="alert alert-danger">配置数据不存在，请返回上一步生成配置</div>';
+            statusDiv.style.display = 'block';
+            return;
+        }
+
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发布中...';
+        statusDiv.style.display = 'none';
+
+        try {
+            const response = await fetch("{% url 'publish_template' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    template_name: templateName,
+                    ppt_session_id: wizardState.pptSessionId,
+                    config_data: wizardState.configData
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            statusDiv.innerHTML = `
+            <div class="alert alert-success">
+                <strong>🎉 发布成功！</strong><br>
+                模板已保存到: ${data.template_path}
+            </div>
+        `;
+            statusDiv.style.display = 'block';
+            publishBtn.innerHTML = '<i class="fas fa-check"></i> 已发布';
+            publishBtn.classList.remove('btn-primary');
+            publishBtn.classList.add('btn-success');
+
+            // 标记所有步骤为完成
+            stepItems.forEach(item => {
+                item.classList.remove('active');
+                item.classList.add('completed');
+            });
+            stepConnectors.forEach(conn => conn.classList.add('completed'));
+
+        } catch (e) {
+            statusDiv.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+            statusDiv.style.display = 'block';
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = '<i class="fas fa-rocket"></i> 发布模板';
+        }
+    }
+
+    // 事件绑定
+    document.addEventListener('DOMContentLoaded', function () {
+        // 初始化 DOM 元素
+        stepPanels = document.querySelectorAll('.step-panel');
+        stepItems = document.querySelectorAll('.step-item');
+        stepConnectors = document.querySelectorAll('.step-connector');
+        prevBtn = document.getElementById('prevBtn');
+        nextBtn = document.getElementById('nextBtn');
+        uploadZone = document.getElementById('uploadZone');
+        pptFileInput = document.getElementById('pptFileInput');
+
+        // 上传区域点击
+        uploadZone.addEventListener('click', () => pptFileInput.click());
+
+        // 文件选择
+        pptFileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) uploadPPT(e.target.files[0]);
+        });
+
+        // 拖拽上传
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files[0]) uploadPPT(e.dataTransfer.files[0]);
+        });
+
+        // 上一步/下一步按钮
+        prevBtn.addEventListener('click', () => {
+            if (wizardState.currentStep > 1) {
+                goToStep(wizardState.currentStep - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (wizardState.currentStep === 2) {
+                // 从元素命名进入配置模板
+                loadConfigEditor();
+                goToStep(3);
+            } else if (wizardState.currentStep === 3) {
+                // 从配置模板进入发布
+                goToStep(4);
+            }
+        });
+
+        // 发布按钮
+        document.getElementById('publishBtn').addEventListener('click', publishTemplate);
+
+        // 如果通过 URL 参数传入 session，自动恢复
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionParam = urlParams.get('session');
+        console.log('Session param:', sessionParam);
+        console.log('Existing session:', wizardState.existingSession);
+        if (sessionParam && wizardState.existingSession) {
+            console.log('Restoring wizard session...');
+            restoreWizardSession();
+        }
+    });
+
+    // 恢复向导会话
+    function restoreWizardSession() {
+        const session = wizardState.existingSession;
+        console.log('restoreWizardSession called, session:', session);
+        if (!session) return;
+
+        const progressData = session.progress_data || {};
+        console.log('Progress data:', progressData);
+
+        wizardState.wizardSessionId = session.session_id;
+        wizardState.pptSessionId = progressData.ppt_session_id;
+        wizardState.templateName = progressData.template_name || session.template_name;
+        wizardState.configData = progressData.config_data;
+
+        console.log('Restored state:', {
+            wizardSessionId: wizardState.wizardSessionId,
+            pptSessionId: wizardState.pptSessionId,
+            templateName: wizardState.templateName,
+            targetStep: progressData.current_step
+        });
+
+        // 填充模板名称输入框
+        if (wizardState.templateName) {
+            document.getElementById('templateName').value = wizardState.templateName;
+        }
+
+        // 加载 PPT 编辑器（如果有 ppt_session_id）
+        if (progressData.ppt_session_id) {
+            console.log('Loading PPT editor with session:', progressData.ppt_session_id);
+            loadPPTEditor(progressData.ppt_session_id);
+        }
+
+        // 跳转到上次的步骤
+        const targetStep = progressData.current_step || 2;
+        console.log('Going to step:', targetStep);
+
+        // 恢复配置数据（如果当前步骤 >= 3 且有配置数据）
+        if (targetStep >= 3 && progressData.config_data) {
+            // 延迟加载配置编辑器，让它通过 postMessage 接收数据
+            setTimeout(() => {
+                loadConfigEditorWithData(progressData.config_data);
+            }, 100);
+        }
+
+        // 跳转到上次的步骤
+        goToStep(targetStep);
+    }
+
+    // 使用已有数据加载配置编辑器
+    function loadConfigEditorWithData(configData) {
+        const container = document.getElementById('configEditorContainer');
+        container.innerHTML = `<iframe id="configEditorIframe" src="{% url 'config_editor_page' %}?embedded=1" style="width:100%;height:100%;border:none;"></iframe>`;
+
+        const iframe = document.getElementById('configEditorIframe');
+        iframe.onload = function () {
+            setTimeout(() => {
+                iframe.contentWindow.postMessage({
+                    type: 'loadConfig',
+                    config: configData,
+                    sessionId: wizardState.wizardSessionId
+                }, '*');
+            }, 500);
+        };
+    }
+</script>
+{% endblock %}

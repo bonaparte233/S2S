@@ -80,6 +80,17 @@ urlpatterns = [
         views.ai_auto_name_shapes,
         name="ai_auto_name_shapes",
     ),
+    # Template Wizard
+    path(
+        "developer-tools/template-wizard/",
+        views.template_wizard_page,
+        name="template_wizard_page",
+    ),
+    path(
+        "developer-tools/publish-template/",
+        views.publish_template,
+        name="publish_template",
+    ),
     # Edit Session Management
     path(
         "developer-tools/edit-sessions/",

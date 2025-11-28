@@ -204,13 +204,39 @@
 
 <!-- 工具卡片网格 -->
 <div class="tools-grid">
+    <!-- 模板制作向导 - 放在第一位 -->
+    <div class="tool-card">
+        <div class="tool-card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="tool-card-icon">🧙‍♂️</div>
+            <h3 class="tool-card-title">
+                模板制作向导
+                <span class="tool-badge tool-badge-new">NEW</span>
+            </h3>
+            <p class="tool-card-subtitle">一站式模板创建流程</p>
+        </div>
+        <div class="tool-card-body">
+            <p class="tool-card-description">
+                从上传 PPT 到发布完整模板的一站式向导流程。整合元素命名、配置生成、模板发布，一气呵成。
+            </p>
+            <ul class="tool-card-features">
+                <li>四步完成模板制作</li>
+                <li>自动保存编辑进度</li>
+                <li>一键发布到模板库</li>
+                <li>支持随时继续编辑</li>
+            </ul>
+            <a href="{% url 'template_wizard_page' %}" class="tool-card-action tool-card-action-primary"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                开始制作 →
+            </a>
+        </div>
+    </div>
+
     <!-- PPT 模板编辑器 -->
     <div class="tool-card">
         <div class="tool-card-header gradient-purple">
             <div class="tool-card-icon">🎨</div>
             <h3 class="tool-card-title">
                 PPT 模板编辑器
-                <span class="tool-badge tool-badge-new">推荐</span>
             </h3>
             <p class="tool-card-subtitle">可视化模板元素编辑工具</p>
         </div>
@@ -224,7 +250,7 @@
                 <li>AI 智能识别与命名</li>
                 <li>一键导出配置 JSON</li>
             </ul>
-            <a href="{% url 'template_editor_page' %}" class="tool-card-action tool-card-action-primary">
+            <a href="{% url 'template_editor_page' %}" class="tool-card-action tool-card-action-secondary">
                 打开编辑器 →
             </a>
         </div>
@@ -346,12 +372,20 @@
         min-width: 0;
     }
 
+    .session-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
     .session-name {
         font-weight: 600;
-        margin-bottom: 4px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
     }
 
     .session-meta {
@@ -397,10 +431,11 @@
 
     .session-type-badge {
         display: inline-block;
-        padding: 2px 6px;
+        padding: 2px 8px;
         font-size: 0.7rem;
-        border-radius: 3px;
-        margin-left: 6px;
+        border-radius: 4px;
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 
     .session-type-ppt {
@@ -411,6 +446,11 @@
     .session-type-config {
         background: #d4edda;
         color: #155724;
+    }
+
+    .session-type-wizard {
+        background: linear-gradient(135deg, #e8d4f8 0%, #d4e4fd 100%);
+        color: #5b21b6;
     }
 </style>
 
@@ -424,21 +464,43 @@
             const response = await fetch('/developer-tools/edit-sessions/');
             const data = await response.json();
 
+            console.log('All sessions from API:', data.sessions);
             if (data.sessions && data.sessions.length > 0) {
-                listEl.innerHTML = data.sessions.map(session => `
+                // 过滤掉来自向导的 ppt/config session（它们的 progress_data.from_wizard = true）
+                const filteredSessions = data.sessions.filter(session => {
+                    // 向导类型始终显示
+                    if (session.editor_type === 'wizard') return true;
+                    // 检查是否来自向导
+                    const progressData = session.progress_data || {};
+                    return !progressData.from_wizard;
+                });
+                console.log('Filtered sessions:', filteredSessions);
+
+                const getTypeBadge = (type) => {
+                    if (type === 'wizard') return { icon: '🧙‍♂️', label: '向导' };
+                    if (type === 'ppt') return { icon: '🎨', label: 'PPT' };
+                    return { icon: '📄', label: '配置' };
+                };
+
+                if (filteredSessions.length === 0) {
+                    listEl.innerHTML = '<div class="empty-sessions">暂无编辑记录<br><small>上传模板后，编辑记录会自动保存在这里</small></div>';
+                    return;
+                }
+
+                listEl.innerHTML = filteredSessions.map(session => {
+                    const typeBadge = getTypeBadge(session.editor_type);
+                    return `
                     <div class="session-card" onclick="openSession('${session.session_id}', '${session.editor_type}')">
                         <div class="session-thumbnail">
                             ${session.thumbnail_url
-                        ? `<img src="${session.thumbnail_url}" alt="预览">`
-                        : `<span class="session-thumbnail-placeholder">${session.editor_type === 'ppt' ? '🎨' : '📄'}</span>`
-                    }
+                            ? `<img src="${session.thumbnail_url}" alt="预览">`
+                            : `<span class="session-thumbnail-placeholder">${typeBadge.icon}</span>`
+                        }
                         </div>
                         <div class="session-info">
-                            <div class="session-name">
-                                ${escapeHtml(session.template_name)}
-                                <span class="session-type-badge session-type-${session.editor_type}">
-                                    ${session.editor_type === 'ppt' ? 'PPT' : '配置'}
-                                </span>
+                            <div class="session-header">
+                                <span class="session-name">${escapeHtml(session.template_name)}</span>
+                                <span class="session-type-badge session-type-${session.editor_type}">${typeBadge.label}</span>
                             </div>
                             <div class="session-meta">更新于 ${session.updated_at}</div>
                             <div class="session-progress">${session.progress_summary}</div>
@@ -447,7 +509,7 @@
                             <button class="btn-icon btn-icon-danger" onclick="deleteSession('${session.session_id}')" title="删除">🗑️</button>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             } else {
                 listEl.innerHTML = '<div class="empty-sessions">暂无编辑记录<br><small>上传模板后，编辑记录会自动保存在这里</small></div>';
             }
@@ -459,7 +521,9 @@
 
     // 打开编辑会话
     function openSession(sessionId, editorType) {
-        if (editorType === 'ppt') {
+        if (editorType === 'wizard') {
+            window.location.href = `/developer-tools/template-wizard/?session=${sessionId}`;
+        } else if (editorType === 'ppt') {
             window.location.href = `/developer-tools/template-editor/?session=${sessionId}`;
         } else {
             window.location.href = `/developer-tools/config-editor/?session=${sessionId}`;

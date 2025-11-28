@@ -162,6 +162,48 @@
         align-items: center;
         gap: 8px;
     }
+
+    /* 嵌入模式样式 */
+    body.embedded-mode .navbar,
+    body.embedded-mode .back-link,
+    body.embedded-mode .tool-header,
+    body.embedded-mode #uploadSection,
+    body.embedded-mode #uploadAnotherBtn,
+    body.embedded-mode #downloadEditedBtn,
+    body.embedded-mode .form-actions {
+        display: none !important;
+    }
+
+    body.embedded-mode .main-content {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    body.embedded-mode .main-content>.container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    body.embedded-mode .editor-container {
+        height: 100vh;
+        min-height: auto;
+    }
+
+    body.embedded-mode #editorSection .card {
+        margin: 0;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    body.embedded-mode #editorSection .card-header {
+        padding: 10px 15px;
+        border-radius: 0;
+    }
+
+    body.embedded-mode #editorSection .card-body {
+        padding: 0;
+    }
 </style>
 {% endblock %}
 
@@ -243,6 +285,9 @@
         return cookieValue;
     }
 
+    // 嵌入模式标记
+    let embeddedMode = false;
+
     // 保存编辑会话
     async function saveEditSession() {
         if (!templateData || !currentSessionId) return;
@@ -274,7 +319,8 @@
                         total_count: totalFields,
                         named_count: filledFields,
                         page_count: templateData.ppt_pages.length,
-                        template_data: templateData  // 保存完整数据以便恢复
+                        template_data: templateData,
+                        from_wizard: embeddedMode  // 标记是否来自向导
                     },
                     thumbnail_url: null
                 })
@@ -309,14 +355,46 @@
         }
     }
 
-    // 检查 URL 中是否有要恢复的会话
+    // 检查 URL 中是否有要恢复的会话或初始配置
     function checkRestoreSession() {
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session');
+        const embedded = urlParams.get('embedded') === '1';
+
+        // 嵌入模式：添加 class 并设置标记
+        if (embedded) {
+            embeddedMode = true;
+            document.body.classList.add('embedded-mode');
+        }
+
         if (sessionId) {
             restoreEditSession(sessionId);
         }
     }
+
+    // 监听来自父窗口的消息（用于向导传递配置数据）
+    window.addEventListener('message', function (event) {
+        if (event.data && event.data.type === 'loadConfig') {
+            const config = event.data.config;
+            const sessionId = event.data.sessionId;
+            if (config) {
+                currentSessionId = sessionId || generateUUID();
+                currentFileName = '向导生成的配置';
+                loadTemplateData(config);
+                saveEditSession();
+            }
+        }
+
+        // 向导请求获取当前配置数据
+        if (event.data && event.data.type === 'getConfig') {
+            if (templateData && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'configData',
+                    config: templateData
+                }, '*');
+            }
+        }
+    });
 
     // 页面加载时检查
     checkRestoreSession();
