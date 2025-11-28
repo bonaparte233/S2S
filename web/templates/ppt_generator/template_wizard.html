@@ -91,6 +91,10 @@
         flex-shrink: 0;
     }
 
+    .steps-indicator.hidden {
+        display: none;
+    }
+
     .step-item {
         display: flex;
         align-items: center;
@@ -139,6 +143,21 @@
 
     .step-connector.completed {
         background: #22c55e;
+    }
+
+    /* 上传阶段样式 */
+    .upload-stage-indicator {
+        background: white;
+        padding: 20px 40px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .upload-stage-indicator h3 {
+        margin: 0;
+        color: #667eea;
+        font-size: 1.1rem;
     }
 
     /* 步骤内容区 */
@@ -288,25 +307,25 @@
         <div style="width: 80px;"></div>
     </div>
 
-    <!-- 步骤指示器 -->
-    <div class="steps-indicator">
-        <div class="step-item active" data-step="1">
+    <!-- 上传阶段指示器（仅在上传阶段显示） -->
+    <div class="upload-stage-indicator" id="uploadStageIndicator">
+        <h3>📤 上传 PPT 模板文件开始制作</h3>
+    </div>
+
+    <!-- 步骤指示器（上传后显示，3 步流程） -->
+    <div class="steps-indicator hidden" id="stepsIndicator">
+        <div class="step-item active" data-step="2">
             <span class="step-number">1</span>
-            <span>上传 PPT</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step-item" data-step="2">
-            <span class="step-number">2</span>
             <span>元素命名</span>
         </div>
         <div class="step-connector"></div>
         <div class="step-item" data-step="3">
-            <span class="step-number">3</span>
+            <span class="step-number">2</span>
             <span>配置模板</span>
         </div>
         <div class="step-connector"></div>
         <div class="step-item" data-step="4">
-            <span class="step-number">4</span>
+            <span class="step-number">3</span>
             <span>发布模板</span>
         </div>
     </div>
@@ -425,33 +444,49 @@
 
         wizardState.currentStep = step;
 
-        // 更新步骤指示器
-        stepItems.forEach((item, idx) => {
-            const itemStep = idx + 1;
-            item.classList.remove('active', 'completed');
-            if (itemStep < step) {
-                item.classList.add('completed');
-            } else if (itemStep === step) {
-                item.classList.add('active');
-            }
-        });
+        // 切换上传阶段和步骤指示器的显示
+        const uploadStageIndicator = document.getElementById('uploadStageIndicator');
+        const stepsIndicator = document.getElementById('stepsIndicator');
 
-        // 更新连接线
-        stepConnectors.forEach((conn, idx) => {
-            conn.classList.toggle('completed', idx < step - 1);
-        });
+        if (step === 1) {
+            // 上传阶段
+            uploadStageIndicator.style.display = 'block';
+            stepsIndicator.classList.add('hidden');
+        } else {
+            // 编辑阶段（步骤 2-4）
+            uploadStageIndicator.style.display = 'none';
+            stepsIndicator.classList.remove('hidden');
+
+            // 更新步骤指示器（步骤 2-4 对应显示为 1-3）
+            stepItems.forEach((item) => {
+                const itemStep = parseInt(item.dataset.step);
+                item.classList.remove('active', 'completed');
+                if (itemStep < step) {
+                    item.classList.add('completed');
+                } else if (itemStep === step) {
+                    item.classList.add('active');
+                }
+            });
+
+            // 更新连接线（step=2 时无完成，step=3 时第一条完成，step=4 时两条完成）
+            stepConnectors.forEach((conn, idx) => {
+                conn.classList.toggle('completed', idx < step - 2);
+            });
+        }
 
         // 显示对应面板
         stepPanels.forEach((panel, idx) => {
             panel.classList.toggle('active', idx + 1 === step);
         });
 
-        // 更新按钮
-        prevBtn.style.display = step > 1 ? 'inline-block' : 'none';
+        // 更新按钮（上一步只在 step 3/4 显示，下一步只在 step 2/3 显示）
+        prevBtn.style.display = step > 2 ? 'inline-block' : 'none';
         nextBtn.style.display = (step === 2 || step === 3) ? 'inline-block' : 'none';
 
-        // 保存会话
-        saveWizardSession();
+        // 保存会话（只在有 pptSessionId 时保存）
+        if (wizardState.pptSessionId) {
+            saveWizardSession();
+        }
     }
 
     // 保存向导会话
@@ -765,8 +800,10 @@
     document.addEventListener('DOMContentLoaded', function () {
         // 初始化 DOM 元素
         stepPanels = document.querySelectorAll('.step-panel');
-        stepItems = document.querySelectorAll('.step-item');
-        stepConnectors = document.querySelectorAll('.step-connector');
+        // 只选择步骤指示器内的元素
+        const stepsIndicator = document.getElementById('stepsIndicator');
+        stepItems = stepsIndicator.querySelectorAll('.step-item');
+        stepConnectors = stepsIndicator.querySelectorAll('.step-connector');
         prevBtn = document.getElementById('prevBtn');
         nextBtn = document.getElementById('nextBtn');
         uploadZone = document.getElementById('uploadZone');
@@ -796,7 +833,8 @@
 
         // 上一步/下一步按钮
         prevBtn.addEventListener('click', () => {
-            if (wizardState.currentStep > 1) {
+            // 最小只能回到步骤 2（元素命名），不能回到上传步骤
+            if (wizardState.currentStep > 2) {
                 goToStep(wizardState.currentStep - 1);
             }
         });
