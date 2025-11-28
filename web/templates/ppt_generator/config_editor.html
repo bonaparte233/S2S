@@ -290,10 +290,14 @@
             const response = await fetch(`/developer-tools/edit-sessions/${sessionId}/`);
             const data = await response.json();
 
-            if (response.ok && data.exists && data.progress_data?.template_data) {
+            // API 返回的数据结构是 { session: {..., progress_data: {...}}, exists: true }
+            const session = data.session;
+            const progressData = session?.progress_data;
+
+            if (response.ok && data.exists && progressData?.template_data) {
                 currentSessionId = sessionId;
-                currentFileName = data.template_name;
-                loadTemplateData(data.progress_data.template_data);
+                currentFileName = session.template_name;
+                loadTemplateData(progressData.template_data);
                 return true;
             } else {
                 alert('编辑会话已过期或数据不完整');
