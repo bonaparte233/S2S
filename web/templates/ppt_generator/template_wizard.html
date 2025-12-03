@@ -312,24 +312,6 @@
         <h3>📤 上传 PPT 模板文件开始制作</h3>
     </div>
 
-    <!-- 步骤指示器（上传后显示，3 步流程） -->
-    <div class="steps-indicator hidden" id="stepsIndicator">
-        <div class="step-item active" data-step="2">
-            <span class="step-number">1</span>
-            <span>元素命名</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step-item" data-step="3">
-            <span class="step-number">2</span>
-            <span>配置模板</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step-item" data-step="4">
-            <span class="step-number">3</span>
-            <span>发布模板</span>
-        </div>
-    </div>
-
     <!-- 步骤内容区 -->
     <div class="step-content">
         <!-- Step 1: 上传 PPT -->
@@ -361,20 +343,8 @@
             </div>
         </div>
 
-        <!-- Step 3: 配置模板 -->
+        <!-- Step 3: 发布模板 -->
         <div class="step-panel" id="step-3">
-            <div class="embedded-editor" id="configEditorContainer">
-                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
-                    <div class="text-center">
-                        <div style="font-size:3rem;margin-bottom:20px;">⏳</div>
-                        <div>正在生成配置模板...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 4: 发布模板 -->
-        <div class="step-panel" id="step-4">
             <div style="max-width:600px;margin:60px auto;">
                 <div style="background:white;border-radius:16px;padding:40px;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
                     <div style="text-align:center;margin-bottom:30px;">
@@ -387,7 +357,8 @@
                             模板名称 <span style="color:#ef4444;">*</span>
                         </label>
                         <input type="text" id="templateName" class="form-control" placeholder="例如：课程介绍模板、实验报告模板"
-                            style="font-size:1.1rem;padding:12px 16px;">
+                            style="font-size:1.1rem;padding:12px 16px;"
+                            oninput="wizardState.templateName = this.value.trim()">
                         <small style="color:#666;margin-top:5px;display:block;">
                             只能包含中文、英文、数字、下划线和横线
                         </small>
@@ -405,10 +376,10 @@
     <!-- 底部操作栏 -->
     <div class="wizard-footer">
         <button id="prevBtn" class="btn btn-outline-secondary" style="display:none;">
-            <i class="fas fa-arrow-left"></i> 上一步
+            <i class="fas fa-arrow-left"></i> 返回编辑
         </button>
-        <button id="nextBtn" class="btn btn-primary" style="display:none;">
-            下一步 <i class="fas fa-arrow-right"></i>
+        <button id="nextBtn" class="btn btn-success" style="display:none;">
+            <i class="fas fa-rocket"></i> 发布模板
         </button>
     </div>
 </div>
@@ -430,7 +401,7 @@
     };
 
     // DOM 元素（延迟初始化）
-    let stepPanels, stepItems, stepConnectors, prevBtn, nextBtn, uploadZone, pptFileInput;
+    let stepPanels, prevBtn, nextBtn, uploadZone, pptFileInput;
 
     // CSRF Token
     function getCSRFToken() {
@@ -440,38 +411,19 @@
 
     // 切换步骤
     function goToStep(step) {
-        if (step < 1 || step > 4) return;
+        if (step < 1 || step > 3) return;
 
         wizardState.currentStep = step;
 
-        // 切换上传阶段和步骤指示器的显示
+        // 切换上传阶段指示器的显示
         const uploadStageIndicator = document.getElementById('uploadStageIndicator');
-        const stepsIndicator = document.getElementById('stepsIndicator');
 
         if (step === 1) {
             // 上传阶段
             uploadStageIndicator.style.display = 'block';
-            stepsIndicator.classList.add('hidden');
         } else {
-            // 编辑阶段（步骤 2-4）
+            // 编辑/发布阶段
             uploadStageIndicator.style.display = 'none';
-            stepsIndicator.classList.remove('hidden');
-
-            // 更新步骤指示器（步骤 2-4 对应显示为 1-3）
-            stepItems.forEach((item) => {
-                const itemStep = parseInt(item.dataset.step);
-                item.classList.remove('active', 'completed');
-                if (itemStep < step) {
-                    item.classList.add('completed');
-                } else if (itemStep === step) {
-                    item.classList.add('active');
-                }
-            });
-
-            // 更新连接线（step=2 时无完成，step=3 时第一条完成，step=4 时两条完成）
-            stepConnectors.forEach((conn, idx) => {
-                conn.classList.toggle('completed', idx < step - 2);
-            });
         }
 
         // 显示对应面板
@@ -479,9 +431,9 @@
             panel.classList.toggle('active', idx + 1 === step);
         });
 
-        // 更新按钮（上一步只在 step 3/4 显示，下一步只在 step 2/3 显示）
-        prevBtn.style.display = step > 2 ? 'inline-block' : 'none';
-        nextBtn.style.display = (step === 2 || step === 3) ? 'inline-block' : 'none';
+        // 更新按钮（返回只在发布页显示，发布只在编辑页显示）
+        prevBtn.style.display = step === 3 ? 'inline-block' : 'none';
+        nextBtn.style.display = step === 2 ? 'inline-block' : 'none';
 
         // 保存会话（只在有 pptSessionId 时保存）
         if (wizardState.pptSessionId) {
@@ -502,15 +454,19 @@
             wizardState.wizardSessionId = 'wizard-' + wizardState.pptSessionId;
         }
 
+        // 获取最新的模板名称
+        const currentTemplateName = document.getElementById('templateName')?.value?.trim() || wizardState.templateName || '未命名模板';
+        wizardState.templateName = currentTemplateName;
+
         const payload = {
             session_id: wizardState.wizardSessionId,
             editor_type: 'wizard',
-            template_name: wizardState.templateName || '未命名模板',
+            template_name: currentTemplateName,
             progress_data: {
                 current_step: wizardState.currentStep,
                 ppt_session_id: wizardState.pptSessionId,
-                template_name: wizardState.templateName,
-                config_data: wizardState.configData,
+                template_name: currentTemplateName,
+                // 不保存 config_data，发布时从 PPT 编辑器实时获取
                 published: false
             }
         };
@@ -571,10 +527,11 @@
         }
     }
 
-    // 加载 PPT 编辑器
+    // 加载 PPT 编辑器（向导模式，包含完整配置功能）
     function loadPPTEditor(sessionId) {
         const container = document.getElementById('pptEditorContainer');
-        container.innerHTML = `<iframe id="pptEditorIframe" src="{% url 'template_editor_page' %}?session=${sessionId}&embedded=1"></iframe>`;
+        // 添加 wizard=1 参数启用向导模式（显示 hint/max_chars/required/note 编辑功能）
+        container.innerHTML = `<iframe id="pptEditorIframe" src="{% url 'template_editor_page' %}?session=${sessionId}&embedded=1&wizard=1"></iframe>`;
 
         // 显示工具栏
         const toolbar = document.getElementById('step2Toolbar');
@@ -689,7 +646,7 @@
         }
     }
 
-    // 从配置编辑器获取最新配置（用于发布前）
+    // 从配置编辑器获取最新配置（用于发布前）- 旧版，保留兼容
     function getConfigFromEditor() {
         return new Promise((resolve) => {
             const iframe = document.getElementById('configEditorIframe');
@@ -718,6 +675,38 @@
         });
     }
 
+    // 从 PPT 编辑器获取完整配置数据（新版向导模式）
+    function getFullConfigFromPPTEditor() {
+        return new Promise((resolve) => {
+            const iframe = document.getElementById('pptEditorIframe');
+            if (!iframe || !iframe.contentWindow) {
+                console.log('[getFullConfigFromPPTEditor] iframe 不存在');
+                resolve(null);
+                return;
+            }
+
+            // 监听来自 iframe 的响应
+            const handler = function (event) {
+                if (event.data && event.data.type === 'fullConfigData') {
+                    window.removeEventListener('message', handler);
+                    console.log('[getFullConfigFromPPTEditor] 收到配置数据:', event.data);
+                    resolve(event.data.config);
+                }
+            };
+            window.addEventListener('message', handler);
+
+            // 请求完整配置数据
+            iframe.contentWindow.postMessage({ type: 'getFullConfig' }, '*');
+
+            // 超时后返回 null
+            setTimeout(() => {
+                window.removeEventListener('message', handler);
+                console.log('[getFullConfigFromPPTEditor] 超时，未收到响应');
+                resolve(null);
+            }, 2000);
+        });
+    }
+
     // 发布模板
     async function publishTemplate() {
         const templateName = document.getElementById('templateName').value.trim();
@@ -737,21 +726,33 @@
             return;
         }
 
-        // 从配置编辑器获取最新的配置数据
-        const latestConfig = await getConfigFromEditor();
-        if (latestConfig) {
-            wizardState.configData = latestConfig;
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 获取配置数据...';
+        statusDiv.style.display = 'none';
+
+        // 优先从 PPT 编辑器获取完整配置（新版向导模式，包含 hint/max_chars/required/note）
+        let fullConfig = await getFullConfigFromPPTEditor();
+
+        // 如果 PPT 编辑器没有返回，尝试从配置编辑器获取（兼容旧流程）
+        if (!fullConfig) {
+            console.log('[publishTemplate] PPT 编辑器未返回配置，尝试从配置编辑器获取');
+            const latestConfig = await getConfigFromEditor();
+            if (latestConfig) {
+                wizardState.configData = latestConfig;
+            }
+        } else {
+            wizardState.configData = fullConfig;
         }
 
         if (!wizardState.configData) {
-            statusDiv.innerHTML = '<div class="alert alert-danger">配置数据不存在，请返回上一步生成配置</div>';
+            statusDiv.innerHTML = '<div class="alert alert-danger">配置数据不存在，请确保已完成模板编辑</div>';
             statusDiv.style.display = 'block';
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = '<i class="fas fa-rocket"></i> 发布模板';
             return;
         }
 
-        publishBtn.disabled = true;
         publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发布中...';
-        statusDiv.style.display = 'none';
 
         try {
             const response = await fetch("{% url 'publish_template' %}", {
@@ -781,13 +782,6 @@
             publishBtn.classList.remove('btn-primary');
             publishBtn.classList.add('btn-success');
 
-            // 标记所有步骤为完成
-            stepItems.forEach(item => {
-                item.classList.remove('active');
-                item.classList.add('completed');
-            });
-            stepConnectors.forEach(conn => conn.classList.add('completed'));
-
         } catch (e) {
             statusDiv.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
             statusDiv.style.display = 'block';
@@ -800,10 +794,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         // 初始化 DOM 元素
         stepPanels = document.querySelectorAll('.step-panel');
-        // 只选择步骤指示器内的元素
-        const stepsIndicator = document.getElementById('stepsIndicator');
-        stepItems = stepsIndicator.querySelectorAll('.step-item');
-        stepConnectors = stepsIndicator.querySelectorAll('.step-connector');
         prevBtn = document.getElementById('prevBtn');
         nextBtn = document.getElementById('nextBtn');
         uploadZone = document.getElementById('uploadZone');
@@ -841,12 +831,8 @@
 
         nextBtn.addEventListener('click', () => {
             if (wizardState.currentStep === 2) {
-                // 从元素命名进入配置模板
-                loadConfigEditor();
+                // 从编辑模板直接进入发布（配置已在编辑器中完成）
                 goToStep(3);
-            } else if (wizardState.currentStep === 3) {
-                // 从配置模板进入发布
-                goToStep(4);
             }
         });
 
@@ -876,7 +862,8 @@
         wizardState.wizardSessionId = session.session_id;
         wizardState.pptSessionId = progressData.ppt_session_id;
         wizardState.templateName = progressData.template_name || session.template_name;
-        wizardState.configData = progressData.config_data;
+        // 不恢复旧的 configData，发布时从 PPT 编辑器实时获取最新配置
+        wizardState.configData = null;
 
         console.log('Restored state:', {
             wizardSessionId: wizardState.wizardSessionId,
@@ -896,37 +883,14 @@
             loadPPTEditor(progressData.ppt_session_id);
         }
 
-        // 跳转到上次的步骤
-        const targetStep = progressData.current_step || 2;
+        // 跳转到上次的步骤（新版只有3步：上传、编辑、发布）
+        // 如果旧会话保存的是 step 4，映射到新的 step 3
+        let targetStep = progressData.current_step || 2;
+        if (targetStep > 3) targetStep = 3;
         console.log('Going to step:', targetStep);
-
-        // 恢复配置数据（如果当前步骤 >= 3 且有配置数据）
-        if (targetStep >= 3 && progressData.config_data) {
-            // 延迟加载配置编辑器，让它通过 postMessage 接收数据
-            setTimeout(() => {
-                loadConfigEditorWithData(progressData.config_data);
-            }, 100);
-        }
 
         // 跳转到上次的步骤
         goToStep(targetStep);
-    }
-
-    // 使用已有数据加载配置编辑器
-    function loadConfigEditorWithData(configData) {
-        const container = document.getElementById('configEditorContainer');
-        container.innerHTML = `<iframe id="configEditorIframe" src="{% url 'config_editor_page' %}?embedded=1" style="width:100%;height:100%;border:none;"></iframe>`;
-
-        const iframe = document.getElementById('configEditorIframe');
-        iframe.onload = function () {
-            setTimeout(() => {
-                iframe.contentWindow.postMessage({
-                    type: 'loadConfig',
-                    config: configData,
-                    sessionId: wizardState.wizardSessionId
-                }, '*');
-            }, 500);
-        };
     }
 </script>
 {% endblock %}

@@ -1,0 +1,423 @@
+{
+  "manifest": [
+    {
+      "template_page_num": 1,
+      "page_type": "第1页",
+      "text_slots": 3,
+      "image_slots": 4
+    },
+    {
+      "template_page_num": 2,
+      "page_type": "第2页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 3,
+      "page_type": "第3页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 4,
+      "page_type": "第4页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 5,
+      "page_type": "第5页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 6,
+      "page_type": "第6页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 7,
+      "page_type": "第7页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 8,
+      "page_type": "第8页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 9,
+      "page_type": "第9页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 10,
+      "page_type": "第10页",
+      "text_slots": 2,
+      "image_slots": 0
+    }
+  ],
+  "ppt_pages": [
+    {
+      "page_type": "第1页",
+      "template_page_num": 1,
+      "content": {
+        "标题 1": {
+          "type": "text",
+          "hint": "填写标题 1的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 2": {
+          "type": "text",
+          "hint": "填写文本占位符 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 3": {
+          "type": "text",
+          "hint": "填写文本占位符 3的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 11": {
+          "type": "image",
+          "hint": "填写图形 11的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 7": {
+          "type": "image",
+          "hint": "填写图形 7的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 9": {
+          "type": "image",
+          "hint": "填写图形 9的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 5": {
+          "type": "image",
+          "hint": "填写图形 5的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第1页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 4,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第2页",
+      "template_page_num": 2,
+      "content": {
+        "标题 1": {
+          "type": "text",
+          "hint": "填写标题 1的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 5": {
+          "type": "text",
+          "hint": "填写文本占位符 5的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 9": {
+          "type": "image",
+          "hint": "填写图形 9的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第2页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第3页",
+      "template_page_num": 3,
+      "content": {
+        "标题 9": {
+          "type": "text",
+          "hint": "填写标题 9的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 4": {
+          "type": "image",
+          "hint": "填写图形 4的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 2": {
+          "type": "text",
+          "hint": "填写文本占位符 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第3页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第4页",
+      "template_page_num": 4,
+      "content": {
+        "标题 4": {
+          "type": "text",
+          "hint": "填写标题 4的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 2": {
+          "type": "text",
+          "hint": "填写文本占位符 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第4页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第5页",
+      "template_page_num": 5,
+      "content": {
+        "标题 2": {
+          "type": "text",
+          "hint": "填写标题 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 4": {
+          "type": "text",
+          "hint": "填写文本占位符 4的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 8": {
+          "type": "image",
+          "hint": "填写图形 8的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第5页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第6页",
+      "template_page_num": 6,
+      "content": {
+        "标题 2": {
+          "type": "text",
+          "hint": "填写标题 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 8": {
+          "type": "image",
+          "hint": "填写图形 8的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 4": {
+          "type": "text",
+          "hint": "填写文本占位符 4的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第6页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第7页",
+      "template_page_num": 7,
+      "content": {
+        "标题 3": {
+          "type": "text",
+          "hint": "填写标题 3的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 6": {
+          "type": "image",
+          "hint": "填写图形 6的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 2": {
+          "type": "text",
+          "hint": "填写文本占位符 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第7页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第8页",
+      "template_page_num": 8,
+      "content": {
+        "标题 3": {
+          "type": "text",
+          "hint": "填写标题 3的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 2": {
+          "type": "text",
+          "hint": "填写文本占位符 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第8页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第9页",
+      "template_page_num": 9,
+      "content": {
+        "标题 1": {
+          "type": "text",
+          "hint": "填写标题 1的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图形 9": {
+          "type": "image",
+          "hint": "填写图形 9的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 3": {
+          "type": "text",
+          "hint": "填写文本占位符 3的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第9页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "第10页",
+      "template_page_num": 10,
+      "content": {
+        "标题 3": {
+          "type": "text",
+          "hint": "填写标题 3的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "文本占位符 2": {
+          "type": "text",
+          "hint": "填写文本占位符 2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "第10页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "请根据实际需要填写内容"
+      }
+    }
+  ]
+}

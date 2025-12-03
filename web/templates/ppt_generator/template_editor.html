@@ -582,6 +582,29 @@
         </div>
     </div>
 </div>
+
+<!-- 页面备注模态框 -->
+<div id="pageNoteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                                background: rgba(0,0,0,0.5); z-index: 10000;
+                                justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 500px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 1.1rem;">📝 编辑页面备注</h3>
+            <button onclick="closePageNoteModal()" style="background: none; border: none; font-size: 1.5rem;
+                            cursor: pointer; color: #999;">&times;</button>
+        </div>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 12px;">
+            页面备注用于告诉 AI 这一页的用途和内容要求，帮助生成更准确的内容。
+        </p>
+        <textarea id="pageNoteTextarea" rows="5" placeholder="例如：这是课程介绍页，需要展示课程名称、讲师信息和课程亮点..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+                         font-size: 0.95rem; resize: vertical; box-sizing: border-box;"></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+            <button onclick="closePageNoteModal()" class="btn btn-secondary">取消</button>
+            <button onclick="savePageNote()" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -600,7 +623,8 @@
         currentPageNum: 1,
         selectedShapeId: null,  // 当前选中的元素
         imageCache: new Map(),  // 图片缓存，避免重复加载
-        embeddedMode: false     // 嵌入模式标记
+        embeddedMode: false,    // 嵌入模式标记
+        wizardMode: false       // 向导模式标记（显示 hint/max_chars/required/note）
     };
 
     // ========================================
@@ -845,6 +869,11 @@
         const hiddenShapes = {};
         // 保存每个页面的名称（用于恢复）
         const pageTypes = {};
+        // 保存每个页面的备注（向导模式）
+        const pageNotes = {};
+        // 保存元素的配置属性（向导模式：hint/max_chars/required）
+        const shapeConfigs = {};
+
         templateEditorState.pages.forEach(page => {
             const pageHiddenIds = page.shapes
                 .filter(s => s.is_hidden)
@@ -855,6 +884,26 @@
             // 保存页面名称
             if (page.page_type) {
                 pageTypes[page.page_num] = page.page_type;
+            }
+            // 保存页面备注
+            if (page.note) {
+                pageNotes[page.page_num] = page.note;
+            }
+            // 保存元素配置（向导模式）
+            if (templateEditorState.wizardMode) {
+                const pageShapeConfigs = {};
+                page.shapes.forEach(shape => {
+                    if (shape.hint || shape.max_chars || shape.required) {
+                        pageShapeConfigs[shape.shape_id] = {
+                            hint: shape.hint || '',
+                            max_chars: shape.max_chars || null,
+                            required: shape.required || false
+                        };
+                    }
+                });
+                if (Object.keys(pageShapeConfigs).length > 0) {
+                    shapeConfigs[page.page_num] = pageShapeConfigs;
+                }
             }
         });
 
@@ -874,8 +923,11 @@
                         named_count: namedCount,
                         page_count: templateEditorState.pages.length,
                         hidden_shapes: hiddenShapes,
-                        page_types: pageTypes,  // 保存页面名称
-                        from_wizard: templateEditorState.embeddedMode  // 标记是否来自向导
+                        page_types: pageTypes,
+                        page_notes: pageNotes,      // 页面备注（向导模式）
+                        shape_configs: shapeConfigs, // 元素配置（向导模式）
+                        from_wizard: templateEditorState.embeddedMode,
+                        wizard_mode: templateEditorState.wizardMode
                     },
                     thumbnail_url: thumbnailUrl
                 })
@@ -893,12 +945,19 @@
             // 检查会话是否存在，并获取保存的状态
             let hiddenShapes = {};
             let pageTypes = {};
+            let pageNotes = {};
+            let shapeConfigs = {};
+            let savedWizardMode = false;
             try {
                 const checkResponse = await fetch(`/developer-tools/edit-sessions/${sessionId}/`);
                 const checkData = await checkResponse.json();
                 if (checkResponse.ok && checkData.exists) {
-                    hiddenShapes = checkData.session?.progress_data?.hidden_shapes || {};
-                    pageTypes = checkData.session?.progress_data?.page_types || {};
+                    const progressData = checkData.session?.progress_data || {};
+                    hiddenShapes = progressData.hidden_shapes || {};
+                    pageTypes = progressData.page_types || {};
+                    pageNotes = progressData.page_notes || {};
+                    shapeConfigs = progressData.shape_configs || {};
+                    savedWizardMode = progressData.wizard_mode || false;
                 }
                 // 如果 session 不存在，继续尝试加载数据（可能是从向导直接传入的 template_id）
             } catch (e) {
@@ -943,6 +1002,38 @@
                     console.log('[restoreEditSession] 已恢复页面名称:', pageTypes);
                 }
 
+                // 恢复页面备注（向导模式）
+                if (Object.keys(pageNotes).length > 0) {
+                    templateEditorState.pages.forEach(page => {
+                        const savedNote = pageNotes[page.page_num];
+                        if (savedNote) {
+                            page.note = savedNote;
+                        }
+                    });
+                    console.log('[restoreEditSession] 已恢复页面备注:', pageNotes);
+                }
+
+                // 恢复元素配置（向导模式：hint/max_chars/required）
+                if (Object.keys(shapeConfigs).length > 0) {
+                    templateEditorState.pages.forEach(page => {
+                        const pageShapeConfigs = shapeConfigs[page.page_num] || {};
+                        page.shapes.forEach(shape => {
+                            const savedConfig = pageShapeConfigs[shape.shape_id];
+                            if (savedConfig) {
+                                shape.hint = savedConfig.hint || '';
+                                shape.max_chars = savedConfig.max_chars || null;
+                                shape.required = savedConfig.required || false;
+                            }
+                        });
+                    });
+                    console.log('[restoreEditSession] 已恢复元素配置:', shapeConfigs);
+                }
+
+                // 恢复向导模式（如果之前保存时是向导模式，且当前 URL 也是向导模式）
+                if (savedWizardMode && templateEditorState.wizardMode) {
+                    console.log('[restoreEditSession] 向导模式已恢复');
+                }
+
                 // 显示编辑器
                 document.getElementById('uploadSection').style.display = 'none';
                 document.getElementById('editorSection').style.display = 'flex';
@@ -978,6 +1069,13 @@
             // 直接显示编辑器区域，隐藏上传区域
             document.getElementById('uploadSection').style.display = 'none';
             document.getElementById('editorSection').style.display = 'flex';
+        }
+
+        // 向导模式处理（通过 URL 参数 wizard=1）
+        const wizardParam = urlParams.get('wizard');
+        if (wizardParam === '1') {
+            templateEditorState.wizardMode = true;
+            document.body.classList.add('wizard-mode');
         }
 
         if (sessionId) {
@@ -1160,18 +1258,37 @@
 
         // 更新页面标题（显示页面名称，可编辑）
         const pageName = page.page_type || `第${pageNum}页`;
+        const isWizardMode = templateEditorState.wizardMode;
+
+        // 向导模式下显示页面备注按钮
+        const noteBtn = isWizardMode ? `
+            <button onclick="openPageNoteModal(${pageNum})"
+                    style="margin-left: 8px; padding: 4px 10px; font-size: 0.8rem;
+                           background: ${page.note ? 'var(--primary-color)' : 'var(--bg-secondary)'};
+                           color: ${page.note ? 'white' : 'var(--text-secondary)'};
+                           border: 1px solid ${page.note ? 'var(--primary-color)' : 'var(--border-color)'};
+                           border-radius: var(--radius-sm); cursor: pointer;
+                           transition: all 0.2s;"
+                    title="${page.note ? '编辑页面备注' : '添加页面备注'}">
+                📝 ${page.note ? '备注' : '添加备注'}
+            </button>
+        ` : '';
+
         document.getElementById('currentPageTitle').innerHTML = `
-            <span style="color: var(--text-secondary); font-size: 0.9rem;">第${pageNum}页 · </span>
-            <input type="text" id="pageNameInput" value="${pageName}"
-                   style="border: none; background: transparent; font-size: inherit; font-weight: inherit;
-                          color: inherit; padding: 2px 4px; border-radius: 4px; max-width: 150px;
-                          transition: background 0.2s;"
-                   onmouseover="this.style.background='var(--bg-secondary)'"
-                   onmouseout="if(document.activeElement!==this)this.style.background='transparent'"
-                   onfocus="this.style.background='var(--bg-secondary)';this.select()"
-                   onblur="this.style.background='transparent';updatePageName(${pageNum}, this.value)"
-                   onkeydown="if(event.key==='Enter'){this.blur()}"
-                   title="点击编辑页面名称">
+            <div style="display: flex; align-items: center;">
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">第${pageNum}页 · </span>
+                <input type="text" id="pageNameInput" value="${pageName}"
+                       style="border: none; background: transparent; font-size: inherit; font-weight: inherit;
+                              color: inherit; padding: 2px 4px; border-radius: 4px; max-width: 150px;
+                              transition: background 0.2s;"
+                       onmouseover="this.style.background='var(--bg-secondary)'"
+                       onmouseout="if(document.activeElement!==this)this.style.background='transparent'"
+                       onfocus="this.style.background='var(--bg-secondary)';this.select()"
+                       onblur="this.style.background='transparent';updatePageName(${pageNum}, this.value)"
+                       onkeydown="if(event.key==='Enter'){this.blur()}"
+                       title="点击编辑页面名称">
+                ${noteBtn}
+            </div>
         `;
 
         // 更新页面列表高亮
@@ -1380,21 +1497,44 @@
     // Render property panel
     function renderPropertyPanel(shape) {
         const panel = document.getElementById('elementEditView');
+        const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
 
-        const shapeIndex = templateEditorState.pages
-            .find(p => p.page_num === templateEditorState.currentPageNum)
-            .shapes.findIndex(s => s.shape_id === shape.shape_id) + 1;
+        const shapeIndex = page.shapes.findIndex(s => s.shape_id === shape.shape_id) + 1;
+        const isWizardMode = templateEditorState.wizardMode;
+
+        // 向导模式：显示页面备注和元素配置字段
+        // 普通模式：只显示元素名称和隐藏按钮
+        const wizardFields = isWizardMode ? `
+                <div class="form-group">
+                    <label class="form-label">内容提示 (hint)</label>
+                    <textarea id="shapeHintInput" class="text-input" rows="2"
+                              placeholder="告诉 AI 这个位置应该填什么内容"
+                              style="resize: vertical;">${shape.hint || ''}</textarea>
+                    <small class="form-help">给 AI 的提示，描述此处应填写的内容</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">最大字数</label>
+                    <input type="number" id="shapeMaxCharsInput" class="text-input"
+                           value="${shape.max_chars || ''}"
+                           placeholder="如：50" min="1" max="9999">
+                    <small class="form-help">限制 AI 生成内容的字数上限</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="shapeRequiredInput" ${shape.required ? 'checked' : ''}>
+                        <span>必填字段</span>
+                    </label>
+                    <small class="form-help">勾选后，AI 必须为此字段生成内容</small>
+                </div>
+        ` : '';
 
         panel.innerHTML = `
             <div style="margin-bottom: var(--spacing-lg);">
-                <h4 style="margin-bottom: var(--spacing-md);">元素 #${shapeIndex}</h4>
-
-                <div class="form-group">
-                    <label class="form-label">类型</label>
-                    <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
-                        ${shape.type === 'text' ? '📝 文本框' : '🖼️ 图片'}
-                    </div>
-                </div>
+                <h4 style="margin-bottom: var(--spacing-md);">
+                    ${shape.type === 'text' ? '📝' : '🖼️'} 元素 #${shapeIndex}
+                </h4>
 
                 <div class="form-group">
                     <label class="form-label required">元素名称</label>
@@ -1404,31 +1544,11 @@
                     <small class="form-help">使用语义化名称，方便后续配置</small>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">位置和尺寸</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">
-                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
-                            <div style="color: var(--text-secondary);">X</div>
-                            <div>${Math.round(shape.left / 914400 * 2.54 * 10) / 10} cm</div>
-                        </div>
-                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
-                            <div style="color: var(--text-secondary);">Y</div>
-                            <div>${Math.round(shape.top / 914400 * 2.54 * 10) / 10} cm</div>
-                        </div>
-                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
-                            <div style="color: var(--text-secondary);">宽度</div>
-                            <div>${Math.round(shape.width / 914400 * 2.54 * 10) / 10} cm</div>
-                        </div>
-                        <div style="padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm);">
-                            <div style="color: var(--text-secondary);">高度</div>
-                            <div>${Math.round(shape.height / 914400 * 2.54 * 10) / 10} cm</div>
-                        </div>
-                    </div>
-                </div>
+                ${wizardFields}
 
                 <div class="form-actions">
-                    <button class="btn btn-primary btn-block" onclick="saveShapeName(${shape.shape_id})">
-                        💾 保存名称
+                    <button class="btn btn-primary btn-block" onclick="saveShapeProperties(${shape.shape_id})">
+                        💾 保存${isWizardMode ? '配置' : '名称'}
                     </button>
                     <button class="btn btn-${shape.is_hidden ? 'success' : 'secondary'} btn-block"
                             onclick="toggleShapeVisibility(${shape.shape_id})">
@@ -1443,8 +1563,8 @@
     // Element Actions
     // ========================================
 
-    // Save shape name
-    async function saveShapeName(shapeId) {
+    // Save shape properties (name, and in wizard mode: hint, max_chars, required)
+    async function saveShapeProperties(shapeId) {
         const newName = document.getElementById('shapeNameInput').value.trim();
 
         if (!newName) {
@@ -1461,6 +1581,22 @@
             return;
         }
 
+        // 收集向导模式下的额外属性
+        const isWizardMode = templateEditorState.wizardMode;
+        let hint = '';
+        let maxChars = null;
+        let required = false;
+
+        if (isWizardMode) {
+            const hintInput = document.getElementById('shapeHintInput');
+            const maxCharsInput = document.getElementById('shapeMaxCharsInput');
+            const requiredInput = document.getElementById('shapeRequiredInput');
+
+            hint = hintInput ? hintInput.value.trim() : '';
+            maxChars = maxCharsInput && maxCharsInput.value ? parseInt(maxCharsInput.value) : null;
+            required = requiredInput ? requiredInput.checked : false;
+        }
+
         try {
             const response = await fetch('/developer-tools/update-shape-name/', {
                 method: 'POST',
@@ -1471,7 +1607,7 @@
                 body: JSON.stringify({
                     template_id: templateEditorState.templateId,
                     page_num: templateEditorState.currentPageNum,
-                    shape_id: shape.shape_id,  // 使用 shape_id 支持 GROUP 内元素
+                    shape_id: shape.shape_id,
                     new_name: newName
                 })
             });
@@ -1479,8 +1615,16 @@
             const data = await response.json();
 
             if (response.ok) {
+                // 更新本地状态
                 shape.name = newName;
                 shape.is_named = true;
+
+                // 向导模式下保存额外属性到本地状态
+                if (isWizardMode) {
+                    shape.hint = hint;
+                    shape.max_chars = maxChars;
+                    shape.required = required;
+                }
 
                 renderElementList();
                 renderPageList();
@@ -1490,13 +1634,18 @@
                 // 更新编辑会话进度
                 saveEditSession();
 
-                showSuccess('✅ 名称已保存');
+                showSuccess('✅ 保存成功');
             } else {
                 showError('保存失败: ' + data.error);
             }
         } catch (error) {
             showError('保存失败: ' + error.message);
         }
+    }
+
+    // 兼容旧调用
+    function saveShapeName(shapeId) {
+        saveShapeProperties(shapeId);
     }
 
     // 更新页面名称
@@ -1518,6 +1667,60 @@
         // 保存会话
         saveEditSession();
     }
+
+    // 更新页面备注（向导模式下使用）
+    function updatePageNote(pageNum, newNote) {
+        const page = templateEditorState.pages.find(p => p.page_num === pageNum);
+        if (!page) return;
+
+        page.note = newNote.trim();
+
+        // 保存会话
+        saveEditSession();
+    }
+
+    // 页面备注模态框相关
+    let currentNotePageNum = null;
+
+    function openPageNoteModal(pageNum) {
+        currentNotePageNum = pageNum;
+        const page = templateEditorState.pages.find(p => p.page_num === pageNum);
+        if (!page) return;
+
+        document.getElementById('pageNoteTextarea').value = page.note || '';
+        const modal = document.getElementById('pageNoteModal');
+        modal.style.display = 'flex';
+
+        // 聚焦到文本框
+        setTimeout(() => {
+            document.getElementById('pageNoteTextarea').focus();
+        }, 100);
+    }
+
+    function closePageNoteModal() {
+        document.getElementById('pageNoteModal').style.display = 'none';
+        currentNotePageNum = null;
+    }
+
+    function savePageNote() {
+        if (currentNotePageNum === null) return;
+
+        const newNote = document.getElementById('pageNoteTextarea').value.trim();
+        updatePageNote(currentNotePageNum, newNote);
+
+        // 刷新当前页面标题区域的按钮状态
+        loadPage(currentNotePageNum);
+
+        closePageNoteModal();
+        showSuccess('页面备注已保存');
+    }
+
+    // 点击模态框背景关闭
+    document.getElementById('pageNoteModal')?.addEventListener('click', function (e) {
+        if (e.target === this) {
+            closePageNoteModal();
+        }
+    });
 
     // Toggle shape visibility
     async function toggleShapeVisibility(shapeId) {
@@ -1817,6 +2020,11 @@
                 page.page_type = data.page_type;
             }
 
+            // 向导模式下：应用 AI 建议的页面备注
+            if (templateEditorState.wizardMode && data.page_note) {
+                page.note = data.page_note;
+            }
+
             // 应用 AI 建议的元素名称（串行保存，避免并发）
             const namedShapes = data.named_shapes || [];
             let successCount = 0;
@@ -1827,6 +2035,17 @@
                 if (shape && suggestion.suggested_name) {
                     shape.name = suggestion.suggested_name;
                     shape.is_named = true;
+
+                    // 向导模式下：应用 AI 建议的配置信息
+                    if (templateEditorState.wizardMode) {
+                        if (suggestion.hint) shape.hint = suggestion.hint;
+                        if (suggestion.max_chars !== null && suggestion.max_chars !== undefined) {
+                            shape.max_chars = suggestion.max_chars;
+                        }
+                        if (suggestion.required !== undefined) {
+                            shape.required = suggestion.required;
+                        }
+                    }
 
                     try {
                         await fetch('/developer-tools/update-shape-name/', {
@@ -1854,7 +2073,12 @@
                 }
             }
 
-            return { success: true, count: successCount, pageType: data.page_type || null };
+            // 向导模式下保存会话
+            if (templateEditorState.wizardMode) {
+                saveEditSession();
+            }
+
+            return { success: true, count: successCount, pageType: data.page_type || null, pageNote: data.page_note || null };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -1880,7 +2104,10 @@
         }
 
         isAINaming = true;
-        showLoading('🤖 AI 正在分析当前页面元素...');
+        const loadingMsg = templateEditorState.wizardMode
+            ? '🤖 AI 正在分析页面并生成配置...'
+            : '🤖 AI 正在分析当前页面元素...';
+        showLoading(loadingMsg);
 
         try {
             const result = await aiNamePage(page);
@@ -1890,12 +2117,16 @@
                 renderElementList();
                 renderPageList();
                 updateProgress();
-                // 如果 AI 返回了页面名称，更新页面标题显示
-                if (result.pageType) {
-                    loadPage(page.page_num);  // 重新加载页面以更新标题
+                // 刷新页面以显示新的页面名称和备注按钮状态
+                loadPage(page.page_num);
+
+                // 构建成功消息
+                let successMsg = `✅ AI 成功命名 ${result.count} 个元素`;
+                if (result.pageType) successMsg += `，页面命名为"${result.pageType}"`;
+                if (templateEditorState.wizardMode && result.pageNote) {
+                    successMsg += `，已添加页面备注`;
                 }
-                const pageNameMsg = result.pageType ? `，页面命名为"${result.pageType}"` : '';
-                showSuccess(`✅ AI 成功命名 ${result.count} 个元素${pageNameMsg}`);
+                showSuccess(successMsg);
             } else {
                 showError('AI 命名失败: ' + result.error);
             }
@@ -2000,7 +2231,91 @@
             // 从向导触发，跳过确认弹窗
             aiAutoNameAllPages(true);
         }
+
+        // 向导请求获取完整配置数据（用于发布模板）
+        if (event.data.type === 'getFullConfig') {
+            const config = generateFullConfig();
+            window.parent.postMessage({ type: 'fullConfigData', config: config }, '*');
+        }
     });
+
+    // 生成完整的 config.json 格式数据（向导模式）
+    function generateFullConfig() {
+        if (!templateEditorState.pages || templateEditorState.pages.length === 0) {
+            console.log('[generateFullConfig] 没有页面数据');
+            return null;
+        }
+
+        const manifest = [];
+        const pptPages = [];
+
+        templateEditorState.pages.forEach(page => {
+            const content = {};
+            let textSlots = 0;
+            let imageSlots = 0;
+
+            // 遍历所有非隐藏的元素
+            page.shapes.forEach(shape => {
+                if (shape.is_hidden) return;  // 跳过隐藏元素
+                if (!shape.name || shape.name === '未命名') return;  // 跳过未命名元素
+
+                // 确定字段类型
+                let fieldType = 'text';
+                if (shape.shape_type === 'picture' || shape.name.includes('图')) {
+                    fieldType = 'image';
+                    imageSlots++;
+                } else {
+                    textSlots++;
+                }
+
+                content[shape.name] = {
+                    type: fieldType,
+                    hint: shape.hint || `填写${shape.name}的内容`,
+                    required: shape.required !== false,  // 默认必填
+                    value: '',
+                    max_chars: shape.max_chars || null
+                };
+            });
+
+            // 只有有内容的页面才添加
+            if (Object.keys(content).length > 0) {
+                const pageType = page.page_type || `第${page.page_num}页`;
+
+                // 添加到 manifest
+                manifest.push({
+                    template_page_num: page.page_num,
+                    page_type: pageType,
+                    text_slots: textSlots,
+                    image_slots: imageSlots
+                });
+
+                // 添加到 ppt_pages
+                const pageConfig = {
+                    page_type: pageType,
+                    template_page_num: page.page_num,
+                    content: content,
+                    meta: {
+                        layout: pageType,
+                        scene: [],
+                        style: '',
+                        text_slots: textSlots,
+                        image_slots: imageSlots,
+                        notes: page.note || '请根据实际需要填写内容'
+                    }
+                };
+
+                pptPages.push(pageConfig);
+            }
+        });
+
+        const config = {
+            manifest: manifest,
+            ppt_pages: pptPages
+        };
+
+        console.log('[generateFullConfig] 生成配置:', config);
+        return config;
+    }
 
     // Save PPT
     document.getElementById('saveTemplateBtn')?.addEventListener('click', async () => {

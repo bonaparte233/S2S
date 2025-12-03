@@ -1347,37 +1347,43 @@ def ai_auto_name_shapes(request):
             shapes_desc.append(desc)
 
         # 构建 Prompt
-        prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，完成以下两个任务：
+        prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，完成模板配置任务。
 
-**任务1：为页面命名**
-根据页面的整体布局和内容，给这个页面一个简洁的名称，如"封面页"、"目录页"、"章节页"、"图文页"、"结束页"等，不超过6个字。
+**任务概述**
+1. 为页面命名并添加备注
+2. 为每个元素命名并配置属性
 
-**任务2：为元素命名**
-图片上只标注了当前可见的元素，编号从 1 到 {len(visible_shapes)}。请为每个标注了编号的元素提供一个语义化的名称。
-
-页面上有 {len(visible_shapes)} 个可编辑元素，用黄色/蓝色编号圈标注：
+**页面信息**
+图片上标注了 {len(visible_shapes)} 个可编辑元素（黄色/蓝色编号圈）：
 
 {chr(10).join(shapes_desc)}
 
-元素命名规则：
-1. 名称应该反映元素的用途，如"章节标题"、"正文内容区"、"作者姓名"、"日期"等
-2. 名称简洁明了，不超过10个字
-3. 如果元素内容已经暗示了用途，使用对应的名称
-4. 图片元素命名为"封面图片"、"内容配图"、"logo图标"等
-5. 只为图片上有编号标注的 {len(visible_shapes)} 个元素命名
+**配置规则**
 
-请以 JSON 格式返回，格式如下：
+页面配置：
+- page_type: 页面名称，如"封面页"、"目录页"、"章节页"、"图文页"、"结束页"，不超过6字
+- page_note: 页面备注，说明这一页的用途和内容要求（可选，简洁即可）
+
+元素配置：
+- name: 元素名称，反映用途，如"主标题"、"副标题"、"正文内容"、"配图"，不超过10字
+- hint: 内容提示，告诉填写者这里应该填什么内容（简洁清晰）
+- max_chars: 建议最大字数（根据文本框大小估算，标题类20-50，正文类100-500，图片填null）
+- required: 是否必填（重要元素如标题为true，装饰性元素为false）
+
+请以 JSON 格式返回：
 ```json
 {{
   "page_type": "封面页",
+  "page_note": "展示课程/演讲主题和演讲者信息",
   "elements": [
-    {{"index": 1, "name": "章节标题"}},
-    {{"index": 2, "name": "正文内容"}}
+    {{"index": 1, "name": "主标题", "hint": "输入课程或演讲主题", "max_chars": 30, "required": true}},
+    {{"index": 2, "name": "副标题", "hint": "补充说明或口号", "max_chars": 50, "required": false}},
+    {{"index": 3, "name": "封面图片", "hint": "主题相关配图", "max_chars": null, "required": false}}
   ]
 }}
 ```
 
-只返回 JSON，不要其他解释。确保 elements 的 index 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
+只返回 JSON，不要其他解释。确保 elements 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
 
         # 初始化 LLM（使用管理后台配置的多模态模型）
         sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -1468,10 +1474,12 @@ def ai_auto_name_shapes(request):
         # 支持新格式（包含 page_type 和 elements）和旧格式（仅元素列表）
         if isinstance(parsed_response, dict):
             page_type = parsed_response.get("page_type", "")
+            page_note = parsed_response.get("page_note", "")
             suggested_names = parsed_response.get("elements", [])
         else:
             # 兼容旧格式：直接是元素列表
             page_type = ""
+            page_note = ""
             suggested_names = parsed_response
 
         # 映射到 shape_index（visible_shapes 已在上面定义）
@@ -1486,6 +1494,10 @@ def ai_auto_name_shapes(request):
                         "shape_index": shape.get("shape_index"),
                         "shape_id": shape.get("shape_id"),
                         "suggested_name": suggestion.get("name", ""),
+                        # 新增：额外配置信息（向导模式下使用）
+                        "hint": suggestion.get("hint", ""),
+                        "max_chars": suggestion.get("max_chars"),
+                        "required": suggestion.get("required", False),
                     }
                 )
 
@@ -1493,7 +1505,8 @@ def ai_auto_name_shapes(request):
             {
                 "success": True,
                 "named_shapes": named_shapes,
-                "page_type": page_type,  # 新增：返回页面名称
+                "page_type": page_type,
+                "page_note": page_note,  # 新增：页面备注
             }
         )
 
