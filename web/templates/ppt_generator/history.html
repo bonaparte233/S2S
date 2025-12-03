@@ -11,68 +11,67 @@
 <div class="card">
     <div class="card-body">
         {% if generations %}
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>状态</th>
-                            <th>课程名称</th>
-                            <th>模板</th>
-                            <th>使用LLM</th>
-                            <th>创建时间</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for gen in generations %}
-                        <tr>
-                            <td>#{{ gen.id }}</td>
-                            <td>
-                                <span class="status-badge status-{{ gen.status }}">
-                                    {{ gen.get_status_display }}
-                                </span>
-                            </td>
-                            <td>{{ gen.course_name|default:"-" }}</td>
-                            <td>
-                                {% if gen.template_file %}
-                                    自定义
-                                {% else %}
-                                    {{ gen.template_name|default:"默认" }}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>状态</th>
+                        <th>课程名称</th>
+                        <th>模板</th>
+                        <th>使用LLM</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gen in generations %}
+                    <tr>
+                        <td>#{{ gen.id }}</td>
+                        <td>
+                            <span class="status-badge status-{{ gen.status }}">
+                                {{ gen.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ gen.course_name|default:"-" }}</td>
+                        <td>
+                            {% if gen.template_file %}
+                            自定义
+                            {% else %}
+                            {{ gen.template_name|default:"默认" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if gen.use_llm %}
+                            ✅
+                            {% else %}
+                            ❌
+                            {% endif %}
+                        </td>
+                        <td>{{ gen.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'generation_detail' gen.pk %}" class="btn btn-small btn-secondary">
+                                    查看
+                                </a>
+                                {% if gen.status == 'completed' %}
+                                <a href="{% url 'download_ppt' gen.pk %}" class="btn btn-small btn-success">
+                                    下载
+                                </a>
                                 {% endif %}
-                            </td>
-                            <td>
-                                {% if gen.use_llm %}
-                                    ✅
-                                {% else %}
-                                    ❌
-                                {% endif %}
-                            </td>
-                            <td>{{ gen.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="{% url 'generation_detail' gen.pk %}" class="btn btn-small btn-secondary">
-                                        查看
-                                    </a>
-                                    {% if gen.status == 'completed' %}
-                                        <a href="{% url 'download_ppt' gen.pk %}" class="btn btn-small btn-success">
-                                            下载
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-            <div class="empty-state">
-                <p>📭 暂无生成记录</p>
-                <a href="{% url 'index' %}" class="btn btn-primary">开始生成第一个PPT</a>
-            </div>
+        <div class="empty-state">
+            <p>📭 暂无生成记录</p>
+            <a href="{% url 'index' %}" class="btn btn-primary">开始生成第一个PPT</a>
+        </div>
         {% endif %}
     </div>
 </div>
 {% endblock %}
-

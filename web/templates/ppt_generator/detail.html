@@ -34,10 +34,15 @@
                     <a href="{% url 'download_ppt' generation.pk %}" class="btn btn-success btn-large">
                         📥 下载PPT
                     </a>
-                    {% if is_developer and generation.config_json %}
-                    <a href="{{ generation.config_json.url }}" class="btn btn-secondary" download>
+                    {% if is_developer %}
+                    <a href="{% url 'download_config_json' generation.pk %}" class="btn btn-secondary" download>
                         📄 下载配置JSON
                     </a>
+                    {% if has_preprocessed_script %}
+                    <a href="{% url 'download_preprocessed_script' generation.pk %}" class="btn btn-info" download>
+                        📝 下载预分页讲稿
+                    </a>
+                    {% endif %}
                     {% endif %}
                 </div>
                 {% elif generation.status == 'failed' %}

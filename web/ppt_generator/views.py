@@ -172,9 +172,17 @@ def generation_detail(request, pk):
         request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
     )
 
+    # Check if preprocessed script exists
+    has_preprocessed_script = False
+    if is_developer:
+        run_dir = settings.S2S_TEMP_DIR / f"web-{generation.id}"
+        script_path = run_dir / "preprocessed_script.md"
+        has_preprocessed_script = script_path.exists()
+
     context = {
         "generation": generation,
         "is_developer": is_developer,
+        "has_preprocessed_script": has_preprocessed_script,
     }
     return render(request, "ppt_generator/detail.html", context)
 
@@ -396,10 +404,14 @@ def download_ppt(request, pk):
     """Download generated PPT file."""
     generation = get_object_or_404(PPTGeneration, pk=pk)
 
-    if not generation.output_ppt:
-        raise Http404("PPT文件不存在")
+    # 优先从 temp 目录下载
+    run_dir = settings.S2S_TEMP_DIR / f"web-{generation.id}"
+    file_path = run_dir / "slides.pptx"
 
-    file_path = Path(generation.output_ppt.path)
+    # 如果 temp 不存在，尝试 media 目录（兼容旧记录）
+    if not file_path.exists() and generation.output_ppt:
+        file_path = Path(generation.output_ppt.path)
+
     if not file_path.exists():
         raise Http404("PPT文件不存在")
 
@@ -409,6 +421,79 @@ def download_ppt(request, pk):
     )
     response["Content-Disposition"] = (
         f'attachment; filename="generated_{generation.id}.pptx"'
+    )
+    return response
+
+
+@login_required
+@require_http_methods(["GET"])
+def download_config_json(request, pk):
+    """
+    下载配置 JSON（仅管理员/开发者可用）
+    """
+    is_developer = (
+        request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
+    )
+    if not is_developer:
+        return JsonResponse({"error": "权限不足"}, status=403)
+
+    generation = get_object_or_404(PPTGeneration, pk=pk)
+
+    # 优先从 temp 目录下载
+    run_dir = settings.S2S_TEMP_DIR / f"web-{generation.id}"
+    file_path = run_dir / "config.json"
+
+    # 如果 temp 不存在，尝试 media 目录（兼容旧记录）
+    if not file_path.exists() and generation.config_json:
+        file_path = Path(generation.config_json.path)
+
+    if not file_path.exists():
+        raise Http404("配置文件不存在")
+
+    response = FileResponse(
+        open(file_path, "rb"),
+        content_type="application/json",
+    )
+    response["Content-Disposition"] = (
+        f'attachment; filename="config_{generation.id}.json"'
+    )
+    return response
+
+
+@login_required
+@require_http_methods(["GET"])
+def download_preprocessed_script(request, pk):
+    """
+    下载预分页讲稿（仅管理员/开发者可用）
+
+    Args:
+        pk: PPT生成记录的主键
+
+    Returns:
+        Markdown 文件下载响应
+    """
+    # 检查权限：仅管理员和开发者可以下载
+    is_developer = (
+        request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
+    )
+    if not is_developer:
+        return JsonResponse({"error": "权限不足，仅管理员/开发者可下载"}, status=403)
+
+    generation = get_object_or_404(PPTGeneration, pk=pk)
+
+    # 构建预分页讲稿路径 - 使用 run_dir 而不是 config_json 路径
+    run_dir = settings.S2S_TEMP_DIR / f"web-{generation.id}"
+    script_path = run_dir / "preprocessed_script.md"
+
+    if not script_path.exists():
+        raise Http404("预分页讲稿不存在（可能该生成使用了带标记的讲稿）")
+
+    response = FileResponse(
+        open(script_path, "rb"),
+        content_type="text/markdown; charset=utf-8",
+    )
+    response["Content-Disposition"] = (
+        f'attachment; filename="preprocessed_script_{generation.id}.md"'
     )
     return response
 
@@ -721,9 +806,26 @@ def parse_ppt_template(request):
                 relative_path = annotated_path.relative_to(settings.MEDIA_ROOT)
                 image_url = f"/media/{relative_path}"
 
+                # 根据元素类型推断页面类型
+                shapes = page_data["shapes"]
+                text_count = sum(1 for s in shapes if s.get("type") == "text")
+                image_count = sum(1 for s in shapes if s.get("type") == "image")
+
+                if text_count == 0 and image_count > 0:
+                    page_type = "纯图页"
+                elif text_count <= 3 and image_count == 0:
+                    page_type = "标题页"
+                elif image_count > 0:
+                    page_type = "图文页"
+                elif text_count > 0:
+                    page_type = "文字页"
+                else:
+                    page_type = f"第{page_num}页"
+
                 pages.append(
                     {
                         "page_num": page_num,
+                        "page_type": page_type,
                         "image_url": image_url,
                         "shapes": page_data["shapes"],
                     }
@@ -799,6 +901,44 @@ def update_shape_name_api(request):
         )
 
 
+def _estimate_max_chars(shape: dict) -> int:
+    """
+    根据文本框尺寸估算最大字符数
+
+    由于字体大小经常从母版继承无法直接获取，采用保守估算策略：
+    - 使用当前内容长度作为参考
+    - 如果没有内容，根据面积粗略估算
+
+    Args:
+        shape: 包含 width, height, char_count 等属性的字典
+
+    Returns:
+        估算的最大字符数（建议手动校准）
+    """
+    char_count = shape.get("char_count", 0)
+
+    # 如果有现有内容，使用 1.2 倍作为保守估计
+    # 用户可以在配置编辑器中根据实际测试调整
+    if char_count > 0:
+        return max(int(char_count * 1.2), char_count)
+
+    # 没有现有内容时，根据面积粗略估算
+    # 假设平均每个中文字符占约 30x30 pt 的区域
+    EMU_PER_POINT = 914400 / 72
+    width = shape.get("width", 0)
+    height = shape.get("height", 0)
+
+    if width and height:
+        width_pt = width / EMU_PER_POINT
+        height_pt = height / EMU_PER_POINT
+        # 假设字符占用面积约 900 平方点（30x30）
+        area = width_pt * height_pt
+        estimated = int(area / 900)
+        return max(estimated, 10)
+
+    return 20  # 默认值
+
+
 @login_required
 @permission_required("ppt_generator.is_developer", raise_exception=True)
 @require_http_methods(["POST"])
@@ -857,7 +997,8 @@ def generate_template_config(request):
 
                     if is_text:
                         text_slots += 1
-                        max_chars = (shape.get("char_count") or 10) * 2
+                        # 智能估算 max_chars
+                        max_chars = _estimate_max_chars(shape)
                         content[name] = {
                             "type": "text",
                             "hint": f"填写{name}的内容",
@@ -1206,15 +1347,19 @@ def ai_auto_name_shapes(request):
             shapes_desc.append(desc)
 
         # 构建 Prompt
-        prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，为每个标注了编号的元素提供一个语义化的名称。
+        prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，完成以下两个任务：
 
-**重要说明**：图片上只标注了当前可见的元素，编号从 1 到 {len(visible_shapes)}。请只关注图片上有编号标注的元素，忽略其他没有标注的部分。
+**任务1：为页面命名**
+根据页面的整体布局和内容，给这个页面一个简洁的名称，如"封面页"、"目录页"、"章节页"、"图文页"、"结束页"等，不超过6个字。
+
+**任务2：为元素命名**
+图片上只标注了当前可见的元素，编号从 1 到 {len(visible_shapes)}。请为每个标注了编号的元素提供一个语义化的名称。
 
 页面上有 {len(visible_shapes)} 个可编辑元素，用黄色/蓝色编号圈标注：
 
 {chr(10).join(shapes_desc)}
 
-命名规则：
+元素命名规则：
 1. 名称应该反映元素的用途，如"章节标题"、"正文内容区"、"作者姓名"、"日期"等
 2. 名称简洁明了，不超过10个字
 3. 如果元素内容已经暗示了用途，使用对应的名称
@@ -1223,13 +1368,16 @@ def ai_auto_name_shapes(request):
 
 请以 JSON 格式返回，格式如下：
 ```json
-[
-  {{"index": 1, "name": "章节标题"}},
-  {{"index": 2, "name": "正文内容"}}
-]
+{{
+  "page_type": "封面页",
+  "elements": [
+    {{"index": 1, "name": "章节标题"}},
+    {{"index": 2, "name": "正文内容"}}
+  ]
+}}
 ```
 
-只返回 JSON，不要其他解释。确保返回的 index 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
+只返回 JSON，不要其他解释。确保 elements 的 index 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
 
         # 初始化 LLM（使用管理后台配置的多模态模型）
         sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -1315,7 +1463,16 @@ def ai_auto_name_shapes(request):
         elif "```" in response:
             json_match = response.split("```")[1].split("```")[0].strip()
 
-        suggested_names = json.loads(json_match)
+        parsed_response = json.loads(json_match)
+
+        # 支持新格式（包含 page_type 和 elements）和旧格式（仅元素列表）
+        if isinstance(parsed_response, dict):
+            page_type = parsed_response.get("page_type", "")
+            suggested_names = parsed_response.get("elements", [])
+        else:
+            # 兼容旧格式：直接是元素列表
+            page_type = ""
+            suggested_names = parsed_response
 
         # 映射到 shape_index（visible_shapes 已在上面定义）
         named_shapes = []
@@ -1332,7 +1489,13 @@ def ai_auto_name_shapes(request):
                     }
                 )
 
-        return JsonResponse({"success": True, "named_shapes": named_shapes})
+        return JsonResponse(
+            {
+                "success": True,
+                "named_shapes": named_shapes,
+                "page_type": page_type,  # 新增：返回页面名称
+            }
+        )
 
     except json.JSONDecodeError as e:
         return JsonResponse(

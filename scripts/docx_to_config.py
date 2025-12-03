@@ -649,6 +649,234 @@ def llm_plan_slides(
         raise ValueError("模型输出无法解析为 JSON 数组，请检查提示或重试。")
 
 
+def llm_preprocess_script(
+    llm: BaseLLM,
+    doc_text: str,
+    templates: Dict[int, Dict],
+    images: List[str],
+    user_prompt: Optional[str] = None,
+) -> str:
+    """
+    使用 LLM 将原始讲稿预处理为带【PPT】标记的中间讲稿。
+
+    Args:
+        llm: LLM 实例
+        doc_text: 原始讲稿文本
+        templates: 模板定义字典
+        images: 图片路径列表
+        user_prompt: 用户自定义提示
+
+    Returns:
+        带有【PPT1】【PPT2】等标记的 Markdown 格式讲稿
+    """
+    if not llm:
+        raise ValueError("预处理讲稿需要启用 LLM。")
+
+    # 构建模板描述
+    template_desc_lines = []
+    for num, info in templates.items():
+        text_count = len(info["text_fields"])
+        image_count = len(info["image_fields"])
+        page_type = info["page_type"]
+
+        # 获取文本字段的详细信息
+        text_fields_desc = []
+        for field in info["text_fields"]:
+            name = field.get("name", "未命名")
+            max_chars = field.get("max_chars", "无限制")
+            text_fields_desc.append(f"    - {name}（最多{max_chars}字）")
+
+        image_fields_desc = []
+        for field in info["image_fields"]:
+            name = field.get("name", "图片")
+            image_fields_desc.append(f"    - {name}")
+
+        desc = f"【PPT{num}】{page_type}\n  文本字段({text_count}个):\n"
+        desc += "\n".join(text_fields_desc) if text_fields_desc else "    （无）"
+        if image_count > 0:
+            desc += f"\n  图片字段({image_count}个):\n"
+            desc += "\n".join(image_fields_desc)
+        template_desc_lines.append(desc)
+
+    template_desc = "\n\n".join(template_desc_lines)
+
+    # 图片信息和模板限制
+    if images:
+        image_info = f"讲稿中包含 {len(images)} 张图片，请在适当位置保留图片引用。"
+        # 所有模板都可用
+        available_templates = list(templates.keys())
+    else:
+        image_info = "⚠️ 讲稿中【没有图片】，请【只选择不包含图片字段的模板】！"
+        # 只保留没有图片字段的模板
+        available_templates = [
+            num for num, info in templates.items() if len(info["image_fields"]) == 0
+        ]
+        image_info += f"\n可用模板编号：{available_templates}"
+
+    prompt = f"""你是一位专业的演讲稿编辑。请将以下原始讲稿改写为适合 PPT 演示的正式演讲稿。
+
+## 任务说明
+
+1. **分析讲稿结构**：理解讲稿的主题、逻辑和内容层次
+2. **选择合适模板**：根据内容为每个部分选择最合适的 PPT 模板
+3. **添加页码标记**：在每个部分开头用【PPT编号】标记该部分使用的模板
+4. **优化表达**：将内容改写为正式、简洁的演讲风格，但不改变原意
+5. **控制篇幅**：根据每个模板的字数限制，精简内容使其适合 PPT 展示
+
+## 可用模板
+
+{template_desc}
+
+## 图片信息
+
+{image_info}
+
+## 输出格式要求
+
+输出为 Markdown 格式，每个 PPT 页面以【PPT编号】开头，例如：
+
+```
+【PPT2】
+# 课程介绍
+
+本课程将带您了解人工智能的基础知识...
+
+【PPT4】
+# 课程目录
+
+1. 机器学习基础
+2. 深度学习入门
+3. 实践案例分析
+
+【PPT5】
+# 机器学习基础
+
+机器学习是人工智能的核心技术...
+
+[图片资源: doc_image_1.png]
+```
+
+## 注意事项
+
+1. 每个【PPT编号】标记必须独占一行
+2. 编号必须是上面模板列表中存在的编号
+3. **重要**：如果讲稿没有图片，则【禁止】使用带图片字段的模板！
+4. 内容要精炼，适合 PPT 展示，避免大段文字
+5. 保留讲稿中的关键信息、专有名词和数据
+6. 如有图片引用（[图片资源: ...]），请保留在合适的位置
+7. 不要输出任何解释说明，只输出改写后的讲稿
+
+## 原始讲稿
+
+{doc_text}
+"""
+
+    if user_prompt:
+        prompt += f"\n\n## 用户额外要求\n\n{user_prompt}"
+
+    # 构建消息（支持多模态）
+    if _is_multimodal_llm(llm) and images:
+        content: List[Dict[str, Any]] = [{"type": "text", "text": prompt}]
+        for img_path in images:
+            if not os.path.exists(img_path):
+                continue
+            mime_type, _ = mimetypes.guess_type(img_path)
+            if not mime_type:
+                mime_type = "image/jpeg"
+            base64_str = _encode_image(img_path)
+            if not base64_str:
+                continue
+            data_url = f"data:{mime_type};base64,{base64_str}"
+            content.append({"type": "image_url", "image_url": {"url": data_url}})
+        messages = [{"role": "user", "content": content}]
+    else:
+        messages = [{"role": "user", "content": prompt}]
+
+    if DEBUG_LLM:
+        print(f"\n{'=' * 60}")
+        print("🔍 [DEBUG] LLM 请求 (llm_preprocess_script)")
+        print(f"{'=' * 60}")
+        print(f"📝 预处理讲稿请求")
+        print(f"{'=' * 60}\n")
+
+    response = llm.generate(messages, temperature=0.3)
+
+    if DEBUG_LLM:
+        print(f"\n{'=' * 60}")
+        print("📥 [DEBUG] LLM 响应 (llm_preprocess_script)")
+        print(f"{'=' * 60}")
+        print(f"{response[:1000]}...")
+        print(f"{'=' * 60}\n")
+
+    # 清理响应：移除可能的 markdown 代码块标记
+    result = response.strip()
+    if result.startswith("```"):
+        # 移除开头的 ```markdown 或 ```
+        lines = result.split("\n")
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        result = "\n".join(lines)
+
+    return result
+
+
+def _parse_preprocessed_script(
+    preprocessed_text: str,
+    image_dir: Path,
+) -> List[Dict]:
+    """
+    解析预处理后的带标记讲稿，返回 blocks 列表。
+
+    Args:
+        preprocessed_text: 带【PPT】标记的讲稿文本
+        image_dir: 图片目录
+
+    Returns:
+        blocks 列表，每个 block 包含 template_hint, text, images
+    """
+    blocks: List[Dict] = []
+    current_block: Optional[Dict] = None
+
+    # 按行解析
+    for line in preprocessed_text.split("\n"):
+        marker_match = MARKER_RE.match(line.strip())
+        if marker_match:
+            # 保存之前的 block
+            if current_block and current_block.get("text", "").strip():
+                blocks.append(current_block)
+            # 开始新的 block
+            template_num = int(marker_match.group(1))
+            current_block = {
+                "template_hint": template_num,
+                "text": "",
+                "images": [],
+            }
+        elif current_block is not None:
+            # 检查是否有图片引用
+            img_match = re.search(r"\[图片资源:\s*([^\]]+)\]", line)
+            if img_match:
+                img_name = img_match.group(1).strip()
+                img_path = image_dir / img_name
+                if img_path.exists():
+                    current_block["images"].append(str(img_path))
+                # 从文本中移除图片标记
+                line = re.sub(r"\[图片资源:\s*[^\]]+\]", "", line)
+
+            current_block["text"] += line + "\n"
+
+    # 保存最后一个 block
+    if current_block and current_block.get("text", "").strip():
+        blocks.append(current_block)
+
+    # 清理每个 block 的文本
+    for block in blocks:
+        block["text"] = block["text"].strip()
+
+    return blocks
+
+
 def _extract_json_value(text: str, opener: str) -> Any:
     decoder = json.JSONDecoder()
     idx = 0
@@ -859,45 +1087,60 @@ def _plan_without_markers(
     llm: BaseLLM,
     metadata: Dict,
     user_prompt: Optional[str] = None,
+    run_dir: Optional[Path] = None,
 ) -> List[Dict]:
+    """
+    处理没有【PPT】标记的讲稿。
+
+    新流程（两步处理）：
+    1. 预分页：让 LLM 将原始讲稿改写为带【PPT】标记的中间讲稿
+    2. 填充：复用 _fill_by_markers 处理中间讲稿
+
+    Args:
+        blocks: 原始讲稿的 block 列表
+        templates: 模板定义字典
+        llm: LLM 实例
+        metadata: 元数据
+        user_prompt: 用户自定义提示
+        run_dir: 运行目录，用于保存中间讲稿
+
+    Returns:
+        填充后的页面列表
+    """
     if not llm:
         raise ValueError("讲稿未指定 PPT 标记且未启用 LLM，无法自动分配模板。")
+
+    # 合并所有 block 的文本和图片
     doc_text = "\n\n".join(
         block.get("text", "") for block in blocks if block.get("text")
     )
     all_images = [path for block in blocks for path in block.get("images", [])]
-    plan = llm_plan_slides(llm, doc_text, templates, all_images, user_prompt)
-    pages: List[Dict] = []
-    for item in plan:
-        try:
-            item = _coerce_dict(item)
-        except ValueError as exc:
-            raise ValueError("模型输出的列表元素必须是对象。") from exc
-        template_num = item.get("template_page_num")
-        if template_num not in templates:
-            raise ValueError(f"模型返回的模板编号 {template_num} 不在允许列表中。")
-        template_info = templates[template_num]
-        content = _clone_schema(template_info["schema"])
-        texts = item.get("texts", [])
-        images = item.get("images", [])
-        for idx, field in enumerate(template_info["text_fields"]):
-            value = _lookup_field_value(
-                field, texts, texts if isinstance(texts, list) else None, idx
-            )
-            _assign_in_schema(content, list(field["path"]), value)
-        for idx, field in enumerate(template_info["image_fields"]):
-            value = _lookup_field_value(
-                field, images, images if isinstance(images, list) else None, idx
-            )
-            _assign_in_schema(content, list(field["path"]), value)
-        _apply_metadata_overrides(content, template_info, metadata)
-        pages.append(
-            {
-                "page_type": template_info["page_type"],
-                "template_page_num": template_num,
-                "content": content,
-            }
-        )
+
+    # Step 1: 预分页 - 生成带【PPT】标记的中间讲稿
+    print("📝 Step 1: 预处理讲稿（生成带标记的中间讲稿）...")
+    preprocessed_script = llm_preprocess_script(
+        llm, doc_text, templates, all_images, user_prompt
+    )
+
+    # 保存中间讲稿到文件（供管理员/开发者下载）
+    if run_dir:
+        script_path = run_dir / "preprocessed_script.md"
+        script_path.write_text(preprocessed_script, encoding="utf-8")
+        print(f"💾 中间讲稿已保存: {script_path}")
+
+    # Step 2: 解析中间讲稿为 blocks
+    image_dir = run_dir / "images" if run_dir else Path(".")
+    preprocessed_blocks = _parse_preprocessed_script(preprocessed_script, image_dir)
+
+    if not preprocessed_blocks:
+        raise ValueError("预处理后的讲稿没有有效的【PPT】标记，请检查 LLM 输出。")
+
+    print(f"✅ 预处理完成，共 {len(preprocessed_blocks)} 个页面")
+
+    # Step 3: 复用 _fill_by_markers 处理
+    print("📝 Step 2: 填充页面内容...")
+    pages = _fill_by_markers(preprocessed_blocks, templates, llm, metadata, user_prompt)
+
     return pages
 
 
@@ -927,7 +1170,9 @@ def generate_config_data(
     if has_marker:
         pages = _fill_by_markers(blocks, templates, llm, metadata, user_prompt)
     else:
-        pages = _plan_without_markers(blocks, templates, llm, metadata, user_prompt)
+        pages = _plan_without_markers(
+            blocks, templates, llm, metadata, user_prompt, run_dir
+        )
 
     if not pages:
         raise ValueError("未生成任何幻灯片内容，请检查讲稿或模板。")

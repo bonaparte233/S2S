@@ -411,6 +411,15 @@ input[type="checkbox"] {
     background-color: #27ae60;
 }
 
+.btn-info {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #2980b9;
+}
+
 .btn-warning {
     background-color: var(--warning-color);
     color: white;
@@ -857,34 +866,7 @@ input[type="checkbox"] {
     transition: width 0.3s ease;
 }
 
-/* File upload styling */
-.file-upload-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-}
-
-.file-upload-wrapper input[type="file"] {
-    position: absolute;
-    left: -9999px;
-}
-
-.file-upload-label {
-    display: block;
-    padding: var(--spacing-md);
-    background: var(--bg-color);
-    border: 2px dashed var(--border-color);
-    border-radius: var(--radius-md);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.file-upload-label:hover {
-    border-color: var(--primary-color);
-    background: rgba(52, 152, 219, 0.05);
-}
-
+/* File upload focus state */
 .file-upload-wrapper input[type="file"]:focus+.file-upload-label {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);

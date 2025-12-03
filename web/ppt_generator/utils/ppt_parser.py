@@ -314,10 +314,23 @@ def extract_shapes_info(pptx_path: Path) -> Dict:
                 "z_order": shape_counter,  # 层级顺序
             }
 
-            # 如果是文本框，提取示例文本
+            # 如果是文本框，提取示例文本和字体大小
             if shape.has_text_frame:
                 info["text_sample"] = shape.text[:100] if shape.text else ""
                 info["char_count"] = len(shape.text) if shape.text else 0
+                # 提取字体大小（取第一段第一个 run 的字体大小）
+                font_size = None
+                try:
+                    for para in shape.text_frame.paragraphs:
+                        for run in para.runs:
+                            if run.font.size:
+                                font_size = run.font.size  # EMU 单位
+                                break
+                        if font_size:
+                            break
+                except Exception:
+                    pass
+                info["font_size"] = font_size
 
             shapes_info.append(info)
             shape_counter += 1

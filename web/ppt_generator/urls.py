@@ -15,6 +15,16 @@ urlpatterns = [
     path("generation/<int:pk>/start/", views.start_generation, name="start_generation"),
     path("generation/<int:pk>/status/", views.check_status, name="check_status"),
     path("generation/<int:pk>/download/", views.download_ppt, name="download_ppt"),
+    path(
+        "generation/<int:pk>/download-config/",
+        views.download_config_json,
+        name="download_config_json",
+    ),
+    path(
+        "generation/<int:pk>/download-script/",
+        views.download_preprocessed_script,
+        name="download_preprocessed_script",
+    ),
     path("history/", views.history, name="history"),
     # Developer only
     path("developer-tools/", views.developer_tools, name="developer_tools_page"),

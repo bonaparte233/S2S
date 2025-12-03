@@ -843,12 +843,18 @@
 
         // 保存每个元素的隐藏状态（用于恢复）
         const hiddenShapes = {};
+        // 保存每个页面的名称（用于恢复）
+        const pageTypes = {};
         templateEditorState.pages.forEach(page => {
             const pageHiddenIds = page.shapes
                 .filter(s => s.is_hidden)
                 .map(s => s.shape_id);
             if (pageHiddenIds.length > 0) {
                 hiddenShapes[page.page_num] = pageHiddenIds;
+            }
+            // 保存页面名称
+            if (page.page_type) {
+                pageTypes[page.page_num] = page.page_type;
             }
         });
 
@@ -868,6 +874,7 @@
                         named_count: namedCount,
                         page_count: templateEditorState.pages.length,
                         hidden_shapes: hiddenShapes,
+                        page_types: pageTypes,  // 保存页面名称
                         from_wizard: templateEditorState.embeddedMode  // 标记是否来自向导
                     },
                     thumbnail_url: thumbnailUrl
@@ -883,13 +890,15 @@
         try {
             showLoading('正在恢复编辑会话...');
 
-            // 检查会话是否存在，并获取保存的隐藏状态
+            // 检查会话是否存在，并获取保存的状态
             let hiddenShapes = {};
+            let pageTypes = {};
             try {
                 const checkResponse = await fetch(`/developer-tools/edit-sessions/${sessionId}/`);
                 const checkData = await checkResponse.json();
                 if (checkResponse.ok && checkData.exists) {
                     hiddenShapes = checkData.session?.progress_data?.hidden_shapes || {};
+                    pageTypes = checkData.session?.progress_data?.page_types || {};
                 }
                 // 如果 session 不存在，继续尝试加载数据（可能是从向导直接传入的 template_id）
             } catch (e) {
@@ -921,6 +930,17 @@
                         });
                     });
                     console.log('[restoreEditSession] 已恢复隐藏状态:', hiddenShapes);
+                }
+
+                // 恢复页面名称
+                if (Object.keys(pageTypes).length > 0) {
+                    templateEditorState.pages.forEach(page => {
+                        const savedPageType = pageTypes[page.page_num];
+                        if (savedPageType) {
+                            page.page_type = savedPageType;
+                        }
+                    });
+                    console.log('[restoreEditSession] 已恢复页面名称:', pageTypes);
                 }
 
                 // 显示编辑器
@@ -1091,11 +1111,14 @@
             const namedShapes = page.shapes.filter(s => !s.is_hidden && s.is_named).length;
             const percent = totalShapes > 0 ? Math.round(namedShapes / totalShapes * 100) : 0;
 
+            // 页面名称：优先使用 page_type，否则显示"第X页"
+            const pageName = page.page_type || `第${page.page_num}页`;
+
             const pageItem = document.createElement('div');
             pageItem.className = 'page-item' + (page.page_num === templateEditorState.currentPageNum ? ' active' : '');
             pageItem.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <span style="font-weight: bold;">第 ${page.page_num} 页</span>
+                    <span style="font-weight: bold;" title="${pageName}">${pageName.length > 6 ? pageName.substring(0, 6) + '...' : pageName}</span>
                     <span style="font-size: 0.85rem; color: ${percent === 100 ? 'var(--success-color)' : 'var(--text-secondary)'};">
                         ${percent}%
                     </span>
@@ -1135,8 +1158,21 @@
             </p>
         `;
 
-        // 更新页面标题
-        document.getElementById('currentPageTitle').textContent = `第 ${pageNum} 页`;
+        // 更新页面标题（显示页面名称，可编辑）
+        const pageName = page.page_type || `第${pageNum}页`;
+        document.getElementById('currentPageTitle').innerHTML = `
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">第${pageNum}页 · </span>
+            <input type="text" id="pageNameInput" value="${pageName}"
+                   style="border: none; background: transparent; font-size: inherit; font-weight: inherit;
+                          color: inherit; padding: 2px 4px; border-radius: 4px; max-width: 150px;
+                          transition: background 0.2s;"
+                   onmouseover="this.style.background='var(--bg-secondary)'"
+                   onmouseout="if(document.activeElement!==this)this.style.background='transparent'"
+                   onfocus="this.style.background='var(--bg-secondary)';this.select()"
+                   onblur="this.style.background='transparent';updatePageName(${pageNum}, this.value)"
+                   onkeydown="if(event.key==='Enter'){this.blur()}"
+                   title="点击编辑页面名称">
+        `;
 
         // 更新页面列表高亮
         document.querySelectorAll('#pageList .page-item').forEach((item, index) => {
@@ -1258,8 +1294,9 @@
             return;
         }
 
-        // 显示批量操作栏
-        if (batchActionsBar) {
+        // 检查当前是否在元素列表标签页（只在列表视图时显示批量操作栏）
+        const isListTabActive = document.getElementById('elementListTabBtn')?.classList.contains('active');
+        if (batchActionsBar && isListTabActive) {
             batchActionsBar.style.display = 'block';
             updateElementStats();
         }
@@ -1460,6 +1497,26 @@
         } catch (error) {
             showError('保存失败: ' + error.message);
         }
+    }
+
+    // 更新页面名称
+    function updatePageName(pageNum, newName) {
+        const page = templateEditorState.pages.find(p => p.page_num === pageNum);
+        if (!page) return;
+
+        const trimmedName = newName.trim();
+        if (!trimmedName) {
+            // 如果为空，恢复默认名称
+            page.page_type = `第${pageNum}页`;
+        } else {
+            page.page_type = trimmedName;
+        }
+
+        // 更新页面列表显示
+        renderPageList();
+
+        // 保存会话
+        saveEditSession();
     }
 
     // Toggle shape visibility
@@ -1755,7 +1812,12 @@
                 return { success: false, error: data.error || '未知错误' };
             }
 
-            // 应用 AI 建议的名称（串行保存，避免并发）
+            // 应用 AI 建议的页面名称
+            if (data.page_type) {
+                page.page_type = data.page_type;
+            }
+
+            // 应用 AI 建议的元素名称（串行保存，避免并发）
             const namedShapes = data.named_shapes || [];
             let successCount = 0;
 
@@ -1792,7 +1854,7 @@
                 }
             }
 
-            return { success: true, count: successCount };
+            return { success: true, count: successCount, pageType: data.page_type || null };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -1828,7 +1890,12 @@
                 renderElementList();
                 renderPageList();
                 updateProgress();
-                showSuccess(`✅ AI 成功命名 ${result.count} 个元素`);
+                // 如果 AI 返回了页面名称，更新页面标题显示
+                if (result.pageType) {
+                    loadPage(page.page_num);  // 重新加载页面以更新标题
+                }
+                const pageNameMsg = result.pageType ? `，页面命名为"${result.pageType}"` : '';
+                showSuccess(`✅ AI 成功命名 ${result.count} 个元素${pageNameMsg}`);
             } else {
                 showError('AI 命名失败: ' + result.error);
             }
