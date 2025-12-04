@@ -454,8 +454,11 @@
         </div>
         <h2 id="editorTitle">🎨 PPT 模板编辑器</h2>
         <div class="toolbar-actions">
-            <button id="aiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 自动为所有页面元素命名（逐页处理）">
+            <button id="aiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 重新命名所有页面（覆盖现有命名）">
                 🤖 AI 一键命名
+            </button>
+            <button id="aiAutoFillBtn" class="btn btn-info" title="使用 AI 补全缺失的配置（保留现有命名）">
+                ✨ AI 查漏补缺
             </button>
             <button id="saveTemplateBtn" class="btn btn-success">
                 💾 保存
@@ -1988,11 +1991,25 @@
     let isAINaming = false;
 
     // AI 命名单个页面的核心函数
-    async function aiNamePage(page, showProgress = true) {
+    // forceOverride: true=强制覆盖所有配置, false=只补全缺失的配置
+    async function aiNamePage(page, showProgress = true, forceOverride = false) {
         const visibleShapes = page.shapes.filter(s => !s.is_hidden);
         if (visibleShapes.length === 0) {
             return { success: true, count: 0, skipped: true };
         }
+
+        // 构建现有配置信息（强制覆盖模式下传空配置）
+        const existingConfig = forceOverride ? {} : {
+            page_type: page.page_type || '',
+            page_note: page.note || '',
+            elements: visibleShapes.map((s, idx) => ({
+                index: idx + 1,
+                name: s.name || '',
+                hint: s.hint || '',
+                max_chars: s.max_chars || null,
+                required: s.required || false
+            }))
+        };
 
         try {
             const response = await fetch('/developer-tools/ai-auto-name/', {
@@ -2005,7 +2022,10 @@
                     template_id: templateEditorState.templateId,
                     page_num: page.page_num,
                     image_url: page.image_url,
-                    shapes: page.shapes
+                    shapes: page.shapes,
+                    existing_config: existingConfig,  // 传入现有配置（覆盖模式为空）
+                    wizard_mode: templateEditorState.wizardMode,  // 告知后端是否向导模式
+                    force_override: forceOverride  // 是否强制覆盖
                 })
             });
 
@@ -2015,60 +2035,88 @@
                 return { success: false, error: data.error || '未知错误' };
             }
 
-            // 应用 AI 建议的页面名称
+            // 应用页面名称
             if (data.page_type) {
-                page.page_type = data.page_type;
+                if (forceOverride || !page.page_type || page.page_type === `第${page.page_num}页`) {
+                    page.page_type = data.page_type;
+                }
             }
 
-            // 向导模式下：应用 AI 建议的页面备注
+            // 向导模式下：应用页面备注
             if (templateEditorState.wizardMode && data.page_note) {
-                page.note = data.page_note;
+                if (forceOverride || !page.note) {
+                    page.note = data.page_note;
+                }
             }
 
-            // 应用 AI 建议的元素名称（串行保存，避免并发）
+            // 应用 AI 建议的元素配置
             const namedShapes = data.named_shapes || [];
             let successCount = 0;
+            let updatedCount = 0;
 
             for (let i = 0; i < namedShapes.length; i++) {
                 const suggestion = namedShapes[i];
                 const shape = page.shapes.find(s => s.shape_index === suggestion.shape_index);
-                if (shape && suggestion.suggested_name) {
-                    shape.name = suggestion.suggested_name;
-                    shape.is_named = true;
+                if (shape) {
+                    let needsSave = false;
 
-                    // 向导模式下：应用 AI 建议的配置信息
-                    if (templateEditorState.wizardMode) {
-                        if (suggestion.hint) shape.hint = suggestion.hint;
-                        if (suggestion.max_chars !== null && suggestion.max_chars !== undefined) {
-                            shape.max_chars = suggestion.max_chars;
-                        }
-                        if (suggestion.required !== undefined) {
-                            shape.required = suggestion.required;
+                    // 更新名称（强制覆盖 或 缺失时）
+                    if (suggestion.suggested_name) {
+                        if (forceOverride || !shape.name || shape.name === '未命名') {
+                            shape.name = suggestion.suggested_name;
+                            shape.is_named = true;
+                            needsSave = true;
                         }
                     }
 
-                    try {
-                        await fetch('/developer-tools/update-shape-name/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCookie('csrftoken')
-                            },
-                            body: JSON.stringify({
-                                template_id: templateEditorState.templateId,
-                                page_num: page.page_num,
-                                shape_index: suggestion.shape_index,
-                                new_name: suggestion.suggested_name
-                            })
-                        });
-                        successCount++;
-
-                        // 短延迟避免触发后端限流（每保存一个等50ms）
-                        if (i < namedShapes.length - 1) {
-                            await new Promise(resolve => setTimeout(resolve, 50));
+                    // 向导模式下：应用配置信息
+                    if (templateEditorState.wizardMode) {
+                        // hint（强制覆盖 或 缺失时）
+                        if (suggestion.hint && (forceOverride || !shape.hint)) {
+                            shape.hint = suggestion.hint;
+                            updatedCount++;
                         }
-                    } catch (e) {
-                        console.error('保存失败:', suggestion, e);
+                        // max_chars（强制覆盖 或 缺失时）
+                        if (suggestion.max_chars !== null && suggestion.max_chars !== undefined) {
+                            if (forceOverride || !shape.max_chars) {
+                                shape.max_chars = suggestion.max_chars;
+                                updatedCount++;
+                            }
+                        }
+                        // required（强制覆盖 或 未设置时）
+                        if (suggestion.required !== undefined) {
+                            if (forceOverride || shape.required === undefined) {
+                                shape.required = suggestion.required;
+                                updatedCount++;
+                            }
+                        }
+                    }
+
+                    // 保存名称变更
+                    if (needsSave) {
+                        try {
+                            await fetch('/developer-tools/update-shape-name/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                },
+                                body: JSON.stringify({
+                                    template_id: templateEditorState.templateId,
+                                    page_num: page.page_num,
+                                    shape_id: shape.shape_id,  // 使用 shape_id 而不是 shape_index
+                                    new_name: suggestion.suggested_name
+                                })
+                            });
+                            successCount++;
+
+                            // 短延迟避免触发后端限流（每保存一个等50ms）
+                            if (i < namedShapes.length - 1) {
+                                await new Promise(resolve => setTimeout(resolve, 50));
+                            }
+                        } catch (e) {
+                            console.error('保存失败:', suggestion, e);
+                        }
                     }
                 }
             }
@@ -2135,30 +2183,78 @@
         }
     });
 
-    // AI 命名全部页面核心逻辑（逐页串行处理，避免并发限制）
-    async function aiAutoNameAllPages(skipConfirm = false) {
+    // 检查页面配置是否完整（向导模式下需要检查更多字段）
+    function isPageConfigComplete(page) {
+        const visibleShapes = page.shapes.filter(s => !s.is_hidden);
+        if (visibleShapes.length === 0) return true;
+
+        // 检查页面名称
+        if (!page.page_type || page.page_type === `第${page.page_num}页`) return false;
+
+        // 向导模式下还要检查元素配置
+        if (templateEditorState.wizardMode) {
+            for (const shape of visibleShapes) {
+                // 检查名称
+                if (!shape.name || shape.name === '未命名') return false;
+                // 检查 hint
+                if (!shape.hint) return false;
+            }
+        } else {
+            // 非向导模式只检查名称
+            for (const shape of visibleShapes) {
+                if (!shape.name || shape.name === '未命名') return false;
+            }
+        }
+
+        return true;
+    }
+
+    // AI 命名全部页面核心逻辑
+    // forceOverride: true=强制重命名所有页面, false=只补全缺失的配置
+    async function aiAutoNameAllPages(skipConfirm = false, forceOverride = false) {
         if (isAINaming) {
             showWarning('AI 正在处理中，请稍候...');
             return;
         }
 
-        // 筛选需要命名的页面（有可见元素且未完成命名的）
-        const pagesToName = templateEditorState.pages.filter(p => {
-            const visibleShapes = p.shapes.filter(s => !s.is_hidden);
-            const namedCount = visibleShapes.filter(s => s.is_named).length;
-            return visibleShapes.length > 0 && namedCount < visibleShapes.length;
-        });
+        let pagesToName;
+        let confirmMsg;
 
-        if (pagesToName.length === 0) {
-            showWarning('所有页面已完成命名');
-            // 通知父窗口完成
-            if (templateEditorState.embeddedMode && window.parent !== window) {
-                window.parent.postMessage({ type: 'aiNamingComplete' }, '*');
+        if (forceOverride) {
+            // 强制覆盖模式：处理所有有元素的页面
+            pagesToName = templateEditorState.pages.filter(p => {
+                const visibleShapes = p.shapes.filter(s => !s.is_hidden);
+                return visibleShapes.length > 0;
+            });
+
+            if (pagesToName.length === 0) {
+                showWarning('没有需要命名的页面');
+                return;
             }
-            return;
+
+            confirmMsg = `确定要使用 AI 重新命名全部 ${pagesToName.length} 个页面吗？\n\n⚠️ 这将覆盖所有现有的命名和配置！`;
+        } else {
+            // 查漏补缺模式：只处理配置不完整的页面
+            pagesToName = templateEditorState.pages.filter(p => {
+                const visibleShapes = p.shapes.filter(s => !s.is_hidden);
+                return visibleShapes.length > 0 && !isPageConfigComplete(p);
+            });
+
+            if (pagesToName.length === 0) {
+                showWarning('所有页面配置已完整');
+                // 通知父窗口完成
+                if (templateEditorState.embeddedMode && window.parent !== window) {
+                    window.parent.postMessage({ type: 'aiNamingComplete' }, '*');
+                }
+                return;
+            }
+
+            confirmMsg = templateEditorState.wizardMode
+                ? `发现 ${pagesToName.length} 个页面配置不完整（缺少页面名称、元素名称或提示信息）。\n\n确定让 AI 补全这些配置吗？`
+                : `确定要使用 AI 命名 ${pagesToName.length} 个未完成的页面吗？\n\n这可能需要较长时间，请耐心等待。`;
         }
 
-        if (!skipConfirm && !confirm(`确定要使用 AI 命名 ${pagesToName.length} 个未完成的页面吗？\n\n这可能需要较长时间，请耐心等待。`)) {
+        if (!skipConfirm && !confirm(confirmMsg)) {
             // 通知父窗口取消
             if (templateEditorState.embeddedMode && window.parent !== window) {
                 window.parent.postMessage({ type: 'aiNamingComplete' }, '*');
@@ -2169,10 +2265,11 @@
         isAINaming = true;
         let totalSuccess = 0;
         let totalFailed = 0;
+        const modeLabel = forceOverride ? '重命名' : '补全';
 
         for (let i = 0; i < pagesToName.length; i++) {
             const page = pagesToName[i];
-            const progressMsg = `🤖 AI 正在处理第 ${page.page_num} 页 (${i + 1}/${pagesToName.length})...`;
+            const progressMsg = `🤖 AI 正在${modeLabel}第 ${page.page_num} 页 (${i + 1}/${pagesToName.length})...`;
             showLoading(progressMsg);
 
             // 通知父窗口进度
@@ -2180,13 +2277,13 @@
                 window.parent.postMessage({ type: 'aiNamingProgress', message: progressMsg }, '*');
             }
 
-            const result = await aiNamePage(page, false);
+            const result = await aiNamePage(page, false, forceOverride);
 
             if (result.success) {
                 totalSuccess += result.count;
             } else {
                 totalFailed++;
-                console.error(`第 ${page.page_num} 页命名失败:`, result.error);
+                console.error(`第 ${page.page_num} 页${modeLabel}失败:`, result.error);
             }
 
             // 更新 UI
@@ -2211,9 +2308,9 @@
         renderElementList();
 
         if (totalFailed === 0) {
-            showSuccess(`✅ AI 批量命名完成！共命名 ${totalSuccess} 个元素`);
+            showSuccess(`✅ AI 批量${modeLabel}完成！共处理 ${totalSuccess} 个元素`);
         } else {
-            showWarning(`⚠️ 批量命名完成，成功 ${totalSuccess} 个元素，${totalFailed} 个页面失败`);
+            showWarning(`⚠️ 批量${modeLabel}完成，成功 ${totalSuccess} 个元素，${totalFailed} 个页面失败`);
         }
 
         // 通知父窗口完成
@@ -2222,14 +2319,19 @@
         }
     }
 
-    // AI 命名全部页面按钮事件
-    document.getElementById('aiAutoNameAllBtn')?.addEventListener('click', () => aiAutoNameAllPages(false));
+    // AI 一键命名（强制覆盖模式）
+    document.getElementById('aiAutoNameAllBtn')?.addEventListener('click', () => aiAutoNameAllPages(false, true));
+
+    // AI 查漏补缺（保留现有配置）
+    document.getElementById('aiAutoFillBtn')?.addEventListener('click', () => aiAutoNameAllPages(false, false));
 
     // 监听来自父窗口的消息（向导模式）
     window.addEventListener('message', function (event) {
         if (event.data.type === 'triggerAiAutoNameAll') {
             // 从向导触发，跳过确认弹窗
-            aiAutoNameAllPages(true);
+            // forceOverride: true=强制重命名, false=查漏补缺
+            const forceOverride = event.data.forceOverride === true;
+            aiAutoNameAllPages(true, forceOverride);
         }
 
         // 向导请求获取完整配置数据（用于发布模板）
@@ -2237,7 +2339,70 @@
             const config = generateFullConfig();
             window.parent.postMessage({ type: 'fullConfigData', config: config }, '*');
         }
+
+        // 从向导接收初始配置数据（编辑已发布模板时）
+        if (event.data.type === 'applyInitialConfig') {
+            console.log('[applyInitialConfig] 接收到初始配置:', event.data.config);
+            applyConfigFromJSON(event.data.config);
+        }
     });
+
+    // 从 JSON 配置恢复编辑器状态（编辑已发布模板时使用）
+    function applyConfigFromJSON(configData) {
+        if (!configData || !configData.ppt_pages) {
+            console.log('[applyConfigFromJSON] 配置数据无效');
+            return;
+        }
+
+        // 等待页面数据加载完成
+        const checkAndApply = () => {
+            if (!templateEditorState.pages || templateEditorState.pages.length === 0) {
+                console.log('[applyConfigFromJSON] 等待页面数据加载...');
+                setTimeout(checkAndApply, 200);
+                return;
+            }
+
+            console.log('[applyConfigFromJSON] 开始应用配置');
+
+            // 遍历配置中的每一页
+            configData.ppt_pages.forEach((pageConfig, index) => {
+                const pageNum = index + 1;
+                const page = templateEditorState.pages.find(p => p.page_num === pageNum);
+                if (!page) return;
+
+                // 应用页面名称
+                if (pageConfig.page_type) {
+                    page.page_type = pageConfig.page_type;
+                }
+
+                // 应用页面备注
+                if (pageConfig.page_note) {
+                    page.note = pageConfig.page_note;
+                }
+
+                // 应用元素配置
+                if (pageConfig.content) {
+                    Object.entries(pageConfig.content).forEach(([fieldName, fieldConfig]) => {
+                        // 查找匹配的形状（通过名称匹配）
+                        const shape = page.shapes.find(s => s.name === fieldName);
+                        if (shape) {
+                            shape.is_named = true;
+                            if (fieldConfig.hint) shape.hint = fieldConfig.hint;
+                            if (fieldConfig.max_chars) shape.max_chars = fieldConfig.max_chars;
+                            if (fieldConfig.required !== undefined) shape.required = fieldConfig.required;
+                        }
+                    });
+                }
+            });
+
+            // 刷新显示
+            if (typeof renderPageList === 'function') renderPageList();
+            if (typeof renderShapeList === 'function') renderShapeList();
+            console.log('[applyConfigFromJSON] 配置应用完成');
+        };
+
+        checkAndApply();
+    }
 
     // 生成完整的 config.json 格式数据（向导模式）
     function generateFullConfig() {

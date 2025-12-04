@@ -202,6 +202,35 @@
     <p class="subtitle">PPT 模板开发与配置管理工具集</p>
 </div>
 
+<!-- 已发布模板列表 -->
+{% if published_templates %}
+<div class="published-templates-section" style="margin-bottom: 2rem;">
+    <h4 style="margin-bottom: 1rem; color: #333;">
+        <i class="fas fa-folder-open" style="color: #667eea;"></i>
+        已发布的模板 ({{ published_templates|length }})
+    </h4>
+    <div class="templates-list" style="display: flex; flex-wrap: wrap; gap: 12px;">
+        {% for tpl in published_templates %}
+        <a href="{% url 'template_wizard_page' %}?edit={{ tpl.name }}" class="template-item" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+                  background: white; border-radius: 8px; text-decoration: none; color: #333;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s ease;
+                  border: 1px solid #e0e0e0;">
+            <span style="font-size: 1.2rem;">📁</span>
+            <span style="font-weight: 500;">{{ tpl.name }}</span>
+            {% if tpl.has_json %}
+            <span
+                style="font-size: 0.7rem; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px;">已配置</span>
+            {% else %}
+            <span
+                style="font-size: 0.7rem; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px;">待配置</span>
+            {% endif %}
+            <i class="fas fa-pencil-alt" style="color: #667eea; font-size: 0.85rem;"></i>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <!-- 工具卡片网格 -->
 <div class="tools-grid">
     <!-- 模板制作向导 - 放在第一位 -->

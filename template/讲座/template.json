@@ -1,0 +1,374 @@
+{
+  "manifest": [
+    {
+      "template_page_num": 1,
+      "page_type": "封面页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 2,
+      "page_type": "欢迎页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 3,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 4,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 5,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 6,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 7,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 8,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 9,
+      "page_type": "互动页",
+      "text_slots": 2,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 10,
+      "page_type": "内容页",
+      "text_slots": 2,
+      "image_slots": 0
+    }
+  ],
+  "ppt_pages": [
+    {
+      "page_type": "封面页",
+      "template_page_num": 1,
+      "content": {
+        "机构名称": {
+          "type": "text",
+          "hint": "填写机构或组织名称",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        },
+        "主标题": {
+          "type": "text",
+          "hint": "填写核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "日期": {
+          "type": "text",
+          "hint": "填写活动日期",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        }
+      },
+      "meta": {
+        "layout": "封面页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "展示主题、机构及装饰性图片"
+      }
+    },
+    {
+      "page_type": "欢迎页",
+      "template_page_num": 2,
+      "content": {
+        "主标题": {
+          "type": "text",
+          "hint": "填写欢迎语或核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写欢迎词及活动目标等信息",
+          "required": true,
+          "value": "",
+          "max_chars": 200
+        }
+      },
+      "meta": {
+        "layout": "欢迎页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "用于开场欢迎及介绍活动目标等信息"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 3,
+      "content": {
+        "页面标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "内容说明": {
+          "type": "text",
+          "hint": "填写详细的说明文字或要点列表",
+          "required": true,
+          "value": "",
+          "max_chars": 300
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "展示核心主题及详细说明内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 4,
+      "content": {
+        "页面标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写详细说明或要点列表",
+          "required": false,
+          "value": "",
+          "max_chars": 300
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "展示具体活动或主题的详细内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 5,
+      "content": {
+        "页面标题": {
+          "type": "text",
+          "hint": "填写本页主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写本页详细说明或要点",
+          "required": true,
+          "value": "",
+          "max_chars": 200
+        },
+        "配图": {
+          "type": "image",
+          "hint": "插入与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "展示核心信息和相关配图"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 6,
+      "content": {
+        "页面标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "左侧插图": {
+          "type": "image",
+          "hint": "插入相关视觉素材",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "正文说明": {
+          "type": "text",
+          "hint": "填写详细说明及要点列表",
+          "required": true,
+          "value": "",
+          "max_chars": 300
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "展示主题内容及配套说明"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 7,
+      "content": {
+        "主标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写详细说明或要点列表",
+          "required": true,
+          "value": "",
+          "max_chars": 300
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "展示核心主题及详细说明内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 8,
+      "content": {
+        "主标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写本页详细说明或要点",
+          "required": false,
+          "value": "",
+          "max_chars": 300
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "展示具体主题下的详细内容"
+      }
+    },
+    {
+      "page_type": "互动页",
+      "template_page_num": 9,
+      "content": {
+        "标题栏": {
+          "type": "text",
+          "hint": "填写互动主题或核心问题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "侧边插图": {
+          "type": "image",
+          "hint": "插入辅助理解的视觉素材",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "说明文本": {
+          "type": "text",
+          "hint": "填写互动要求、步骤或任务细节",
+          "required": true,
+          "value": "",
+          "max_chars": 200
+        }
+      },
+      "meta": {
+        "layout": "互动页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 1,
+        "notes": "引导观众参与互动环节或任务说明"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "template_page_num": 10,
+      "content": {
+        "页面标题": {
+          "type": "text",
+          "hint": "填写本页主题",
+          "required": true,
+          "value": "",
+          "max_chars": 30
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写本页详细说明或要点",
+          "required": true,
+          "value": "",
+          "max_chars": 300
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "展示主题核心内容和详细信息"
+      }
+    }
+  ]
+}

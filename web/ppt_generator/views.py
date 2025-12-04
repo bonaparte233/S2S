@@ -5,6 +5,7 @@ Views for PPT Generator application.
 import sys
 import json
 import traceback
+import uuid
 from pathlib import Path
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, FileResponse, Http404
@@ -554,8 +555,26 @@ def developer_tools(request):
         request.user.groups.filter(name="开发者").exists() or request.user.is_superuser
     )
 
+    # 获取已发布的模板列表
+    published_templates = []
+    template_dir = settings.S2S_TEMPLATE_DIR
+    if template_dir.exists():
+        for item in sorted(template_dir.iterdir()):
+            if item.is_dir():
+                pptx_file = item / "template.pptx"
+                json_file = item / "template.json"
+                if pptx_file.exists():
+                    published_templates.append(
+                        {
+                            "name": item.name,
+                            "path": str(item),
+                            "has_json": json_file.exists(),
+                        }
+                    )
+
     context = {
         "is_developer": is_developer,
+        "published_templates": published_templates,
     }
     return render(request, "ppt_generator/developer_tools.html", context)
 
@@ -889,7 +908,11 @@ def update_shape_name_api(request):
             return JsonResponse({"error": "找不到 PPT 文件"}, status=404)
 
         # 更新元素名称（使用 shape_id 支持 GROUP 内元素）
+        print(
+            f"[update_shape_name] 更新形状名称: 文件={ppt_files[0]}, 页码={page_num}, shape_id={shape_id}, 新名称={new_name}"
+        )
         update_shape_name(ppt_files[0], page_num, shape_id, new_name)
+        print(f"[update_shape_name] 保存成功")
 
         return JsonResponse({"success": True})
 
@@ -1282,6 +1305,8 @@ def ai_auto_name_shapes(request):
         page_num = data.get("page_num")
         image_url = data.get("image_url")
         shapes = data.get("shapes", [])
+        existing_config = data.get("existing_config", {})  # 现有配置（查漏补缺模式）
+        wizard_mode = data.get("wizard_mode", False)  # 是否向导模式
 
         if not all([template_id, page_num, image_url, shapes]):
             return JsonResponse({"error": "缺少必要参数"}, status=400)
@@ -1340,45 +1365,100 @@ def ai_auto_name_shapes(request):
 
         # 构建元素描述（编号与图片上的标注一致，从1开始）
         shapes_desc = []
+        existing_elements = existing_config.get("elements", [])
         for i, shape in enumerate(visible_shapes, 1):
             desc = f"#{i}: 类型={shape.get('type', '未知')}"
             if shape.get("text_sample"):
                 desc += f', 文本预览="{shape["text_sample"][:30]}..."'
+            # 添加现有配置信息
+            if i <= len(existing_elements):
+                elem = existing_elements[i - 1]
+                if elem.get("name"):
+                    desc += f', 已命名="{elem["name"]}"'
+                if elem.get("hint"):
+                    desc += f', 已有提示="{elem["hint"]}"'
             shapes_desc.append(desc)
 
-        # 构建 Prompt
-        prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，完成模板配置任务。
+        # 检查是否有现有配置（查漏补缺模式）
+        existing_page_type = existing_config.get("page_type", "")
+        existing_page_note = existing_config.get("page_note", "")
+        has_existing = bool(existing_page_type) or any(
+            e.get("name") or e.get("hint") for e in existing_elements
+        )
 
-**任务概述**
-1. 为页面命名并添加备注
-2. 为每个元素命名并配置属性
+        # 构建 Prompt
+        if has_existing:
+            # 查漏补缺模式
+            prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，**补全缺失的配置信息**。
+
+**重要说明**
+这是一个通用模板，会用于多种不同主题的演讲/课程/汇报。请使用**通用、抽象**的命名。
+
+**现有配置**（保留已有内容，补全缺失部分）
+- 页面类型: {existing_page_type or "（未填写，请补全）"}
+- 页面备注: {existing_page_note or "（未填写，请补全）"}
+
+**页面元素**（{len(visible_shapes)} 个）：
+{chr(10).join(shapes_desc)}
+
+**补全规则**
+1. 已有的 name 和 hint 请**保持不变**，只补全空缺的字段
+2. 使用通用名称，如：主标题、副标题、正文内容、配图、日期等
+3. hint 提示要通用，如"填写本页主题"而非具体内容
+4. max_chars: 标题类20-50，正文类100-500，图片填null
+5. required: 重要元素为true，装饰性元素为false
+
+请以 JSON 格式返回完整配置（包含已有和补全的内容）：
+```json
+{{
+  "page_type": "封面页",
+  "page_note": "展示演讲主题和演讲者信息",
+  "elements": [
+    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 30, "required": true}},
+    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 50, "required": false}}
+  ]
+}}
+```
+
+只返回 JSON，不要其他解释。确保 elements 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
+        else:
+            # 全新配置模式
+            prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，为这个**通用模板**配置元素信息。
+
+**重要说明**
+这是一个通用模板，会用于多种不同主题的演讲/课程/汇报。请使用**通用、抽象**的命名，不要根据图片中的具体内容命名。
 
 **页面信息**
 图片上标注了 {len(visible_shapes)} 个可编辑元素（黄色/蓝色编号圈）：
 
 {chr(10).join(shapes_desc)}
 
+**命名原则**
+1. 根据元素的**位置和布局作用**命名，而非具体内容
+2. 使用通用名称，如：
+   - 标题类：主标题、副标题、页面标题、小标题
+   - 内容类：正文内容、说明文字、描述文本、要点列表
+   - 图片类：主图、配图、插图、背景图
+   - 信息类：日期、作者、单位名称、页码
+3. hint 提示也要通用，如"填写本页主题"而非"填写活动名称"
+
 **配置规则**
-
-页面配置：
-- page_type: 页面名称，如"封面页"、"目录页"、"章节页"、"图文页"、"结束页"，不超过6字
-- page_note: 页面备注，说明这一页的用途和内容要求（可选，简洁即可）
-
-元素配置：
-- name: 元素名称，反映用途，如"主标题"、"副标题"、"正文内容"、"配图"，不超过10字
-- hint: 内容提示，告诉填写者这里应该填什么内容（简洁清晰）
-- max_chars: 建议最大字数（根据文本框大小估算，标题类20-50，正文类100-500，图片填null）
-- required: 是否必填（重要元素如标题为true，装饰性元素为false）
+- page_type: 页面类型，如"封面页"、"目录页"、"内容页"、"图文页"、"结束页"，不超过6字
+- page_note: 简要说明这类页面的通用用途
+- name: 元素名称，反映布局位置/功能，不超过10字
+- hint: 通用的内容提示，不涉及具体主题
+- max_chars: 建议最大字数（标题类20-50，正文类100-500，图片填null）
+- required: 是否必填
 
 请以 JSON 格式返回：
 ```json
 {{
   "page_type": "封面页",
-  "page_note": "展示课程/演讲主题和演讲者信息",
+  "page_note": "展示演讲主题和演讲者信息",
   "elements": [
-    {{"index": 1, "name": "主标题", "hint": "输入课程或演讲主题", "max_chars": 30, "required": true}},
-    {{"index": 2, "name": "副标题", "hint": "补充说明或口号", "max_chars": 50, "required": false}},
-    {{"index": 3, "name": "封面图片", "hint": "主题相关配图", "max_chars": null, "required": false}}
+    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 30, "required": true}},
+    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 50, "required": false}},
+    {{"index": 3, "name": "日期", "hint": "填写日期信息", "max_chars": 20, "required": false}}
   ]
 }}
 ```
@@ -1415,59 +1495,59 @@ def ai_auto_name_shapes(request):
             }
         ]
 
-        # 调用 LLM（带重试机制，处理 429 限流）
-        import time
+        # 调用 LLM（不重试，避免加重限流问题）
+        try:
+            print(f"[AI命名] 开始调用 {llm_provider} 模型 {llm_model}...")
+            response = llm.generate(messages)
+            print(f"[AI命名] 调用成功，响应长度: {len(response)}")
+        except Exception as e:
+            error_str = str(e)
+            print(f"[AI命名] 调用失败: {error_str}")
 
-        max_retries = 5
-        retry_delay = 5  # 初始延迟秒数（增加到5秒）
-        response = None
-        last_error = None
-
-        for attempt in range(max_retries):
-            try:
-                response = llm.generate(messages)
-                break  # 成功则跳出循环
-            except Exception as e:
-                last_error = e
-                error_str = str(e)
-                # 检查是否是 429 限流错误（支持中英文关键词）
-                is_rate_limit = (
-                    "429" in error_str
-                    or "rate" in error_str.lower()
-                    or "limit" in error_str.lower()
-                    or "1302" in error_str  # GLM 的限流错误码
-                    or "并发" in error_str
-                    or "频率" in error_str
-                )
-                if is_rate_limit and attempt < max_retries - 1:
-                    # 固定延迟重试（不用指数退避，避免等太久）
-                    wait_time = retry_delay + attempt * 2  # 5, 7, 9, 11 秒
-                    print(
-                        f"[AI命名] 遇到限流，等待 {wait_time} 秒后重试 ({attempt + 1}/{max_retries})..."
-                    )
-                    time.sleep(wait_time)
-                    continue
-                # 其他错误或重试耗尽，返回友好错误
-                if is_rate_limit:
-                    raise Exception(
-                        "AI 服务繁忙，请稍后重试（已尝试多次重试）"
-                    ) from last_error
-                raise
-
-        if response is None:
-            if last_error:
-                error_str = str(last_error)
-                if "429" in error_str or "1302" in error_str or "并发" in error_str:
-                    raise Exception("AI 服务繁忙，请稍后重试")
-            raise last_error or Exception("LLM 调用失败")
+            # 检查是否是限流错误，给出明确提示
+            if "429" in error_str or "1302" in error_str or "并发" in error_str:
+                raise Exception(
+                    "GLM API 限流，请等待 30 秒后重试。如频繁遇到此问题，可在管理后台切换到太初(taichu)模型。"
+                ) from e
+            raise
 
         # 解析响应
+        print(f"[AI命名] 原始响应:\n{response[:500]}...")  # 打印前500字符用于调试
+
         # 提取 JSON 部分
-        json_match = response
-        if "```json" in response:
-            json_match = response.split("```json")[1].split("```")[0].strip()
-        elif "```" in response:
-            json_match = response.split("```")[1].split("```")[0].strip()
+        json_match = response.strip()
+
+        # 尝试多种方式提取 JSON
+        if "```json" in json_match:
+            json_match = json_match.split("```json")[1].split("```")[0].strip()
+        elif "```" in json_match:
+            # 可能是 ```\n{...}\n```
+            parts = json_match.split("```")
+            for part in parts:
+                part = part.strip()
+                if part.startswith("{") or part.startswith("["):
+                    json_match = part
+                    break
+
+        # 如果还是没找到 JSON，尝试直接找 { 或 [ 开头的内容
+        if not json_match.startswith("{") and not json_match.startswith("["):
+            # 尝试找到第一个 { 或 [
+            start_brace = json_match.find("{")
+            start_bracket = json_match.find("[")
+            if start_brace >= 0 and (start_bracket < 0 or start_brace < start_bracket):
+                # 找到最后一个匹配的 }
+                end_brace = json_match.rfind("}")
+                if end_brace > start_brace:
+                    json_match = json_match[start_brace : end_brace + 1]
+            elif start_bracket >= 0:
+                end_bracket = json_match.rfind("]")
+                if end_bracket > start_bracket:
+                    json_match = json_match[start_bracket : end_bracket + 1]
+
+        print(f"[AI命名] 提取的 JSON:\n{json_match[:300]}...")
+
+        if not json_match:
+            raise json.JSONDecodeError("AI 返回内容为空", response, 0)
 
         parsed_response = json.loads(json_match)
 
@@ -1801,13 +1881,88 @@ def restore_edit_session(request, session_id):
 @login_required
 def template_wizard_page(request):
     """模板制作向导页面"""
+    import shutil
+    from .utils import (
+        extract_shapes_info,
+        convert_ppt_to_pdf,
+        convert_pdf_to_images,
+        annotate_screenshot,
+    )
+
+    # 检查是否是编辑已发布模板的请求
+    edit_template = request.GET.get("edit")
+    edit_mode_data = None
+
+    if edit_template:
+        # 编辑已发布模板模式
+        template_dir = settings.S2S_TEMPLATE_DIR / edit_template
+        pptx_file = template_dir / "template.pptx"
+        json_file = template_dir / "template.json"
+
+        if pptx_file.exists():
+            # 创建临时会话目录，复制 PPT 文件
+            ppt_session_id = str(uuid.uuid4())
+            session_dir = settings.MEDIA_ROOT / "template_editor" / ppt_session_id
+            session_dir.mkdir(parents=True, exist_ok=True)
+
+            # 复制 PPT 文件
+            ppt_path = session_dir / "template.pptx"
+            shutil.copy2(pptx_file, ppt_path)
+
+            # 生成预览图片（和 parse_ppt_template 相同的逻辑）
+            try:
+                # 提取元素信息
+                shapes_data = extract_shapes_info(ppt_path)
+
+                # 使用 LibreOffice 将 PPT 转换为 PDF
+                pdf_path = convert_ppt_to_pdf(ppt_path, session_dir)
+
+                # 转换 PDF 为图片
+                images_dir = session_dir / "images"
+                convert_pdf_to_images(pdf_path, images_dir, dpi=150)
+
+                # 获取幻灯片尺寸
+                slide_width = shapes_data.get("slide_width", 12192000)
+                slide_height = shapes_data.get("slide_height", 6858000)
+
+                # 为每个页面生成标注图片
+                for page_data in shapes_data["pages"]:
+                    page_num = page_data["page_num"]
+                    image_path = images_dir / f"page_{page_num}.png"
+                    if image_path.exists():
+                        annotate_screenshot(
+                            image_path,
+                            page_data["shapes"],
+                            slide_width=slide_width,
+                            slide_height=slide_height,
+                        )
+            except Exception as e:
+                print(f"[template_wizard_page] 生成预览图失败: {e}")
+
+            # 加载 JSON 配置（如果存在）
+            config_data = None
+            if json_file.exists():
+                try:
+                    config_data = json.loads(json_file.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+
+            edit_mode_data = json.dumps(
+                {
+                    "template_name": edit_template,
+                    "ppt_session_id": ppt_session_id,
+                    "config_data": config_data,
+                    "is_edit_mode": True,
+                }
+            )
+
     # 只有通过 URL 参数指定 session 时才恢复会话
     # 直接点击卡片进入时不传 session 参数，开始新的向导
     session_id = request.GET.get("session")
 
     existing_session = None
     existing_session_json = None
-    if session_id:
+    if session_id and not edit_template:
         existing_session = TemplateEditSession.objects.filter(
             user=request.user, session_id=session_id, editor_type="wizard"
         ).first()
@@ -1831,6 +1986,7 @@ def template_wizard_page(request):
     context = {
         "existing_session": existing_session,
         "existing_session_json": existing_session_json,
+        "edit_mode_data": edit_mode_data,
     }
     return render(request, "ppt_generator/template_wizard.html", context)
 
@@ -1853,6 +2009,8 @@ def publish_template(request):
         template_name = data.get("template_name", "").strip()
         ppt_session_id = data.get("ppt_session_id")
         config_data = data.get("config_data")
+        is_edit_mode = data.get("is_edit_mode", False)
+        original_template_name = data.get("original_template_name")
 
         if not template_name:
             return JsonResponse({"error": "模板名称不能为空"}, status=400)
@@ -1871,10 +2029,29 @@ def publish_template(request):
 
         # 目标目录
         target_dir = settings.S2S_TEMPLATE_DIR / template_name
-        if target_dir.exists():
-            return JsonResponse(
-                {"error": f"模板 '{template_name}' 已存在，请使用其他名称"}, status=400
-            )
+
+        # 编辑模式：允许覆盖原模板
+        if is_edit_mode and original_template_name:
+            # 如果名称改变了，需要检查新名称是否已存在
+            if template_name != original_template_name and target_dir.exists():
+                return JsonResponse(
+                    {"error": f"模板 '{template_name}' 已存在，请使用其他名称"},
+                    status=400,
+                )
+            # 如果名称改变，需要删除原目录
+            if template_name != original_template_name:
+                old_dir = settings.S2S_TEMPLATE_DIR / original_template_name
+                if old_dir.exists():
+                    import shutil as shutil_old
+
+                    shutil_old.rmtree(old_dir)
+        else:
+            # 新建模式：不允许覆盖
+            if target_dir.exists():
+                return JsonResponse(
+                    {"error": f"模板 '{template_name}' 已存在，请使用其他名称"},
+                    status=400,
+                )
 
         # 获取 PPT 文件路径
         ppt_source_dir = settings.MEDIA_ROOT / "template_editor" / ppt_session_id
@@ -1903,20 +2080,25 @@ def publish_template(request):
             json.dumps(config_data, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
-        # 更新 wizard 会话状态
-        wizard_session = (
-            TemplateEditSession.objects.filter(user=request.user, editor_type="wizard")
-            .order_by("-updated_at")
-            .first()
-        )
+        # 发布成功后清理相关会话记录
+        import shutil as shutil_cleanup
 
-        if wizard_session:
-            progress = wizard_session.progress_data or {}
-            progress["published"] = True
-            progress["published_path"] = str(target_dir)
-            progress["current_step"] = 4
-            wizard_session.progress_data = progress
-            wizard_session.save()
+        # 删除 wizard 会话
+        wizard_sessions = TemplateEditSession.objects.filter(
+            user=request.user, editor_type="wizard"
+        )
+        wizard_sessions.delete()
+
+        # 删除 PPT 编辑器会话
+        ppt_session = TemplateEditSession.objects.filter(
+            user=request.user, session_id=ppt_session_id
+        ).first()
+        if ppt_session:
+            ppt_session.delete()
+
+        # 删除临时文件目录
+        if ppt_source_dir.exists():
+            shutil_cleanup.rmtree(ppt_source_dir)
 
         return JsonResponse(
             {

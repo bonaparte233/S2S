@@ -225,8 +225,8 @@
         gap: 10px;
     }
 
-    .wizard-step-toolbar .btn-warning {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+    .wizard-step-toolbar .btn-warning,
+    .wizard-step-toolbar .btn-info {
         color: white;
         border: none;
         padding: 8px 16px;
@@ -236,12 +236,26 @@
         transition: all 0.2s;
     }
 
+    .wizard-step-toolbar .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .wizard-step-toolbar .btn-info {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
     .wizard-step-toolbar .btn-warning:hover {
         background: linear-gradient(135deg, #d97706, #b45309);
         transform: translateY(-1px);
     }
 
-    .wizard-step-toolbar .btn-warning:disabled {
+    .wizard-step-toolbar .btn-info:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        transform: translateY(-1px);
+    }
+
+    .wizard-step-toolbar .btn-warning:disabled,
+    .wizard-step-toolbar .btn-info:disabled {
         background: #ccc;
         cursor: not-allowed;
         transform: none;
@@ -328,8 +342,11 @@
         <div class="step-panel" id="step-2">
             <!-- 元素命名工具栏 -->
             <div class="wizard-step-toolbar" id="step2Toolbar" style="display:none;">
-                <button id="wizardAiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 自动为所有页面元素命名">
-                    🤖 AI 一键命名全部页
+                <button id="wizardAiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 重新命名所有页面（覆盖现有命名）">
+                    🤖 AI 一键命名
+                </button>
+                <button id="wizardAiAutoFillBtn" class="btn btn-info" title="使用 AI 补全缺失的配置（保留现有命名）">
+                    ✨ AI 查漏补缺
                 </button>
                 <span id="wizardAiProgress" style="margin-left: 15px; color: #666; display: none;"></span>
             </div>
@@ -397,7 +414,10 @@
         templateName: '',
         configData: null,
         wizardSessionId: null,
-        existingSession: {% if existing_session_json %}JSON.parse('{{ existing_session_json|escapejs }}'){% else %} null{% endif %}
+        existingSession: {% if existing_session_json %}JSON.parse('{{ existing_session_json|escapejs }}'){% else %} null{% endif %},
+    editModeData: {% if edit_mode_data %} JSON.parse('{{ edit_mode_data|escapejs }}'){% else %} null{% endif %},
+    isEditMode: false,
+        originalTemplateName: null
     };
 
     // DOM 元素（延迟初始化）
@@ -538,12 +558,28 @@
         if (toolbar) {
             toolbar.style.display = 'flex';
         }
+
+        // 如果是编辑模式且有配置数据，等待 iframe 加载后发送配置
+        if (wizardState.isEditMode && wizardState.configData) {
+            const iframe = document.getElementById('pptEditorIframe');
+            iframe.onload = () => {
+                console.log('[loadPPTEditor] iframe 已加载，发送初始配置');
+                // 延迟一点确保编辑器完全初始化
+                setTimeout(() => {
+                    iframe.contentWindow.postMessage({
+                        type: 'applyInitialConfig',
+                        config: wizardState.configData
+                    }, '*');
+                }, 1000);
+            };
+        }
     }
 
-    // AI 一键命名全部页（通过 postMessage 与 iframe 通信）
+    // AI 命名功能（通过 postMessage 与 iframe 通信）
     let wizardAiNaming = false;
+    let currentAiMode = null; // 'override' 或 'fill'
 
-    document.getElementById('wizardAiAutoNameAllBtn')?.addEventListener('click', function () {
+    function triggerAiNaming(forceOverride) {
         if (wizardAiNaming) {
             alert('AI 正在处理中，请稍候...');
             return;
@@ -556,14 +592,34 @@
         }
 
         // 发送消息给 iframe 触发 AI 命名
-        iframe.contentWindow.postMessage({ type: 'triggerAiAutoNameAll' }, '*');
+        iframe.contentWindow.postMessage({
+            type: 'triggerAiAutoNameAll',
+            forceOverride: forceOverride
+        }, '*');
 
         // 更新按钮状态
         wizardAiNaming = true;
-        this.disabled = true;
-        this.textContent = '🤖 AI 处理中...';
+        currentAiMode = forceOverride ? 'override' : 'fill';
+
+        const overrideBtn = document.getElementById('wizardAiAutoNameAllBtn');
+        const fillBtn = document.getElementById('wizardAiAutoFillBtn');
+
+        if (overrideBtn) {
+            overrideBtn.disabled = true;
+            if (forceOverride) overrideBtn.textContent = '🤖 处理中...';
+        }
+        if (fillBtn) {
+            fillBtn.disabled = true;
+            if (!forceOverride) fillBtn.textContent = '✨ 处理中...';
+        }
         document.getElementById('wizardAiProgress').style.display = 'inline';
-    });
+    }
+
+    // AI 一键命名（强制覆盖模式）
+    document.getElementById('wizardAiAutoNameAllBtn')?.addEventListener('click', () => triggerAiNaming(true));
+
+    // AI 查漏补缺（保留现有配置）
+    document.getElementById('wizardAiAutoFillBtn')?.addEventListener('click', () => triggerAiNaming(false));
 
     // 监听来自 iframe 的消息
     window.addEventListener('message', function (event) {
@@ -578,12 +634,21 @@
         // AI 命名完成
         if (event.data.type === 'aiNamingComplete') {
             wizardAiNaming = false;
-            const btn = document.getElementById('wizardAiAutoNameAllBtn');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = '🤖 AI 一键命名全部页';
+
+            const overrideBtn = document.getElementById('wizardAiAutoNameAllBtn');
+            const fillBtn = document.getElementById('wizardAiAutoFillBtn');
+
+            if (overrideBtn) {
+                overrideBtn.disabled = false;
+                overrideBtn.textContent = '🤖 AI 一键命名';
             }
+            if (fillBtn) {
+                fillBtn.disabled = false;
+                fillBtn.textContent = '✨ AI 查漏补缺';
+            }
+
             document.getElementById('wizardAiProgress').style.display = 'none';
+            currentAiMode = null;
         }
     });
 
@@ -726,6 +791,12 @@
             return;
         }
 
+        const isEditMode = wizardState.isEditMode;
+        const originalName = wizardState.originalTemplateName;
+        const loadingText = isEditMode ? '保存中...' : '发布中...';
+        const buttonText = isEditMode ? '<i class="fas fa-save"></i> 保存修改' : '<i class="fas fa-rocket"></i> 发布模板';
+        const successText = isEditMode ? '<i class="fas fa-check"></i> 已保存' : '<i class="fas fa-check"></i> 已发布';
+
         publishBtn.disabled = true;
         publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 获取配置数据...';
         statusDiv.style.display = 'none';
@@ -748,11 +819,11 @@
             statusDiv.innerHTML = '<div class="alert alert-danger">配置数据不存在，请确保已完成模板编辑</div>';
             statusDiv.style.display = 'block';
             publishBtn.disabled = false;
-            publishBtn.innerHTML = '<i class="fas fa-rocket"></i> 发布模板';
+            publishBtn.innerHTML = buttonText;
             return;
         }
 
-        publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发布中...';
+        publishBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
 
         try {
             const response = await fetch("{% url 'publish_template' %}", {
@@ -764,21 +835,24 @@
                 body: JSON.stringify({
                     template_name: templateName,
                     ppt_session_id: wizardState.pptSessionId,
-                    config_data: wizardState.configData
+                    config_data: wizardState.configData,
+                    is_edit_mode: isEditMode,
+                    original_template_name: originalName
                 })
             });
 
             const data = await response.json();
             if (data.error) throw new Error(data.error);
 
+            const successMessage = isEditMode ? '保存成功！' : '发布成功！';
             statusDiv.innerHTML = `
             <div class="alert alert-success">
-                <strong>🎉 发布成功！</strong><br>
+                <strong>🎉 ${successMessage}</strong><br>
                 模板已保存到: ${data.template_path}
             </div>
         `;
             statusDiv.style.display = 'block';
-            publishBtn.innerHTML = '<i class="fas fa-check"></i> 已发布';
+            publishBtn.innerHTML = successText;
             publishBtn.classList.remove('btn-primary');
             publishBtn.classList.add('btn-success');
 
@@ -786,7 +860,7 @@
             statusDiv.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
             statusDiv.style.display = 'block';
             publishBtn.disabled = false;
-            publishBtn.innerHTML = '<i class="fas fa-rocket"></i> 发布模板';
+            publishBtn.innerHTML = buttonText;
         }
     }
 
@@ -839,6 +913,13 @@
         // 发布按钮
         document.getElementById('publishBtn').addEventListener('click', publishTemplate);
 
+        // 检查是否是编辑已发布模板模式
+        if (wizardState.editModeData) {
+            console.log('Edit mode detected:', wizardState.editModeData);
+            initEditMode();
+            return;  // 跳过普通会话恢复
+        }
+
         // 如果通过 URL 参数传入 session，自动恢复
         const urlParams = new URLSearchParams(window.location.search);
         const sessionParam = urlParams.get('session');
@@ -849,6 +930,36 @@
             restoreWizardSession();
         }
     });
+
+    // 初始化编辑模式（编辑已发布的模板）
+    function initEditMode() {
+        const data = wizardState.editModeData;
+        wizardState.isEditMode = true;
+        wizardState.originalTemplateName = data.template_name;
+        wizardState.pptSessionId = data.ppt_session_id;
+        wizardState.templateName = data.template_name;
+        wizardState.configData = data.config_data;
+        wizardState.wizardSessionId = 'edit-' + data.ppt_session_id;
+
+        // 填充模板名称
+        document.getElementById('templateName').value = data.template_name;
+
+        // 更新发布按钮文案为"保存"
+        const publishBtn = document.getElementById('publishBtn');
+        publishBtn.innerHTML = '<i class="fas fa-save"></i> 保存修改';
+
+        // 更新标题提示
+        const publishTitle = document.querySelector('#step-3 h3');
+        if (publishTitle) {
+            publishTitle.textContent = '保存模板修改';
+        }
+
+        // 加载 PPT 编辑器
+        loadPPTEditor(data.ppt_session_id);
+
+        // 跳转到编辑步骤
+        goToStep(2);
+    }
 
     // 恢复向导会话
     function restoreWizardSession() {

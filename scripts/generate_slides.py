@@ -247,15 +247,19 @@ def _safe_remove_shape(shape):
 
 
 def _replace_picture(slide, shape, image_path):
-    """将图片占位符替换为本地图片，保持位置大小比率。"""
+    """将图片占位符替换为本地图片，保持位置大小比率。
+
+    如果没有提供图片路径或图片文件不存在，保留原有占位符不做修改。
+    """
     if not image_path:
-        _safe_remove_shape(shape)
+        # 没有提供图片，保留原有占位符
+        print(f"ℹ️  图片位置 [{shape.name}] 未提供图片，保留原有占位符")
         return
 
     image_path = Path(image_path)
     if not image_path.is_file():
-        print(f"⚠️  图片文件不可用：{image_path}")
-        _safe_remove_shape(shape)
+        # 图片文件不存在，保留原有占位符
+        print(f"⚠️  图片文件不可用：{image_path}，保留原有占位符")
         return
 
     left, top, width, height = shape.left, shape.top, shape.width, shape.height
@@ -337,15 +341,33 @@ def _fill_slide(slide, page_content, slide_width):
         else:
             continue
 
-    # 兼容旧 JSON 的键名，用别名机制兜底
-    for area_name, value in page_content.items():
-        if isinstance(value, dict):
-            continue
-        shape = None
-        for candidate in _candidate_keys(area_name):
-            shape = shapes_by_name.get(candidate)
-            if shape:
-                break
+    # 兼容新旧 JSON 格式的键名匹配
+    for area_name, raw_value in page_content.items():
+        # 新版格式：值是 dict，包含 type/hint/value 等字段
+        # 旧版格式：值直接是字符串
+        field_type = None  # 从 JSON 获取的字段类型
+        if isinstance(raw_value, dict):
+            # 检查是否是新版格式（有 type 和 value 字段）
+            if "type" in raw_value and "value" in raw_value:
+                value = raw_value.get("value", "")
+                field_type = raw_value.get("type", "text")  # text 或 image
+            else:
+                # 嵌套的旧版结构，跳过让 _flatten_content 处理
+                continue
+        else:
+            value = raw_value
+
+        # 首先尝试精确匹配形状名称（向导模式命名后的形状）
+        shape = shapes_by_exact.get(area_name)
+
+        # 如果精确匹配失败，尝试别名匹配
+        if not shape:
+            for candidate in _candidate_keys(area_name):
+                shape = shapes_by_name.get(candidate)
+                if shape:
+                    break
+
+        # 尝试手动映射
         if not shape and area_name in MANUAL_NAME_MAP:
             for exact in MANUAL_NAME_MAP[area_name]:
                 shape = shapes_by_exact.get(exact)
@@ -357,6 +379,7 @@ def _fill_slide(slide, page_content, slide_width):
                 if shape:
                     break
 
+        # 尝试占位符匹配
         if not shape and any(keyword in area_name for keyword in ("内容", "字幕")):
             if text_placeholders:
                 shape = text_placeholders.pop(0)
@@ -365,18 +388,29 @@ def _fill_slide(slide, page_content, slide_width):
                 shape = picture_placeholders.pop(0)
 
         if not shape:
-            print(f"⚠️  找不到名为“{area_name}”的形状，内容已忽略。")
+            print(f"⚠️  找不到名为「{area_name}」的形状，内容已忽略。")
             continue
 
-        if _is_picture_shape(shape):
+        # 跳过已处理的形状
+        if shape.name in used_text_shapes or shape.name in used_picture_shapes:
+            continue
+
+        # 根据 JSON 中的 type 字段或形状类型判断处理方式
+        is_image = field_type == "image" if field_type else _is_picture_shape(shape)
+        
+        if is_image:
+            # 图片类型：没有值时保留原占位符
             _replace_picture(slide, shape, value)
+            used_picture_shapes.add(shape.name)
         elif shape.has_text_frame:
+            # 文本类型：没有值时清空文本框
             if value:
                 _set_shape_text(shape, value)
             else:
                 shape.text_frame.clear()
+            used_text_shapes.add(shape.name)
         else:
-            print(f"⚠️  形状“{area_name}”既不是文本也不是图片，跳过。")
+            print(f"⚠️  形状「{area_name}」既不是文本也不是图片，跳过。")
 
     _clear_default_subtitles(all_shapes)
     _apply_layout_rules(all_shapes, slide_width)
