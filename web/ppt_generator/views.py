@@ -928,9 +928,9 @@ def _estimate_max_chars(shape: dict) -> int:
     """
     根据文本框尺寸估算最大字符数
 
-    由于字体大小经常从母版继承无法直接获取，采用保守估算策略：
-    - 使用当前内容长度作为参考
-    - 如果没有内容，根据面积粗略估算
+    PPT 文字宜精简，采用保守估算策略：
+    - 使用当前内容长度作为参考（不额外增加）
+    - 如果没有内容，根据面积粗略估算但限制上限
 
     Args:
         shape: 包含 width, height, char_count 等属性的字典
@@ -940,13 +940,12 @@ def _estimate_max_chars(shape: dict) -> int:
     """
     char_count = shape.get("char_count", 0)
 
-    # 如果有现有内容，使用 1.2 倍作为保守估计
-    # 用户可以在配置编辑器中根据实际测试调整
+    # 如果有现有内容，直接使用当前字数（PPT 模板通常已经是合适长度）
     if char_count > 0:
-        return max(int(char_count * 1.2), char_count)
+        return char_count
 
     # 没有现有内容时，根据面积粗略估算
-    # 假设平均每个中文字符占约 30x30 pt 的区域
+    # 假设平均每个中文字符占约 40x40 pt 的区域（更保守的估算）
     EMU_PER_POINT = 914400 / 72
     width = shape.get("width", 0)
     height = shape.get("height", 0)
@@ -954,10 +953,11 @@ def _estimate_max_chars(shape: dict) -> int:
     if width and height:
         width_pt = width / EMU_PER_POINT
         height_pt = height / EMU_PER_POINT
-        # 假设字符占用面积约 900 平方点（30x30）
+        # 假设字符占用面积约 1600 平方点（40x40）- 更保守
         area = width_pt * height_pt
-        estimated = int(area / 900)
-        return max(estimated, 10)
+        estimated = int(area / 1600)
+        # 限制最大值为 150（PPT 文字不宜过长）
+        return min(max(estimated, 10), 150)
 
     return 20  # 默认值
 
@@ -1405,7 +1405,7 @@ def ai_auto_name_shapes(request):
 1. 已有的 name 和 hint 请**保持不变**，只补全空缺的字段
 2. 使用通用名称，如：主标题、副标题、正文内容、配图、日期等
 3. hint 提示要通用，如"填写本页主题"而非具体内容
-4. max_chars: 标题类20-50，正文类100-500，图片填null
+4. max_chars: 尽量往少估算，PPT文字宜精简。标题类10-20，正文类30-80，长文本最多150，图片填null
 5. required: 重要元素为true，装饰性元素为false
 
 请以 JSON 格式返回完整配置（包含已有和补全的内容）：
@@ -1414,8 +1414,8 @@ def ai_auto_name_shapes(request):
   "page_type": "封面页",
   "page_note": "展示演讲主题和演讲者信息",
   "elements": [
-    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 30, "required": true}},
-    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 50, "required": false}}
+    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 15, "required": true}},
+    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 30, "required": false}}
   ]
 }}
 ```
@@ -1447,7 +1447,7 @@ def ai_auto_name_shapes(request):
 - page_note: 简要说明这类页面的通用用途
 - name: 元素名称，反映布局位置/功能，不超过10字
 - hint: 通用的内容提示，不涉及具体主题
-- max_chars: 建议最大字数（标题类20-50，正文类100-500，图片填null）
+- max_chars: 建议最大字数，尽量往少估算（PPT文字宜精简）。标题类10-20，正文类30-80，长文本最多150，图片填null
 - required: 是否必填
 
 请以 JSON 格式返回：
@@ -1456,9 +1456,9 @@ def ai_auto_name_shapes(request):
   "page_type": "封面页",
   "page_note": "展示演讲主题和演讲者信息",
   "elements": [
-    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 30, "required": true}},
-    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 50, "required": false}},
-    {{"index": 3, "name": "日期", "hint": "填写日期信息", "max_chars": 20, "required": false}}
+    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 15, "required": true}},
+    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 30, "required": false}},
+    {{"index": 3, "name": "日期", "hint": "填写日期信息", "max_chars": 12, "required": false}}
   ]
 }}
 ```
