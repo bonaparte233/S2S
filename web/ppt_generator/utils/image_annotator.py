@@ -2,26 +2,29 @@
 PPT 截图标注工具
 
 功能：
-1. 在 PPT 截图上绘制编号圆圈
-2. 支持不同状态的颜色标注
+1. 将 PPT 转换为预览图片
+2. 在 PPT 截图上绘制编号圆圈
+3. 支持不同状态的颜色标注
+
+优先使用 LibreOffice 转换（高保真），如果失败则使用 python-pptx 渲染（简化预览）
 """
 
+import io
 import platform
 import subprocess
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 from PIL import Image, ImageDraw, ImageFont
-from pdf2image import convert_from_path
 
 
-def get_soffice_path():
+def get_soffice_path() -> Optional[str]:
     """获取 LibreOffice soffice 可执行文件路径（跨平台）"""
     system = platform.system()
 
     if system == "Darwin":  # macOS
-        return "/Applications/LibreOffice.app/Contents/MacOS/soffice"
+        path = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
+        return path if Path(path).exists() else None
     elif system == "Windows":
-        # 常见安装路径
         paths = [
             r"C:\Program Files\LibreOffice\program\soffice.exe",
             r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
@@ -29,17 +32,12 @@ def get_soffice_path():
         for path in paths:
             if Path(path).exists():
                 return path
-        raise FileNotFoundError(
-            "LibreOffice not found. Please install LibreOffice:\n"
-            "Windows: choco install libreoffice\n"
-            "macOS: brew install --cask libreoffice\n"
-            "Linux: sudo apt-get install libreoffice"
-        )
+        return None
     else:  # Linux
         return "soffice"
 
 
-def convert_ppt_to_pdf(pptx_path: Path, output_dir: Path) -> Path:
+def convert_ppt_to_pdf(pptx_path: Path, output_dir: Path) -> Optional[Path]:
     """
     使用 LibreOffice 将 PPT 转换为 PDF（跨平台）
 
@@ -48,36 +46,41 @@ def convert_ppt_to_pdf(pptx_path: Path, output_dir: Path) -> Path:
         output_dir: 输出目录
 
     Returns:
-        生成的 PDF 文件路径
+        生成的 PDF 文件路径，如果失败返回 None
     """
     soffice = get_soffice_path()
+    if not soffice:
+        return None
 
-    # 确保输出目录存在
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 调用 LibreOffice 转换
-    subprocess.run(
-        [
-            soffice,
-            "--headless",
-            "--convert-to",
-            "pdf",
-            "--outdir",
-            str(output_dir),
-            str(pptx_path),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        subprocess.run(
+            [
+                soffice,
+                "--headless",
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                str(output_dir),
+                str(pptx_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
 
-    # 返回生成的 PDF 路径
-    pdf_name = pptx_path.stem + ".pdf"
-    return output_dir / pdf_name
+        pdf_path = output_dir / (pptx_path.stem + ".pdf")
+        if pdf_path.exists() and pdf_path.stat().st_size > 0:
+            return pdf_path
+        return None
+    except Exception:
+        return None
 
 
 def convert_pdf_to_images(
-    pdf_path: Path, output_dir: Path, dpi: int = 300
+    pdf_path: Path, output_dir: Path, dpi: int = 150
 ) -> List[Path]:
     """
     将 PDF 转换为图片
@@ -90,13 +93,11 @@ def convert_pdf_to_images(
     Returns:
         生成的图片路径列表
     """
-    # 确保输出目录存在
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from pdf2image import convert_from_path
 
-    # 转换 PDF 为图片
+    output_dir.mkdir(parents=True, exist_ok=True)
     images = convert_from_path(pdf_path, dpi=dpi)
 
-    # 保存图片
     image_paths = []
     for i, image in enumerate(images, start=1):
         image_path = output_dir / f"page_{i}.png"
@@ -104,6 +105,177 @@ def convert_pdf_to_images(
         image_paths.append(image_path)
 
     return image_paths
+
+
+# ============= python-pptx 渲染（后备方案）=============
+
+
+def _get_shape_fill_color(shape) -> Optional[Tuple[int, int, int]]:
+    """尝试获取形状的填充颜色"""
+    try:
+        fill = shape.fill
+        if fill.type is not None:
+            fore_color = fill.fore_color
+            if fore_color.type is not None:
+                rgb = fore_color.rgb
+                if rgb:
+                    return (rgb[0], rgb[1], rgb[2])
+    except Exception:
+        pass
+    return None
+
+
+def _render_slide_to_image(prs, slide, width: int, height: int) -> Image.Image:
+    """将幻灯片渲染为图片（简化版本）"""
+    from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+    slide_width = prs.slide_width
+    slide_height = prs.slide_height
+
+    scale_x = width / slide_width
+    scale_y = height / slide_height
+    scale = min(scale_x, scale_y)
+
+    actual_width = int(slide_width * scale)
+    actual_height = int(slide_height * scale)
+
+    img = Image.new("RGB", (actual_width, actual_height), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 背景色
+    try:
+        bg = slide.background
+        if bg.fill.type is not None:
+            bg_color = _get_shape_fill_color(bg)
+            if bg_color:
+                draw.rectangle([0, 0, actual_width, actual_height], fill=bg_color)
+    except Exception:
+        pass
+
+    # 渲染形状
+    for shape in slide.shapes:
+        try:
+            left = int(shape.left * scale)
+            top = int(shape.top * scale)
+            sw = int(shape.width * scale)
+            sh = int(shape.height * scale)
+
+            if sw < 5 or sh < 5:
+                continue
+
+            # 图片
+            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+                try:
+                    img_shape = Image.open(io.BytesIO(shape.image.blob))
+                    img_shape = img_shape.convert("RGB")
+                    img_shape = img_shape.resize((sw, sh), Image.Resampling.LANCZOS)
+                    img.paste(img_shape, (left, top))
+                except Exception:
+                    draw.rectangle(
+                        [left, top, left + sw, top + sh],
+                        fill=(200, 200, 200),
+                        outline=(150, 150, 150),
+                    )
+                continue
+
+            # 文本框
+            if hasattr(shape, "text_frame") and shape.has_text_frame:
+                text = shape.text_frame.text.strip()
+                fill_color = _get_shape_fill_color(shape)
+                if fill_color:
+                    draw.rectangle([left, top, left + sw, top + sh], fill=fill_color)
+                if text:
+                    try:
+                        font_size = max(10, min(sh // 4, 24))
+                        try:
+                            font = ImageFont.truetype(
+                                "/System/Library/Fonts/PingFang.ttc", font_size
+                            )
+                        except:
+                            font = ImageFont.load_default()
+                        display_text = text[:30] + "..." if len(text) > 30 else text
+                        draw.text(
+                            (left + 5, top + 5),
+                            display_text,
+                            fill=(50, 50, 50),
+                            font=font,
+                        )
+                    except Exception:
+                        pass
+                continue
+
+            # 其他形状
+            fill_color = _get_shape_fill_color(shape)
+            if fill_color:
+                draw.rectangle(
+                    [left, top, left + sw, top + sh],
+                    fill=fill_color,
+                    outline=(200, 200, 200),
+                )
+        except Exception:
+            continue
+
+    return img
+
+
+def convert_ppt_to_images_fallback(
+    pptx_path: Path, output_dir: Path, dpi: int = 150
+) -> List[Path]:
+    """
+    使用 python-pptx 将 PPT 转换为简化预览图（后备方案）
+
+    Args:
+        pptx_path: PPT 文件路径
+        output_dir: 输出目录
+        dpi: 图片分辨率
+
+    Returns:
+        生成的图片路径列表
+    """
+    from pptx import Presentation
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    prs = Presentation(str(pptx_path))
+
+    width = int(10 * dpi)
+    height = int(7.5 * dpi)
+
+    image_paths = []
+    for i, slide in enumerate(prs.slides, start=1):
+        img = _render_slide_to_image(prs, slide, width, height)
+        image_path = output_dir / f"page_{i}.png"
+        img.save(image_path, "PNG")
+        image_paths.append(image_path)
+
+    return image_paths
+
+
+def convert_ppt_to_images(
+    pptx_path: Path, output_dir: Path, dpi: int = 150
+) -> List[Path]:
+    """
+    将 PPT 转换为图片（自动选择最佳方案）
+
+    优先使用 LibreOffice（高保真），失败时使用 python-pptx（简化预览）
+
+    Args:
+        pptx_path: PPT 文件路径
+        output_dir: 输出目录
+        dpi: 图片分辨率
+
+    Returns:
+        生成的图片路径列表
+    """
+    # 尝试 LibreOffice
+    pdf_path = convert_ppt_to_pdf(pptx_path, output_dir.parent)
+    if pdf_path and pdf_path.exists():
+        try:
+            return convert_pdf_to_images(pdf_path, output_dir, dpi)
+        except Exception:
+            pass
+
+    # 后备：python-pptx 渲染
+    return convert_ppt_to_images_fallback(pptx_path, output_dir, dpi)
 
 
 def annotate_screenshot(

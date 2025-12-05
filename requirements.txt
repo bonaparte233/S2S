@@ -4,6 +4,7 @@ python-docx
 requests
 Pillow
 pdf2image
+lxml
 
 # Django web framework
 Django>=5.2

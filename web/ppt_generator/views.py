@@ -769,8 +769,7 @@ def parse_ppt_template(request):
         import uuid
         from .utils import (
             extract_shapes_info,
-            convert_ppt_to_pdf,
-            convert_pdf_to_images,
+            convert_ppt_to_images,
             annotate_screenshot,
         )
 
@@ -794,12 +793,9 @@ def parse_ppt_template(request):
         # 提取元素信息
         shapes_data = extract_shapes_info(ppt_path)
 
-        # 使用 LibreOffice 将 PPT 转换为 PDF
-        pdf_path = convert_ppt_to_pdf(ppt_path, temp_dir)
-
-        # 转换 PDF 为图片（使用 150 DPI 以减小文件大小，加快加载速度）
+        # 将 PPT 转换为图片（优先 LibreOffice，失败时用 python-pptx）
         images_dir = temp_dir / "images"
-        image_paths = convert_pdf_to_images(pdf_path, images_dir, dpi=150)
+        image_paths = convert_ppt_to_images(ppt_path, images_dir, dpi=150)
 
         # 获取幻灯片尺寸
         slide_width = shapes_data.get("slide_width", 12192000)
@@ -1884,8 +1880,7 @@ def template_wizard_page(request):
     import shutil
     from .utils import (
         extract_shapes_info,
-        convert_ppt_to_pdf,
-        convert_pdf_to_images,
+        convert_ppt_to_images,
         annotate_screenshot,
     )
 
@@ -1909,17 +1904,14 @@ def template_wizard_page(request):
             ppt_path = session_dir / "template.pptx"
             shutil.copy2(pptx_file, ppt_path)
 
-            # 生成预览图片（和 parse_ppt_template 相同的逻辑）
+            # 生成预览图片（优先 LibreOffice，失败时用 python-pptx）
             try:
                 # 提取元素信息
                 shapes_data = extract_shapes_info(ppt_path)
 
-                # 使用 LibreOffice 将 PPT 转换为 PDF
-                pdf_path = convert_ppt_to_pdf(ppt_path, session_dir)
-
-                # 转换 PDF 为图片
+                # 将 PPT 转换为图片
                 images_dir = session_dir / "images"
-                convert_pdf_to_images(pdf_path, images_dir, dpi=150)
+                convert_ppt_to_images(ppt_path, images_dir, dpi=150)
 
                 # 获取幻灯片尺寸
                 slide_width = shapes_data.get("slide_width", 12192000)

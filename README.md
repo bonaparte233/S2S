@@ -40,6 +40,38 @@ python manage.py init_users
 cd ..
 ```
 
+### 可选依赖：LibreOffice（高质量 PPT 预览）
+
+模板编辑器依赖 LibreOffice 将 PPT 转换为高保真预览图。
+
+**macOS**
+
+```bash
+brew install --cask libreoffice
+```
+
+**Windows**
+
+```powershell
+# 使用 Chocolatey
+choco install libreoffice
+
+# 或手动下载安装：https://www.libreoffice.org/download/
+```
+
+**Linux (Ubuntu/Debian)**
+
+```bash
+sudo apt-get update
+sudo apt-get install libreoffice
+```
+
+**Linux (CentOS/RHEL)**
+
+```bash
+sudo yum install libreoffice
+```
+
 ### 启动服务
 
 ```bash
@@ -203,6 +235,19 @@ pip install -r requirements.txt
 </details>
 
 ## 📝 更新日志
+
+### v2.6.0 (2025-12-05)
+
+- 🐛 **PowerPoint 修复提示问题彻底解决**
+  - 修复生成 PPT 打开时出现「PowerPoint 发现内容有问题，是否修复」的问题
+  - 根因：删除 slide 时未同步清理 notesSlides、notesMasters 相关引用
+  - 现在生成的 PPT 文件可直接打开，无需修复
+- 🔧 **PPT 生成引擎优化**
+  - 优化 `build_from_json` 函数，完整清理无用的 notes 相关文件
+  - 清理 `presentation.xml` 中的 `notesMasterIdLst`
+  - 清理 `presentation.xml.rels` 中的 notes 引用
+  - 清理 `[Content_Types].xml` 中的 notes 条目
+  - 清理每个 slide rels 中的 notesSlide 引用
 
 ### v2.5.0 (2025-12-04)
 

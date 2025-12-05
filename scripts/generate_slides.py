@@ -397,7 +397,7 @@ def _fill_slide(slide, page_content, slide_width):
 
         # 根据 JSON 中的 type 字段或形状类型判断处理方式
         is_image = field_type == "image" if field_type else _is_picture_shape(shape)
-        
+
         if is_image:
             # 图片类型：没有值时保留原占位符
             _replace_picture(slide, shape, value)
@@ -450,8 +450,18 @@ def _adjust_text_shape(text_shape, shapes, slide_width):
 
     if target_width > text_shape.width:
         target_width = int(target_width)
-        delta = target_width - text_shape.width
+        # 保存原始位置和高度（占位符的这些值可能来自 layout）
+        original_left = text_shape.left
+        original_top = text_shape.top
+        original_height = text_shape.height
+        # 修改宽度（这可能会创建新的 xfrm 元素，但只有 ext 没有 off）
         text_shape.width = target_width
+        # 强制设置位置和高度，确保 xfrm 元素完整（包含 off 和 ext）
+        # 即使值相同也要设置，因为 python-pptx 在设置 width 时可能没有创建 off 元素
+        text_shape.left = original_left
+        text_shape.top = original_top
+        if original_height > 0:
+            text_shape.height = original_height
         bg = _find_background_shape(text_shape, shapes)
         if bg:
             bg.width = int(max(bg.width, target_width + H_PADDING))

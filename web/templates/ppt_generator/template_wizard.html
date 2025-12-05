@@ -165,6 +165,9 @@
         flex: 1;
         overflow: auto;
         padding: 30px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     .step-panel {
@@ -172,7 +175,10 @@
     }
 
     .step-panel.active {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
     }
 
     /* 上传区域 */
@@ -266,14 +272,14 @@
         background: white;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        height: calc(100vh - 250px);
+        flex: 1;
+        min-height: 0;
         overflow: hidden;
     }
 
     /* 当有工具栏时调整编辑器样式 */
     .wizard-step-toolbar+.embedded-editor {
         border-radius: 0 0 12px 12px;
-        height: calc(100vh - 310px);
     }
 
     .embedded-editor iframe {

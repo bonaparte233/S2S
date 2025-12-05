@@ -65,34 +65,56 @@
 
     /* 顶部工具栏 */
     .editor-toolbar {
-        height: 70px;
+        height: 60px;
         background: white;
         border-bottom: 1px solid var(--border-color);
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        display: flex;
         align-items: center;
-        padding: 0 var(--spacing-xl);
+        justify-content: space-between;
+        padding: 0 var(--spacing-lg);
+        flex-shrink: 0;
+        gap: var(--spacing-md);
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
         flex-shrink: 0;
     }
 
-    .editor-toolbar>div:first-child {
-        justify-self: start;
+    .toolbar-center {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg);
     }
 
-    .editor-toolbar h2 {
+    .toolbar-center h2 {
         margin: 0;
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         color: var(--text-primary);
-        text-align: center;
+        white-space: nowrap;
     }
 
-    .editor-toolbar>div:last-child {
-        justify-self: end;
-    }
-
-    .toolbar-actions {
+    .toolbar-ai-actions {
         display: flex;
         gap: var(--spacing-sm);
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        flex-shrink: 0;
+    }
+
+    .toolbar-actions .btn,
+    .toolbar-left .btn,
+    .toolbar-right .btn,
+    .toolbar-ai-actions .btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        white-space: nowrap;
     }
 
     /* 主编辑区域 */
@@ -447,19 +469,23 @@
 <!-- 编辑器区域（上传成功后显示） -->
 <div id="editorSection" class="template-editor-fullscreen-container" style="display: none;">
     <div class="editor-toolbar">
-        <div>
+        <div class="toolbar-left">
             <a href="{% url 'developer_tools_page' %}" class="btn btn-secondary">
-                ← 返回开发者工具
+                ← 返回
             </a>
         </div>
-        <h2 id="editorTitle">🎨 PPT 模板编辑器</h2>
-        <div class="toolbar-actions">
-            <button id="aiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 重新命名所有页面（覆盖现有命名）">
-                🤖 AI 一键命名
-            </button>
-            <button id="aiAutoFillBtn" class="btn btn-info" title="使用 AI 补全缺失的配置（保留现有命名）">
-                ✨ AI 查漏补缺
-            </button>
+        <div class="toolbar-center">
+            <div class="toolbar-ai-actions">
+                <button id="aiAutoNameAllBtn" class="btn btn-warning" title="使用 AI 重新命名所有页面（覆盖现有命名）">
+                    🤖 AI 命名
+                </button>
+                <button id="aiAutoFillBtn" class="btn btn-info" title="使用 AI 补全缺失的配置（保留现有命名）">
+                    ✨ 查漏补缺
+                </button>
+            </div>
+            <h2 id="editorTitle">🎨 PPT 模板编辑器</h2>
+        </div>
+        <div class="toolbar-right">
             <button id="saveTemplateBtn" class="btn btn-success">
                 💾 保存
             </button>

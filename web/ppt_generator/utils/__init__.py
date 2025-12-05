@@ -7,6 +7,7 @@ from .image_annotator import (
     annotate_screenshot,
     convert_pdf_to_images,
     convert_ppt_to_pdf,
+    convert_ppt_to_images,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "annotate_screenshot",
     "convert_pdf_to_images",
     "convert_ppt_to_pdf",
+    "convert_ppt_to_images",
 ]

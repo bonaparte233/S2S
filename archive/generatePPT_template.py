@@ -28,6 +28,23 @@ ET.register_namespace("", P_NS)
 ET.register_namespace("r", OD_REL_NS)
 
 
+def _clean_rels_namespace(xml_bytes: bytes) -> bytes:
+    """清理 rels XML 中的 ns0: 前缀，PowerPoint 对此敏感。
+
+    ElementTree 在输出时会给未注册的命名空间添加 ns0: 前缀，
+    但 PowerPoint 期望 rels 文件使用无前缀的默认命名空间。
+    """
+    xml_str = xml_bytes.decode("utf-8")
+    # 替换 ns0: 前缀和 xmlns:ns0 声明
+    xml_str = xml_str.replace("ns0:", "").replace(":ns0", "")
+    # 处理可能的 ns1:, ns2: 等（虽然不太可能出现）
+    import re as _re
+
+    xml_str = _re.sub(r"\bns\d+:", "", xml_str)
+    xml_str = _re.sub(r":ns\d+\b", "", xml_str)
+    return xml_str.encode("utf-8")
+
+
 def _next_rid(existing_ids):
     """生成下一个未被占用的 rId 序号"""
     nums = [
@@ -40,10 +57,13 @@ def _next_rid(existing_ids):
 
 def _update_content_types(root, slide_count, new_tag_parts):
     """更新 [Content_Types].xml 中的 slide Override，并追加 tag 定义"""
-    # 先删掉原有的 slide Override，避免旧顺序影响新 PPT
+    # 先删掉原有的 slide Override 和 notes 相关条目，避免旧顺序影响新 PPT
     for override in list(root.findall(f"{{{CT_NS}}}Override")):
         part = override.get("PartName", "")
         if part.startswith("/ppt/slides/slide"):
+            root.remove(override)
+        # 删除 notesSlides 和 notesMasters 相关条目
+        if "/notesSlides/" in part or "/notesMasters/" in part:
             root.remove(override)
 
     for idx in range(1, slide_count + 1):
@@ -75,7 +95,11 @@ def _update_presentation_rels(root, slide_count):
 
     for rel in list(root.findall(f"{{{PKG_REL_NS}}}Relationship")):
         target = rel.get("Target", "")
+        # 删除原有 slide 引用
         if target.startswith("slides/slide"):
+            root.remove(rel)
+        # 删除 notesSlides 和 notesMasters 引用，避免 PowerPoint 修复提示
+        if target.startswith("notesSlides/") or target.startswith("notesMasters/"):
             root.remove(rel)
 
     new_rel_ids = []
@@ -93,7 +117,7 @@ def _update_presentation_rels(root, slide_count):
 
 
 def _update_presentation_xml(root, rel_ids):
-    """用新的 rId 顺序重建 p:sldIdLst"""
+    """用新的 rId 顺序重建 p:sldIdLst，并删除 notesMasterIdLst"""
     ns = {"p": P_NS}
     sld_id_lst = root.find("p:sldIdLst", ns)
     if sld_id_lst is None:
@@ -112,6 +136,11 @@ def _update_presentation_xml(root, rel_ids):
             attrib,
             id=str(base + idx),
         )
+
+    # 删除 notesMasterIdLst，避免引用已删除的 notesMaster
+    notes_master_lst = root.find("p:notesMasterIdLst", ns)
+    if notes_master_lst is not None:
+        root.remove(notes_master_lst)
 
 
 def build_from_json(template_path, json_path, output_path):
@@ -162,7 +191,9 @@ def build_from_json(template_path, json_path, output_path):
             if tmpl_num is None:
                 raise ValueError(f"第{idx}条缺少 template_page_num")
             if tmpl_num not in slide_map:
-                raise ValueError(f"模板中不存在第{tmpl_num}页（来自第{idx}条 {page_type}）")
+                raise ValueError(
+                    f"模板中不存在第{tmpl_num}页（来自第{idx}条 {page_type}）"
+                )
             selected_slides.append((tmpl_num, page_type))
             print(f"✅ 生成第{idx}页：{page_type}（模板第{tmpl_num}页）")
 
@@ -175,27 +206,37 @@ def build_from_json(template_path, json_path, output_path):
         _update_presentation_xml(pres_xml, new_rel_ids)
 
         def clone_tags(rel_bytes):
+            """处理 slide rels：复制 tag 关系并删除 notesSlide 引用"""
             nonlocal next_tag_num
             if not rel_bytes:
                 return rel_bytes
             rel_tree = ET.fromstring(rel_bytes)
-            for rel in rel_tree.findall(f"{{{PKG_REL_NS}}}Relationship"):
+            for rel in list(rel_tree.findall(f"{{{PKG_REL_NS}}}Relationship")):
+                target = rel.get("Target", "")
+                rel_type = rel.get("Type", "")
+
+                # 删除 notesSlide 引用，避免 PowerPoint 修复提示
+                if "notesSlide" in target or "notesSlide" in rel_type:
+                    rel_tree.remove(rel)
+                    continue
+
+                # 处理 tag 关系
                 if (
-                    rel.get("Type")
-                    != "http://schemas.openxmlformats.org/officeDocument/2006/relationships/tags"
+                    rel_type
+                    == "http://schemas.openxmlformats.org/officeDocument/2006/relationships/tags"
                 ):
-                    continue
-                target = rel.get("Target")
-                canonical = posixpath.normpath(posixpath.join("ppt/slides", target))
-                if canonical not in file_bytes:
-                    continue
-                # tag 关系在 PPT 中要求唯一，因此为每条关系生成新的 tag 文件
-                next_tag_num += 1
-                new_part = f"ppt/tags/tag{next_tag_num}.xml"
-                rel.set("Target", posixpath.relpath(new_part, "ppt/slides"))
-                extra_tag_parts.append(new_part)
-                extra_tag_files[new_part] = file_bytes[canonical]
-            return ET.tostring(rel_tree, encoding="utf-8", xml_declaration=True)
+                    canonical = posixpath.normpath(posixpath.join("ppt/slides", target))
+                    if canonical not in file_bytes:
+                        continue
+                    # tag 关系在 PPT 中要求唯一，因此为每条关系生成新的 tag 文件
+                    next_tag_num += 1
+                    new_part = f"ppt/tags/tag{next_tag_num}.xml"
+                    rel.set("Target", posixpath.relpath(new_part, "ppt/slides"))
+                    extra_tag_parts.append(new_part)
+                    extra_tag_files[new_part] = file_bytes[canonical]
+            return _clean_rels_namespace(
+                ET.tostring(rel_tree, encoding="utf-8", xml_declaration=True)
+            )
 
         prepared_rel_bytes = {}
         for idx, (tmpl_num, _) in enumerate(selected_slides, start=1):
@@ -212,17 +253,29 @@ def build_from_json(template_path, json_path, output_path):
                     continue
                 if name.startswith("ppt/slides/_rels/slide"):
                     continue
+                # 跳过 notesSlides 和 notesMasters 相关文件，避免 PowerPoint 修复提示
+                if "notesSlides" in name or "notesMasters" in name:
+                    continue
                 if name == "[Content_Types].xml":
                     out_zip.writestr(
-                        name, ET.tostring(content_types, encoding="utf-8", xml_declaration=True)
+                        name,
+                        ET.tostring(
+                            content_types, encoding="utf-8", xml_declaration=True
+                        ),
                     )
                 elif name == "ppt/_rels/presentation.xml.rels":
                     out_zip.writestr(
-                        name, ET.tostring(pres_rels, encoding="utf-8", xml_declaration=True)
+                        name,
+                        _clean_rels_namespace(
+                            ET.tostring(
+                                pres_rels, encoding="utf-8", xml_declaration=True
+                            )
+                        ),
                     )
                 elif name == "ppt/presentation.xml":
                     out_zip.writestr(
-                        name, ET.tostring(pres_xml, encoding="utf-8", xml_declaration=True)
+                        name,
+                        ET.tostring(pres_xml, encoding="utf-8", xml_declaration=True),
                     )
                 else:
                     out_zip.writestr(name, data)
