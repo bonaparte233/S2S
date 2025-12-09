@@ -1849,8 +1849,8 @@ def restore_edit_session(request, session_id):
 
         ppt_path = ppt_files[0]
 
-        # 提取元素信息
-        shapes_data = extract_shapes_info(ppt_path)
+        # 提取元素信息（恢复会话时不做语义过滤，由前端从 progress_data 恢复隐藏状态）
+        shapes_data = extract_shapes_info(ppt_path, filter_mode="none")
 
         # 获取幻灯片尺寸
         slide_width = shapes_data.get("slide_width", 12192000)
@@ -1945,8 +1945,8 @@ def template_wizard_page(request):
 
             # 生成预览图片（优先 LibreOffice，失败时用 python-pptx）
             try:
-                # 提取元素信息
-                shapes_data = extract_shapes_info(ppt_path)
+                # 提取元素信息（编辑已发布模板时不做语义过滤，由前端根据JSON配置设置隐藏）
+                shapes_data = extract_shapes_info(ppt_path, filter_mode="none")
 
                 # 将 PPT 转换为图片
                 images_dir = session_dir / "images"

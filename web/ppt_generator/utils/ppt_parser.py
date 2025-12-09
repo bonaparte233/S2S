@@ -195,9 +195,15 @@ def is_editable_content(shape, slide_width: int, slide_height: int) -> bool:
     return False
 
 
-def extract_shapes_info(pptx_path: Path) -> Dict:
+def extract_shapes_info(pptx_path: Path, filter_mode: str = "semantic") -> Dict:
     """
-    提取所有元素的坐标信息，自动过滤背景元素
+    提取所有元素的坐标信息
+
+    Args:
+        pptx_path: PPT 文件路径
+        filter_mode: 过滤模式
+            - "semantic": 语义过滤，不符合条件的元素设置 is_hidden=True（上传新PPT用）
+            - "none": 不过滤，返回所有可用元素（加载发布模板用，由前端根据JSON设置隐藏）
 
     Returns:
         {
@@ -249,9 +255,8 @@ def extract_shapes_info(pptx_path: Path) -> Dict:
                 else:
                     continue
 
-            # 使用智能算法判断是否为可编辑内容
-            if not is_editable_content(shape, slide_width, slide_height):
-                continue
+            # 判断是否为可编辑内容（用于语义过滤）
+            is_editable = is_editable_content(shape, slide_width, slide_height)
 
             # 处理 GROUP 类型：递归提取内部元素
             if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
@@ -261,6 +266,9 @@ def extract_shapes_info(pptx_path: Path) -> Dict:
                 for gs in group_shapes:
                     child_shape = gs["shape"]
                     is_named = not is_generic_name(child_shape.name)
+
+                    # 语义过滤模式：不可编辑的元素设为隐藏
+                    should_hide = filter_mode == "semantic" and not is_editable
 
                     info = {
                         "shape_id": child_shape.shape_id,
@@ -272,7 +280,7 @@ def extract_shapes_info(pptx_path: Path) -> Dict:
                         "width": child_shape.width,
                         "height": child_shape.height,
                         "is_named": is_named,
-                        "is_hidden": False,
+                        "is_hidden": should_hide,
                         "z_order": shape_counter,
                         "group_path": gs.get("group_path", ""),  # 记录 GROUP 路径
                     }
@@ -293,12 +301,15 @@ def extract_shapes_info(pptx_path: Path) -> Dict:
             else:
                 shape_type = "other"
 
-            # 只保留文本框和图片
+            # 只保留文本框和图片（这是基本过滤，不是语义过滤）
             if shape_type not in ("text", "image"):
                 continue
 
             # 判断是否已命名（非通用名称）
             is_named = not is_generic_name(shape.name)
+
+            # 语义过滤模式：不可编辑的元素设为隐藏
+            should_hide = filter_mode == "semantic" and not is_editable
 
             info = {
                 "shape_id": shape.shape_id,  # 使用 shape 的真实 ID
@@ -310,7 +321,7 @@ def extract_shapes_info(pptx_path: Path) -> Dict:
                 "width": shape.width,
                 "height": shape.height,
                 "is_named": is_named,
-                "is_hidden": False,  # 用户可以手动隐藏
+                "is_hidden": should_hide,
                 "z_order": shape_counter,  # 层级顺序
             }
 

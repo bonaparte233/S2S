@@ -40,13 +40,13 @@
       "template_page_num": 7,
       "page_type": "内容页",
       "text_slots": 8,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 8,
       "page_type": "内容页多字版",
       "text_slots": 5,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 9,
@@ -70,7 +70,7 @@
       "template_page_num": 12,
       "page_type": "内容页",
       "text_slots": 12,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 13,
@@ -286,7 +286,7 @@
         "style": "",
         "text_slots": 3,
         "image_slots": 0,
-        "notes": "展示章节和小节标题及主讲人信息"
+        "notes": "展示章节及知识点结构，标注主讲人信息"
       }
     },
     {
@@ -556,6 +556,13 @@
           "value": "",
           "max_chars": 24
         },
+        "侧边图片": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "总课程名称": {
           "type": "text",
           "hint": "填写课程或项目名称",
@@ -569,7 +576,7 @@
         "scene": [],
         "style": "",
         "text_slots": 8,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "展示多模块内容的详细讲解页面"
       }
     },
@@ -612,6 +619,13 @@
           "required": true,
           "value": "",
           "max_chars": 10
+        },
+        "配图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
         }
       },
       "meta": {
@@ -619,7 +633,7 @@
         "scene": [],
         "style": "",
         "text_slots": 5,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "展示多层级标题、正文内容及辅助配图的通用内容页"
       }
     },
@@ -903,6 +917,13 @@
           "required": true,
           "value": "",
           "max_chars": 2
+        },
+        "配图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
         }
       },
       "meta": {
@@ -910,8 +931,8 @@
         "scene": [],
         "style": "",
         "text_slots": 12,
-        "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "image_slots": 1,
+        "notes": ""
       }
     },
     {
@@ -1010,7 +1031,7 @@
         "style": "",
         "text_slots": 12,
         "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -1392,7 +1413,7 @@
         "style": "",
         "text_slots": 10,
         "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -1470,7 +1491,7 @@
         "style": "",
         "text_slots": 8,
         "image_slots": 1,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -1541,7 +1562,7 @@
         "style": "",
         "text_slots": 8,
         "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -1612,7 +1633,7 @@
         "style": "",
         "text_slots": 7,
         "image_slots": 1,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -1782,7 +1803,7 @@
         "style": "",
         "text_slots": 3,
         "image_slots": 8,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -1988,7 +2009,7 @@
         "style": "",
         "text_slots": 3,
         "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -2045,7 +2066,7 @@
         "style": "",
         "text_slots": 5,
         "image_slots": 1,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -2081,7 +2102,7 @@
         "style": "",
         "text_slots": 3,
         "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {
@@ -2110,7 +2131,7 @@
         "style": "",
         "text_slots": 2,
         "image_slots": 0,
-        "notes": "请根据实际需要填写内容"
+        "notes": ""
       }
     },
     {

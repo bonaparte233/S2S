@@ -492,6 +492,9 @@
                 current_step: wizardState.currentStep,
                 ppt_session_id: wizardState.pptSessionId,
                 template_name: currentTemplateName,
+                // 保存编辑模式状态（用于恢复已发布模板编辑）
+                is_edit_mode: wizardState.isEditMode || false,
+                original_template_name: wizardState.originalTemplateName || null,
                 // 不保存 config_data，发布时从 PPT 编辑器实时获取
                 published: false
             }
@@ -1012,16 +1015,32 @@
         // 不恢复旧的 configData，发布时从 PPT 编辑器实时获取最新配置
         wizardState.configData = null;
 
+        // 恢复编辑模式状态（用于已发布模板编辑）
+        wizardState.isEditMode = progressData.is_edit_mode || false;
+        wizardState.originalTemplateName = progressData.original_template_name || null;
+
         console.log('Restored state:', {
             wizardSessionId: wizardState.wizardSessionId,
             pptSessionId: wizardState.pptSessionId,
             templateName: wizardState.templateName,
+            isEditMode: wizardState.isEditMode,
+            originalTemplateName: wizardState.originalTemplateName,
             targetStep: progressData.current_step
         });
 
         // 填充模板名称输入框
         if (wizardState.templateName) {
             document.getElementById('templateName').value = wizardState.templateName;
+        }
+
+        // 如果是编辑模式，更新 UI
+        if (wizardState.isEditMode) {
+            const publishBtn = document.getElementById('publishBtn');
+            publishBtn.innerHTML = '<i class="fas fa-save"></i> 保存修改';
+            const publishTitle = document.querySelector('#step-3 h3');
+            if (publishTitle) {
+                publishTitle.textContent = '保存模板修改';
+            }
         }
 
         // 加载 PPT 编辑器（如果有 ppt_session_id）

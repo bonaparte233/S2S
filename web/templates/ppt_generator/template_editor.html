@@ -1451,7 +1451,13 @@
         let html = '';
         let visibleIndex = 0;  // 用于显示可见元素的编号
 
-        page.shapes.forEach((shape) => {
+        // 排序：可见元素在上，隐藏元素在下（保持各自内部的原始顺序）
+        const sortedShapes = [...page.shapes].sort((a, b) => {
+            if (a.is_hidden === b.is_hidden) return 0;
+            return a.is_hidden ? 1 : -1;
+        });
+
+        sortedShapes.forEach((shape) => {
             const isHidden = shape.is_hidden;
             const isNamed = shape.is_named;
             const isSelected = templateEditorState.selectedShapeId === shape.shape_id;
