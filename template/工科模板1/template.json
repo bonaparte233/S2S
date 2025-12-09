@@ -587,21 +587,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写三级标题的内容",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题的内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -630,7 +630,7 @@
       "content": {
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -672,7 +672,7 @@
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -694,14 +694,14 @@
       "content": {
         "二级标题": {
           "type": "text",
-          "hint": "填写子主题",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写细分主题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -715,7 +715,7 @@
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写核心主题",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -758,19 +758,19 @@
       "content": {
         "二级标题": {
           "type": "text",
-          "hint": "填写子主题",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写细分主题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
-        "总课程标识": {
+        "总课程名称": {
           "type": "text",
           "hint": "填写课程或项目名称",
           "required": true,
@@ -779,7 +779,7 @@
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写本章主题",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -822,21 +822,21 @@
       "content": {
         "三级标题": {
           "type": "text",
-          "hint": "填写本页核心主题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题的内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -928,21 +928,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写三级标题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 8
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 8
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题的内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 8
@@ -1018,30 +1018,30 @@
       "page_note": "展示课程主题与多层级标题及表格内容",
       "template_page_num": 14,
       "content": {
-        "课程标识": {
+        "课程名称": {
           "type": "text",
-          "hint": "填写课程名称",
+          "hint": "填写课程或项目名称",
           "required": true,
           "value": "",
-          "max_chars": 15
+          "max_chars": 10
         },
-        "三级子标题": {
+        "三级标题": {
           "type": "text",
-          "hint": "填写三级标题内容",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 8
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 8
         },
-        "主标题": {
+        "一级标题": {
           "type": "text",
-          "hint": "填写一级标题内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 8
@@ -1175,21 +1175,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "细化主题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1274,21 +1274,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写三级标题的内容",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题的内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1359,21 +1359,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写细分项标题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题的内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1437,21 +1437,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写三级标题的内容",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写一级标题的内容",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1515,21 +1515,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写子章节标题",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "一级标题": {
           "type": "text",
-          "hint": "填写主要章节标题",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写次级章节标题",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1579,21 +1579,21 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写第三级标题内容",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
-        "主标题": {
+        "一级标题": {
           "type": "text",
-          "hint": "填写本页主要标题",
+          "hint": "填写章节名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写第二级标题内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1664,14 +1664,14 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写三级标题的内容",
+          "hint": "填写当前页标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写二级标题的内容",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
           "max_chars": 10
@@ -1728,19 +1728,19 @@
         },
         "课程总标题": {
           "type": "text",
-          "hint": "填写整体课程名称",
+          "hint": "填写课程或项目名称",
           "required": true,
           "value": "",
           "max_chars": 15
         },
-        "三级子标题": {
+        "三级标题": {
           "type": "text",
           "hint": "填写细分主题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
-        "二级主标题": {
+        "二级标题": {
           "type": "text",
           "hint": "填写本部分核心主题",
           "required": true,
@@ -1818,23 +1818,23 @@
           "value": "",
           "max_chars": 24
         },
-        "课程总标题": {
+        "课程标题": {
           "type": "text",
-          "hint": "填写整体课程名称",
+          "hint": "填写课程或项目名称",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写该部分的子标题",
+          "hint": "填写图文页子标题",
           "required": true,
           "value": "",
           "max_chars": 10
         },
         "二级标题": {
           "type": "text",
-          "hint": "填写该部分的主要标题",
+          "hint": "填写图文页主标题",
           "required": true,
           "value": "",
           "max_chars": 10
