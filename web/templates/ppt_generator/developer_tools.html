@@ -202,6 +202,25 @@
     <p class="subtitle">PPT 模板开发与配置管理工具集</p>
 </div>
 
+<!-- 全局加载遮罩 -->
+<div id="globalLoadingOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+     background: rgba(255,255,255,0.9); z-index: 9999;
+     justify-content: center; align-items: center; flex-direction: column;">
+    <div style="font-size: 3rem; margin-bottom: 20px; animation: spin 1s linear infinite;">⏳</div>
+    <div id="globalLoadingText" style="font-size: 1.2rem; color: #666;">正在加载模板...</div>
+</div>
+<style>
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
 <!-- 已发布模板列表 -->
 {% if published_templates %}
 <div class="published-templates-section" style="margin-bottom: 2rem;">
@@ -211,7 +230,8 @@
     </h4>
     <div class="templates-list" style="display: flex; flex-wrap: wrap; gap: 12px;">
         {% for tpl in published_templates %}
-        <a href="{% url 'template_wizard_page' %}?edit={{ tpl.name }}" class="template-item" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+        <a href="{% url 'template_wizard_page' %}?edit={{ tpl.name }}" class="template-item template-edit-link"
+            data-template-name="{{ tpl.name }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
                   background: white; border-radius: 8px; text-decoration: none; color: #333;
                   box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s ease;
                   border: 1px solid #e0e0e0;">
@@ -607,10 +627,34 @@
         return div.innerHTML;
     }
 
+    // 显示全局加载遮罩
+    function showGlobalLoading(text) {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        const loadingText = document.getElementById('globalLoadingText');
+        if (overlay) {
+            if (text) loadingText.textContent = text;
+            overlay.style.display = 'flex';
+        }
+    }
+
     // 初始化
     document.addEventListener('DOMContentLoaded', function () {
         loadEditSessions();
         document.getElementById('refreshSessionsBtn').addEventListener('click', loadEditSessions);
+
+        // 为已发布模板链接添加点击事件
+        document.querySelectorAll('.template-edit-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();  // 阻止默认跳转
+                const templateName = this.dataset.templateName;
+                const href = this.href;
+                showGlobalLoading(`正在加载模板「${templateName}」...`);
+                // 短暂延迟确保动画渲染后再跳转
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 50);
+            });
+        });
     });
 </script>
 {% endblock %}

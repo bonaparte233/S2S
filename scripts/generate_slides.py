@@ -147,17 +147,30 @@ def _clean_segment(segment, page_prefix):
 
 
 def _flatten_content(content):
-    mapping = {}
+    """
+    展平 content 结构，返回 (path -> value, path -> type) 两个映射。
+
+    新版格式：{"字段名": {"type": "text/image", "value": "..."}}
+    旧版格式：{"字段名": "..."} 或嵌套结构
+    """
+    value_mapping = {}
+    type_mapping = {}
 
     def walk(node, path):
         if isinstance(node, dict):
-            for key, value in node.items():
-                walk(value, path + (key,))
+            # 检查是否是新版格式（有 type 和 value 字段）
+            if "type" in node and "value" in node:
+                value_mapping[path] = node.get("value", "")
+                type_mapping[path] = node.get("type", "text")
+            else:
+                # 嵌套结构，继续遍历
+                for key, value in node.items():
+                    walk(value, path + (key,))
         else:
-            mapping[path] = node
+            value_mapping[path] = node
 
     walk(content or {}, tuple())
-    return mapping
+    return value_mapping, type_mapping
 
 
 def _shape_aliases(name):
@@ -300,7 +313,7 @@ def _replace_picture(slide, shape, image_path):
 def _fill_slide(slide, page_content, slide_width):
     """根据 JSON 内容把文本和图片写入对应区域。"""
     prefix = _detect_prefix(slide)
-    content_map = _flatten_content(page_content)
+    content_map, type_map = _flatten_content(page_content)
     all_shapes = list(_iter_shapes(slide.shapes))
     shapes_by_name = {}
     shapes_by_exact = {}
@@ -327,8 +340,12 @@ def _fill_slide(slide, page_content, slide_width):
         if key not in content_map:
             continue
         value = content_map[key]
+        field_type = type_map.get(key)  # 获取字段类型
 
-        if _is_picture_shape(shape):
+        # 优先根据 JSON 中的 type 字段判断，否则根据形状类型判断
+        is_image = field_type == "image" if field_type else _is_picture_shape(shape)
+
+        if is_image:
             _replace_picture(slide, shape, value)
             used_picture_shapes.add(shape.name)
         elif shape.has_text_frame:

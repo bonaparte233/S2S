@@ -188,19 +188,18 @@ def generation_detail(request, pk):
     return render(request, "ppt_generator/detail.html", context)
 
 
-@login_required
-@require_http_methods(["POST"])
-def start_generation(request, pk):
-    """Start PPT generation process (AJAX endpoint)."""
-    generation = get_object_or_404(PPTGeneration, pk=pk)
+def _run_generation_task(generation_id):
+    """Background task to run PPT generation."""
+    import os
+    from django.db import connection
 
-    if generation.status != "pending":
-        return JsonResponse(
-            {"success": False, "error": "该任务已经开始处理或已完成"}, status=400
-        )
+    # 关闭当前线程的数据库连接，让它创建新的连接
+    connection.close()
+
+    from .models import PPTGeneration, GlobalLLMConfig
 
     try:
-        generation.mark_processing()
+        generation = PPTGeneration.objects.get(pk=generation_id)
 
         # Determine template path
         if generation.template_file:
@@ -216,13 +215,10 @@ def start_generation(request, pk):
 
         # Determine template.json config: uploaded file > dropdown selection > auto-guess
         if generation.config_template_file:
-            # Priority 1: Uploaded JSON file
             template_json = Path(generation.config_template_file.path)
         elif generation.config_template:
-            # Priority 2: Dropdown selection
             template_json = settings.S2S_TEMPLATE_DIR / generation.config_template
         else:
-            # Priority 3: Auto-guess based on PPTX template
             template_json = _guess_template_json(template_path)
 
         if not template_json.exists():
@@ -243,12 +239,10 @@ def start_generation(request, pk):
 
         # Prepare LLM configuration
         if generation.use_llm:
-            # 判断使用预设配置还是自定义配置
             if (
                 generation.llm_config_choice == "preset"
                 and generation.llm_preset_config
             ):
-                # 使用预设配置
                 preset = generation.llm_preset_config
                 llm_provider = preset.llm_provider
                 llm_model = preset.get_model_for_provider()
@@ -256,14 +250,12 @@ def start_generation(request, pk):
                 llm_base_url = preset.llm_base_url
                 user_prompt = generation.user_prompt or preset.default_prompt
             else:
-                # 使用自定义配置
                 llm_provider = generation.llm_provider
                 llm_model = generation.llm_model
                 llm_api_key = generation.llm_api_key
                 llm_base_url = generation.llm_base_url
                 user_prompt = generation.user_prompt
 
-                # 如果自定义配置不完整，回退到全局默认配置
                 if not llm_provider or not llm_api_key:
                     global_config = GlobalLLMConfig.get_config()
                     llm_provider = llm_provider or global_config.llm_provider
@@ -271,19 +263,14 @@ def start_generation(request, pk):
                     llm_api_key = llm_api_key or global_config.llm_api_key
                     llm_base_url = llm_base_url or global_config.llm_base_url
                     user_prompt = user_prompt or global_config.default_prompt
-
         else:
-            # LLM not enabled
             llm_provider = None
             llm_model = None
             llm_base_url = None
             llm_api_key = None
             user_prompt = None
 
-        # Set API key in environment if provided
-        import os
-
-        # 清除所有 LLM 相关的环境变量，避免使用旧的 API Key
+        # Set API key in environment
         for key in [
             "DEEPSEEK_API_KEY",
             "TAICHU_API_KEY",
@@ -292,7 +279,6 @@ def start_generation(request, pk):
         ]:
             os.environ.pop(key, None)
 
-        # 设置当前使用的 API Key
         if llm_api_key:
             if llm_provider == "deepseek":
                 os.environ["DEEPSEEK_API_KEY"] = llm_api_key
@@ -350,24 +336,52 @@ def start_generation(request, pk):
             run_dir=run_dir,
         )
 
+        print(f"[Generation {generation_id}] 完成")
+
+    except Exception as e:
+        error_msg = f"{str(e)}\n\n{traceback.format_exc()}"
+        try:
+            generation = PPTGeneration.objects.get(pk=generation_id)
+            generation.mark_failed(error_msg)
+        except Exception:
+            pass
+        print(f"[Generation {generation_id}] 失败: {e}")
+
+
+@login_required
+@require_http_methods(["POST"])
+def start_generation(request, pk):
+    """Start PPT generation process (AJAX endpoint)."""
+    import threading
+
+    generation = get_object_or_404(PPTGeneration, pk=pk)
+
+    if generation.status != "pending":
+        return JsonResponse(
+            {"success": False, "error": "该任务已经开始处理或已完成"}, status=400
+        )
+
+    try:
+        generation.mark_processing()
+
+        # 在后台线程中执行生成任务
+        thread = threading.Thread(target=_run_generation_task, args=(pk,))
+        thread.daemon = True
+        thread.start()
+
         return JsonResponse(
             {
                 "success": True,
-                "message": "PPT生成成功！",
-                "download_url": generation.output_ppt.url,
+                "message": "PPT生成任务已启动",
                 "generation_id": generation.id,
             }
         )
 
     except Exception as e:
-        error_msg = f"{str(e)}\n\n{traceback.format_exc()}"
-        generation.mark_failed(error_msg)
-
         return JsonResponse(
             {
                 "success": False,
                 "error": str(e),
-                "traceback": traceback.format_exc(),
             },
             status=500,
         )
@@ -1378,45 +1392,70 @@ def ai_auto_name_shapes(request):
         # 检查是否有现有配置（查漏补缺模式）
         existing_page_type = existing_config.get("page_type", "")
         existing_page_note = existing_config.get("page_note", "")
-        has_existing = bool(existing_page_type) or any(
-            e.get("name") or e.get("hint") for e in existing_elements
+        has_existing = (
+            bool(existing_page_type)
+            or bool(existing_page_note)
+            or any(e.get("name") or e.get("hint") for e in existing_elements)
         )
+
+        # 检查具体缺失哪些字段
+        missing_fields = []
+        if not existing_page_type:
+            missing_fields.append("page_type（页面类型）")
+        if not existing_page_note:
+            missing_fields.append("page_note（页面备注）")
+
+        # 检查元素配置缺失情况
+        elements_missing = []
+        for i, elem in enumerate(existing_elements, 1):
+            elem_missing = []
+            if not elem.get("name"):
+                elem_missing.append("name")
+            if not elem.get("hint"):
+                elem_missing.append("hint")
+            if elem_missing:
+                elements_missing.append(f"#{i}: 缺少 {', '.join(elem_missing)}")
 
         # 构建 Prompt
         if has_existing:
-            # 查漏补缺模式
-            prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，**补全缺失的配置信息**。
+            # 查漏补缺模式 - 明确告诉 AI 只需要补全哪些字段
+            missing_summary = ""
+            if missing_fields:
+                missing_summary += f"\n缺失的页面信息: {', '.join(missing_fields)}"
+            if elements_missing:
+                missing_summary += f"\n缺失的元素配置: {'; '.join(elements_missing)}"
+
+            prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，**只补全缺失的配置信息**。
 
 **重要说明**
-这是一个通用模板，会用于多种不同主题的演讲/课程/汇报。请使用**通用、抽象**的命名。
+这是一个通用模板，请使用**通用、抽象**的命名。
 
-**现有配置**（保留已有内容，补全缺失部分）
-- 页面类型: {existing_page_type or "（未填写，请补全）"}
-- 页面备注: {existing_page_note or "（未填写，请补全）"}
+**现有配置**（这些已有的内容必须原样保留！）
+- 页面类型: {existing_page_type or "（缺失，需补全）"}
+- 页面备注: {existing_page_note or "（缺失，需补全）"}
 
 **页面元素**（{len(visible_shapes)} 个）：
 {chr(10).join(shapes_desc)}
 
+**需要补全的内容**：{missing_summary if missing_summary else "检查并补全缺失字段"}
+
 **补全规则**
-1. 已有的 name 和 hint 请**保持不变**，只补全空缺的字段
-2. 使用通用名称，如：主标题、副标题、正文内容、配图、日期等
-3. hint 提示要通用，如"填写本页主题"而非具体内容
-4. max_chars: 尽量往少估算，PPT文字宜精简。标题类10-20，正文类30-80，长文本最多150，图片填null
+1. ⚠️ 已有的 name、hint 必须**完全保持原值不变**
+2. 只填写标记为"缺失"或空的字段
+3. 使用通用名称，如：主标题、副标题、正文内容、配图、日期等
+4. max_chars: 标题类10-20，正文类30-80，长文本最多150，图片填null
 5. required: 重要元素为true，装饰性元素为false
 
-请以 JSON 格式返回完整配置（包含已有和补全的内容）：
+请以 JSON 格式返回（已有值必须原样保留）：
 ```json
 {{
-  "page_type": "封面页",
-  "page_note": "展示演讲主题和演讲者信息",
-  "elements": [
-    {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 15, "required": true}},
-    {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 30, "required": false}}
-  ]
+  "page_type": "{existing_page_type or "封面页"}",
+  "page_note": "{existing_page_note or "填写页面相关内容"}",
+  "elements": [...]
 }}
 ```
 
-只返回 JSON，不要其他解释。确保 elements 数量与可见元素数量 ({len(visible_shapes)}) 一致。"""
+只返回 JSON，确保 elements 数量为 {len(visible_shapes)} 个。"""
         else:
             # 全新配置模式
             prompt = f"""你是一个 PPT 模板分析专家。请分析这张 PPT 幻灯片截图，为这个**通用模板**配置元素信息。
@@ -1450,7 +1489,7 @@ def ai_auto_name_shapes(request):
 ```json
 {{
   "page_type": "封面页",
-  "page_note": "展示演讲主题和演讲者信息",
+  "page_note": "填写页面相关内容",
   "elements": [
     {{"index": 1, "name": "主标题", "hint": "填写演讲或课程主题", "max_chars": 15, "required": true}},
     {{"index": 2, "name": "副标题", "hint": "补充说明或副主题", "max_chars": 30, "required": false}},

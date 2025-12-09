@@ -556,8 +556,23 @@
     // 加载 PPT 编辑器（向导模式，包含完整配置功能）
     function loadPPTEditor(sessionId) {
         const container = document.getElementById('pptEditorContainer');
-        // 添加 wizard=1 参数启用向导模式（显示 hint/max_chars/required/note 编辑功能）
-        container.innerHTML = `<iframe id="pptEditorIframe" src="{% url 'template_editor_page' %}?session=${sessionId}&embedded=1&wizard=1"></iframe>`;
+
+        // 显示加载动效
+        container.innerHTML = `
+            <div class="loading-overlay" id="pptEditorLoading" style="display:flex;align-items:center;justify-content:center;height:100%;background:#f8f9fa;">
+                <div class="text-center">
+                    <div style="font-size:3rem;margin-bottom:20px;" class="loading-spinner">⏳</div>
+                    <div style="font-size:1.1rem;color:#666;">正在加载模板编辑器...</div>
+                </div>
+            </div>
+        `;
+
+        // 创建 iframe
+        const iframe = document.createElement('iframe');
+        iframe.id = 'pptEditorIframe';
+        iframe.src = `{% url 'template_editor_page' %}?session=${sessionId}&embedded=1&wizard=1`;
+        iframe.style.display = 'none';  // 先隐藏
+        container.appendChild(iframe);
 
         // 显示工具栏
         const toolbar = document.getElementById('step2Toolbar');
@@ -565,20 +580,34 @@
             toolbar.style.display = 'flex';
         }
 
-        // 如果是编辑模式且有配置数据，等待 iframe 加载后发送配置
-        if (wizardState.isEditMode && wizardState.configData) {
-            const iframe = document.getElementById('pptEditorIframe');
-            iframe.onload = () => {
-                console.log('[loadPPTEditor] iframe 已加载，发送初始配置');
+        // iframe 加载完成后
+        iframe.onload = () => {
+            console.log('[loadPPTEditor] iframe 已加载');
+
+            // 如果是编辑模式且有配置数据，发送配置
+            if (wizardState.isEditMode && wizardState.configData) {
+                console.log('[loadPPTEditor] 发送初始配置');
                 // 延迟一点确保编辑器完全初始化
                 setTimeout(() => {
                     iframe.contentWindow.postMessage({
                         type: 'applyInitialConfig',
                         config: wizardState.configData
                     }, '*');
+
+                    // 再稍等一下让配置应用完成后显示
+                    setTimeout(() => {
+                        const loading = document.getElementById('pptEditorLoading');
+                        if (loading) loading.style.display = 'none';
+                        iframe.style.display = 'block';
+                    }, 500);
                 }, 1000);
-            };
-        }
+            } else {
+                // 非编辑模式，直接显示
+                const loading = document.getElementById('pptEditorLoading');
+                if (loading) loading.style.display = 'none';
+                iframe.style.display = 'block';
+            }
+        };
     }
 
     // AI 命名功能（通过 postMessage 与 iframe 通信）
@@ -799,6 +828,7 @@
 
         const isEditMode = wizardState.isEditMode;
         const originalName = wizardState.originalTemplateName;
+        console.log('[publishTemplate] isEditMode:', isEditMode, 'originalName:', originalName, 'templateName:', templateName);
         const loadingText = isEditMode ? '保存中...' : '发布中...';
         const buttonText = isEditMode ? '<i class="fas fa-save"></i> 保存修改' : '<i class="fas fa-rocket"></i> 发布模板';
         const successText = isEditMode ? '<i class="fas fa-check"></i> 已保存' : '<i class="fas fa-check"></i> 已发布';

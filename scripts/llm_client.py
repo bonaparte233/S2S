@@ -25,7 +25,7 @@ class OpenAILikeLLM(BaseLLM):
         model: str,
         base_url: str,
         api_key: Optional[str] = None,
-        timeout: int = 60,
+        timeout: int = 360,
         extra_headers: Optional[Dict[str, str]] = None,
         completion_path: str = "/chat/completions",
     ):
@@ -74,7 +74,7 @@ class DeepSeekLLM(OpenAILikeLLM):
         api_key: Optional[str] = None,
         model: str = "deepseek-chat",
         base_url: Optional[str] = None,
-        timeout: int = 60,
+        timeout: int = 360,
     ):
         key = api_key or os.getenv("DEEPSEEK_API_KEY")
         if not key:

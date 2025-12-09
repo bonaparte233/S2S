@@ -115,8 +115,8 @@ def parse_docx_blocks(doc_path: str, image_dir: Path) -> Tuple[List[Dict], bool,
         images = extract_images(para)
         if images:
             attach_images(images)
-            for img_path in images:
-                buffer.append(f"[图片资源: {img_path}]")
+            # 不在 buffer 中添加图片标记，图片路径只保存在 block["images"] 中
+            # 图片标记会在 _preprocess_and_fill 中统一添加
 
         matches = list(MARKER_RE.finditer(text))
         if matches:
@@ -174,10 +174,14 @@ def load_template_defs(template_json: str, template_list: str) -> Dict[int, Dict
             continue
         schema = page.get("content", {})
         fields = _collect_fields(schema)
+        # 优先使用顶层 page_note，其次使用 meta.notes
+        meta = page.get("meta", {}) or manifest.get(num, {})
+        page_note = page.get("page_note") or meta.get("notes", "")
         templates[num] = {
             "page_type": page.get("page_type", f"模板第{num}页"),
             "schema": schema,
-            "meta": page.get("meta", {}) or manifest.get(num, {}),
+            "meta": meta,
+            "page_note": page_note,  # 统一使用 page_note
             "text_fields": [field for field in fields if not field["is_image"]],
             "image_fields": [field for field in fields if field["is_image"]],
         }
@@ -260,6 +264,7 @@ def _build_prompt(
     images: List[str],
     is_multimodal: bool = False,
     user_prompt: Optional[str] = None,
+    metadata: Optional[Dict] = None,
 ) -> str:
     def describe_fields(fields):
         if not fields:
@@ -290,7 +295,8 @@ def _build_prompt(
     scene = "、".join(meta.get("scene", [])) or "通用"
     layout = meta.get("layout", template_info["page_type"])
     style = meta.get("style", "")
-    note = meta.get("notes", "")
+    # 优先使用顶层 page_note，其次使用 meta.notes
+    note = template_info.get("page_note") or meta.get("notes", "")
 
     multimodal_instruction = ""
     if is_multimodal and images:
@@ -315,7 +321,9 @@ def _build_prompt(
 """
 
     prompt = f"""
-请阅读以下讲稿并生成一个 JSON，对模板《{template_info["page_type"]}》的文本/图片字段进行填充。
+请阅读以下讲稿并生成一个 JSON，对模板《{
+        template_info["page_type"]
+    }》的文本/图片字段进行填充。
 模板布局：{layout}；使用场景：{scene}；风格提示：{style}
 注意事项：{note}
 {multimodal_instruction}
@@ -342,6 +350,18 @@ def _build_prompt(
 3. 内容必须精炼！把讲稿的完整表述压缩为幻灯片要点，只保留核心信息。
 4. 违反字数限制的输出将被视为无效，必须重新生成。
 5. 务必记住讲稿中提到的主讲人姓名、课程/讲座/项目名称等关键专有名词，并在所有需要这些信息的字段保持完全一致，不要改写。
+{
+        ""
+        if not metadata
+        else f'''
+📋 预设元信息（必须使用）：
+以下是用户预设的关键信息，请优先将这些信息填入对应的字段：
+{f"- 课程/项目名称：{metadata['course']}" if metadata.get('course') else ""}
+{f"- 学院/单位名称：{metadata['college']}" if metadata.get('college') else ""}
+{f"- 主讲人/讲师：{metadata['lecturer']}" if metadata.get('lecturer') else ""}
+请根据字段名称的语义，将上述信息填入最匹配的字段（如"主标题"、"课程名"、"讲师"、"单位"等）。
+'''
+    }
 
 该模板包含如下文本字段（按照顺序对应）：
 {text_desc}
@@ -391,10 +411,16 @@ def _build_multimodal_messages(
     raw_text: str,
     images: List[str],
     user_prompt: Optional[str] = None,
+    metadata: Optional[Dict] = None,
 ) -> List[Dict]:
     """构建多模态消息，用于 Taichu-VL 或 GLMV。"""
     prompt_text = _build_prompt(
-        template_info, raw_text, images, is_multimodal=True, user_prompt=user_prompt
+        template_info,
+        raw_text,
+        images,
+        is_multimodal=True,
+        user_prompt=user_prompt,
+        metadata=metadata,
     )
 
     content: List[Dict[str, Any]] = [{"type": "text", "text": prompt_text}]
@@ -454,6 +480,7 @@ def llm_fill_slide(
     images: List[str],
     user_prompt: Optional[str] = None,
     use_multimodal: bool = True,
+    metadata: Optional[Dict] = None,
 ) -> Dict:
     """
     使用 LLM 填充单页幻灯片内容。
@@ -466,6 +493,7 @@ def llm_fill_slide(
         user_prompt: 用户自定义 prompt
         use_multimodal: 是否使用多模态消息（默认 True）
                        当讲稿有 PPT 标记时，图片位置已确定，可设为 False
+        metadata: 元数据（课程名称、学院名称、讲师名称）
     """
     if not llm:
         return _simple_fill(template_info, raw_text, images)
@@ -473,10 +501,12 @@ def llm_fill_slide(
     # 只有在允许使用多模态且模型支持多模态且有图片时，才使用多模态消息
     if use_multimodal and _is_multimodal_llm(llm) and images:
         messages = _build_multimodal_messages(
-            template_info, raw_text, images, user_prompt
+            template_info, raw_text, images, user_prompt, metadata
         )
     else:
-        prompt = _build_prompt(template_info, raw_text, images, user_prompt=user_prompt)
+        prompt = _build_prompt(
+            template_info, raw_text, images, user_prompt=user_prompt, metadata=metadata
+        )
         messages = [{"role": "user", "content": prompt}]
 
     if DEBUG_LLM:
@@ -687,9 +717,10 @@ def llm_preprocess_script(
     templates: Dict[int, Dict],
     images: List[str],
     user_prompt: Optional[str] = None,
+    has_marker: bool = False,
 ) -> str:
     """
-    使用 LLM 将原始讲稿预处理为带【PPT】标记的中间讲稿。
+    使用 LLM 预处理讲稿。
 
     Args:
         llm: LLM 实例
@@ -697,6 +728,7 @@ def llm_preprocess_script(
         templates: 模板定义字典
         images: 图片路径列表
         user_prompt: 用户自定义提示
+        has_marker: 讲稿是否已有【PPT】标记
 
     Returns:
         带有【PPT1】【PPT2】等标记的 Markdown 格式讲稿
@@ -710,6 +742,7 @@ def llm_preprocess_script(
         text_count = len(info["text_fields"])
         image_count = len(info["image_fields"])
         page_type = info["page_type"]
+        has_required_image = any(f.get("required") for f in info["image_fields"])
 
         # 获取文本字段的详细信息
         text_fields_desc = []
@@ -721,9 +754,13 @@ def llm_preprocess_script(
         image_fields_desc = []
         for field in info["image_fields"]:
             name = field.get("name", "图片")
-            image_fields_desc.append(f"    - {name}")
+            required = "必填" if field.get("required") else "可选"
+            image_fields_desc.append(f"    - {name}（{required}）")
 
-        desc = f"【PPT{num}】{page_type}\n  文本字段({text_count}个):\n"
+        desc = f"【PPT{num}】{page_type}"
+        if has_required_image:
+            desc += " ⚠️需要图片"
+        desc += f"\n  文本字段({text_count}个):\n"
         desc += "\n".join(text_fields_desc) if text_fields_desc else "    （无）"
         if image_count > 0:
             desc += f"\n  图片字段({image_count}个):\n"
@@ -732,36 +769,76 @@ def llm_preprocess_script(
 
     template_desc = "\n\n".join(template_desc_lines)
 
-    # 图片信息和模板限制
-    if images:
-        image_info = f"讲稿中包含 {len(images)} 张图片，请在适当位置保留图片引用。"
-        # 所有模板都可用
-        available_templates = list(templates.keys())
-    else:
-        image_info = "⚠️ 讲稿中【没有图片】，请【只选择不包含图片字段的模板】！"
-        # 只保留没有图片字段的模板
-        available_templates = [
-            num for num, info in templates.items() if len(info["image_fields"]) == 0
-        ]
-        image_info += f"\n可用模板编号：{available_templates}"
+    # 根据是否已有标记，构建不同的 prompt
+    if has_marker:
+        # 已有标记：保持分页，只优化文本
+        prompt = f"""你是一位专业的演讲稿编辑。讲稿已经分好页了，请**保持原有分页结构**，只优化文本表达。
 
-    prompt = f"""你是一位专业的演讲稿编辑。请将以下原始讲稿改写为适合 PPT 演示的正式演讲稿。
+## 任务说明
+
+1. **保持分页不变**：讲稿中的【PPT编号】标记表示分页，必须原样保留，不能修改、删除或重新分配
+2. **优化文本表达**：将口语化表达改为正式书面语，但不改变语义
+3. **保持内容完整**：不要精简或删减内容，保持原文语义完整
+
+⚠️ **重要**：分页已由用户指定，你只能优化文本，不能改变分页！
+
+## 可用模板（仅供参考）
+
+{template_desc}
+
+## 注意事项
+
+1. 【PPT编号】标记必须原样保留，不能修改
+2. 不要精简内容，保持讲稿原文的完整性
+3. 保留所有图片引用 `[图片资源: ...]`，位置不变
+4. 不要输出任何解释说明，只输出优化后的讲稿
+
+## 原始讲稿
+
+{doc_text}
+"""
+    else:
+        # 无标记：自动分页
+        # 图片信息和模板限制
+        if images:
+            image_info = f"讲稿中包含 {len(images)} 张图片，请在适当位置保留图片引用。"
+        else:
+            image_info = "⚠️ 讲稿中【没有图片】！"
+            # 找出需要图片的模板
+            templates_need_image = [
+                num
+                for num, info in templates.items()
+                if any(f.get("required") for f in info["image_fields"])
+            ]
+            if templates_need_image:
+                image_info += (
+                    f"\n【禁止】使用以下需要图片的模板：{templates_need_image}"
+                )
+
+        prompt = f"""你是一位专业的演讲稿编辑。请将以下原始讲稿**分页**，为每个部分选择合适的 PPT 模板。
 
 ## 任务说明
 
 1. **分析讲稿结构**：理解讲稿的主题、逻辑和内容层次
 2. **选择合适模板**：根据内容为每个部分选择最合适的 PPT 模板
 3. **添加页码标记**：在每个部分开头用【PPT编号】标记该部分使用的模板
-4. **优化表达**：将内容改写为正式、简洁的演讲风格，但不改变原意
-5. **控制篇幅**：根据每个模板的字数限制，精简内容使其适合 PPT 展示
+4. **保持内容完整**：不要精简或删减内容，保持原文语义完整，只需将口语化表达改为正式书面语
+
+⚠️ **重要**：这一步只负责**分页和选择模板**，不要精简内容！
 
 ## 可用模板
 
 {template_desc}
 
-## 图片信息
+## 图片处理规则
 
 {image_info}
+
+**图片与模板匹配规则**：
+- 图片标记 `[图片资源: xxx]` 必须与其**紧邻的上方文本**分到同一页
+- 如果某页内容包含图片，应选择带图片字段的模板
+- 如果某页内容**没有图片**，**禁止**选择标有"⚠️需要图片"的模板
+- 图片是对上方文本的说明或示例，不能与文本分离
 
 ## 输出格式要求
 
@@ -771,19 +848,12 @@ def llm_preprocess_script(
 【PPT2】
 # 课程介绍
 
-本课程将带您了解人工智能的基础知识...
-
-【PPT4】
-# 课程目录
-
-1. 机器学习基础
-2. 深度学习入门
-3. 实践案例分析
+本课程将带您了解人工智能的基础知识，涵盖机器学习、深度学习等核心领域。
 
 【PPT5】
 # 机器学习基础
 
-机器学习是人工智能的核心技术...
+机器学习是人工智能的核心技术，它让计算机能够从数据中学习规律。
 
 [图片资源: doc_image_1.png]
 ```
@@ -792,11 +862,10 @@ def llm_preprocess_script(
 
 1. 每个【PPT编号】标记必须独占一行
 2. 编号必须是上面模板列表中存在的编号
-3. **重要**：如果讲稿没有图片，则【禁止】使用带图片字段的模板！
-4. 内容要精炼，适合 PPT 展示，避免大段文字
-5. 保留讲稿中的关键信息、专有名词和数据
-6. 如有图片引用（[图片资源: ...]），请保留在合适的位置
-7. 不要输出任何解释说明，只输出改写后的讲稿
+3. **没有图片的页面禁止使用需要图片的模板**
+4. 不要精简内容，保持讲稿原文的完整性
+5. 图片引用 `[图片资源: ...]` 必须与上方文本保持在同一页
+6. 不要输出任何解释说明，只输出分页后的讲稿
 
 ## 原始讲稿
 
@@ -889,10 +958,17 @@ def _parse_preprocessed_script(
             # 检查是否有图片引用
             img_match = re.search(r"\[图片资源:\s*([^\]]+)\]", line)
             if img_match:
-                img_name = img_match.group(1).strip()
-                img_path = image_dir / img_name
-                if img_path.exists():
-                    current_block["images"].append(str(img_path))
+                img_ref = img_match.group(1).strip()
+                # 支持完整路径和文件名两种格式
+                if os.path.isabs(img_ref) and Path(img_ref).exists():
+                    # 完整路径，直接使用
+                    current_block["images"].append(img_ref)
+                else:
+                    # 文件名，拼接 image_dir
+                    img_name = Path(img_ref).name  # 取文件名部分
+                    img_path = image_dir / img_name
+                    if img_path.exists():
+                        current_block["images"].append(str(img_path))
                 # 从文本中移除图片标记
                 line = re.sub(r"\[图片资源:\s*[^\]]+\]", "", line)
 
@@ -1033,7 +1109,9 @@ def _fill_with_template(
         block.get("images", []),
         user_prompt,
         use_multimodal,
+        metadata,  # 传递 metadata 给 LLM
     )
+    # 备用：如果 LLM 没有正确填充 metadata，尝试通过关键词匹配填充
     _apply_metadata_overrides(content, template_info, metadata)
     return {
         "page_type": template_info["page_type"],
@@ -1061,18 +1139,49 @@ def _empty_content(template_info: Dict) -> Dict:
     return result
 
 
-def _prepend_cover_page(pages: List[Dict], templates: Dict[int, Dict]):
+def _prepend_cover_page(
+    pages: List[Dict],
+    templates: Dict[int, Dict],
+    metadata: Dict = None,
+    llm: Optional[BaseLLM] = None,
+):
+    """在页面列表开头插入封面页，并应用元数据（课程名称、学院名称、讲师名称）。"""
     cover_template = templates.get(1)
     if not cover_template:
         return
     if pages and pages[0].get("template_page_num") == 1:
+        # 封面页已存在，确保应用 metadata
+        if metadata:
+            _apply_metadata_overrides(
+                pages[0].get("content", {}), cover_template, metadata
+            )
         return
+
+    # 创建封面页内容
+    if llm and metadata:
+        # 使用 LLM 智能填充封面页（让 LLM 根据字段名称语义匹配 metadata）
+        cover_text = "这是封面页，请根据预设元信息填充相应字段。"
+        content = llm_fill_slide(
+            llm,
+            cover_template,
+            cover_text,
+            [],  # 封面页通常没有图片
+            None,  # user_prompt
+            False,  # use_multimodal
+            metadata,
+        )
+    else:
+        # 没有 LLM，使用关键词匹配
+        content = _empty_content(cover_template)
+        if metadata:
+            _apply_metadata_overrides(content, cover_template, metadata)
+
     pages.insert(
         0,
         {
             "page_type": cover_template["page_type"],
             "template_page_num": 1,
-            "content": _empty_content(cover_template),
+            "content": content,
         },
     )
 
@@ -1113,20 +1222,21 @@ def _fill_by_markers(
     return pages
 
 
-def _plan_without_markers(
+def _preprocess_and_fill(
     blocks: List[Dict],
     templates: Dict[int, Dict],
-    llm: BaseLLM,
+    llm: Optional[BaseLLM],
     metadata: Dict,
     user_prompt: Optional[str] = None,
     run_dir: Optional[Path] = None,
+    has_marker: bool = False,
 ) -> List[Dict]:
     """
-    处理没有【PPT】标记的讲稿。
+    统一的讲稿处理流程（两步处理）。
 
-    新流程（两步处理）：
-    1. 预分页：让 LLM 将原始讲稿改写为带【PPT】标记的中间讲稿
-    2. 填充：复用 _fill_by_markers 处理中间讲稿
+    无论讲稿是否已有【PPT】标记，都统一走此流程：
+    1. 预处理：让 LLM 优化语法；如果已有标记则保持分页，否则自动分页
+    2. 填充：根据模板字段精简内容，生成最终 JSON
 
     Args:
         blocks: 原始讲稿的 block 列表
@@ -1135,23 +1245,49 @@ def _plan_without_markers(
         metadata: 元数据
         user_prompt: 用户自定义提示
         run_dir: 运行目录，用于保存中间讲稿
+        has_marker: 原始讲稿是否已有【PPT】标记
 
     Returns:
         填充后的页面列表
     """
     if not llm:
-        raise ValueError("讲稿未指定 PPT 标记且未启用 LLM，无法自动分配模板。")
+        raise ValueError("未启用 LLM，无法处理讲稿。")
 
-    # 合并所有 block 的文本和图片
-    doc_text = "\n\n".join(
-        block.get("text", "") for block in blocks if block.get("text")
-    )
+    # 合并所有 block 的文本和图片，使用 block["images"] 中的完整路径
+    if has_marker:
+        # 已有标记：保留【PPT】标记结构
+        doc_parts = []
+        for block in blocks:
+            text = block.get("text", "")
+            template_hint = block.get("template_hint")
+            # 构建页面内容（文本 + 图片引用）
+            page_content = text
+            for img_path in block.get("images", []):
+                page_content += f"\n[图片资源: {img_path}]"
+            if template_hint is not None:
+                doc_parts.append(f"【PPT{template_hint}】\n{page_content}")
+            elif page_content.strip():
+                doc_parts.append(page_content)
+        doc_text = "\n\n".join(doc_parts)
+    else:
+        # 无标记：合并所有文本和图片
+        doc_parts = []
+        for block in blocks:
+            text = block.get("text", "")
+            for img_path in block.get("images", []):
+                text += f"\n[图片资源: {img_path}]"
+            if text.strip():
+                doc_parts.append(text)
+        doc_text = "\n\n".join(doc_parts)
     all_images = [path for block in blocks for path in block.get("images", [])]
 
-    # Step 1: 预分页 - 生成带【PPT】标记的中间讲稿
-    print("📝 Step 1: 预处理讲稿（生成带标记的中间讲稿）...")
+    # Step 1: 预处理讲稿
+    if has_marker:
+        print("📝 Step 1: 优化讲稿文本（保持原有分页）...")
+    else:
+        print("📝 Step 1: 预处理讲稿（自动分页）...")
     preprocessed_script = llm_preprocess_script(
-        llm, doc_text, templates, all_images, user_prompt
+        llm, doc_text, templates, all_images, user_prompt, has_marker
     )
 
     # 保存中间讲稿到文件（供管理员/开发者下载）
@@ -1199,17 +1335,17 @@ def generate_config_data(
     templates = load_template_defs(template_json, template_list)
     llm = choose_llm(use_llm, llm_provider, llm_model, llm_base_url)
 
-    if has_marker:
-        pages = _fill_by_markers(blocks, templates, llm, metadata, user_prompt)
-    else:
-        pages = _plan_without_markers(
-            blocks, templates, llm, metadata, user_prompt, run_dir
-        )
+    # 统一走预处理流程：
+    # - 如果已有标记：保持分页，只优化文本
+    # - 如果无标记：自动分页 + 优化文本
+    pages = _preprocess_and_fill(
+        blocks, templates, llm, metadata, user_prompt, run_dir, has_marker
+    )
 
     if not pages:
         raise ValueError("未生成任何幻灯片内容，请检查讲稿或模板。")
 
-    _prepend_cover_page(pages, templates)
+    _prepend_cover_page(pages, templates, metadata, llm)
 
     stripped_pages = []
     for page in pages:

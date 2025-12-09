@@ -1,0 +1,2246 @@
+{
+  "manifest": [
+    {
+      "template_page_num": 1,
+      "page_type": "封面页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 2,
+      "page_type": "章节页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 3,
+      "page_type": "章节页多字版",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 4,
+      "page_type": "目录页",
+      "text_slots": 9,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 5,
+      "page_type": "目录页",
+      "text_slots": 9,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 6,
+      "page_type": "内容页",
+      "text_slots": 6,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 7,
+      "page_type": "内容页",
+      "text_slots": 8,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 8,
+      "page_type": "内容页多字版",
+      "text_slots": 5,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 9,
+      "page_type": "流程内容页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 10,
+      "page_type": "内容页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 11,
+      "page_type": "内容页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 12,
+      "page_type": "内容页",
+      "text_slots": 12,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 13,
+      "page_type": "内容页",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 14,
+      "page_type": "内容页",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 15,
+      "page_type": "内容页",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 16,
+      "page_type": "内容页",
+      "text_slots": 12,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 17,
+      "page_type": "内容页",
+      "text_slots": 10,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 18,
+      "page_type": "图文页",
+      "text_slots": 8,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 19,
+      "page_type": "内容页",
+      "text_slots": 8,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 20,
+      "page_type": "图文页",
+      "text_slots": 7,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 21,
+      "page_type": "图文页",
+      "text_slots": 3,
+      "image_slots": 6
+    },
+    {
+      "template_page_num": 22,
+      "page_type": "图文页",
+      "text_slots": 3,
+      "image_slots": 8
+    },
+    {
+      "template_page_num": 23,
+      "page_type": "图文页",
+      "text_slots": 7,
+      "image_slots": 4
+    },
+    {
+      "template_page_num": 24,
+      "page_type": "图文页",
+      "text_slots": 7,
+      "image_slots": 2
+    },
+    {
+      "template_page_num": 25,
+      "page_type": "过渡页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 26,
+      "page_type": "内容页",
+      "text_slots": 5,
+      "image_slots": 1
+    },
+    {
+      "template_page_num": 27,
+      "page_type": "过渡页",
+      "text_slots": 3,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 28,
+      "page_type": "封面页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 29,
+      "page_type": "内容页",
+      "text_slots": 5,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 30,
+      "page_type": "视频页",
+      "text_slots": 2,
+      "image_slots": 0
+    },
+    {
+      "template_page_num": 31,
+      "page_type": "视频页",
+      "text_slots": 2,
+      "image_slots": 0
+    }
+  ],
+  "ppt_pages": [
+    {
+      "page_type": "封面页",
+      "page_note": "展示演讲主题和所属单位信息",
+      "template_page_num": 1,
+      "content": {
+        "学院名称": {
+          "type": "text",
+          "hint": "填写所属单位/学院名称",
+          "required": true,
+          "value": "",
+          "max_chars": 7
+        },
+        "主标题": {
+          "type": "text",
+          "hint": "填写核心主题内容",
+          "required": true,
+          "value": "",
+          "max_chars": 18
+        }
+      },
+      "meta": {
+        "layout": "封面页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "展示演讲主题和所属单位信息"
+      }
+    },
+    {
+      "page_type": "章节页",
+      "page_note": "展示章节及知识点结构，标注主讲人信息",
+      "template_page_num": 2,
+      "content": {
+        "章节标题": {
+          "type": "text",
+          "hint": "填写章节名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "知识点标题": {
+          "type": "text",
+          "hint": "填写知识点名称",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "主讲人姓名": {
+          "type": "text",
+          "hint": "填写主讲人姓名",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        }
+      },
+      "meta": {
+        "layout": "章节页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "展示章节及知识点结构，标注主讲人信息"
+      }
+    },
+    {
+      "page_type": "章节页多字版",
+      "page_note": "展示章节和小节标题及主讲人信息",
+      "template_page_num": 3,
+      "content": {
+        "章节标题": {
+          "type": "text",
+          "hint": "填写章节名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "知识点标题": {
+          "type": "text",
+          "hint": "填写小节知识点名称",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "主讲人姓名": {
+          "type": "text",
+          "hint": "填写主讲人姓名",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        }
+      },
+      "meta": {
+        "layout": "章节页多字版",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": "展示章节及知识点结构，标注主讲人信息"
+      }
+    },
+    {
+      "page_type": "目录页",
+      "page_note": "展示课程或演讲的主要章节结构",
+      "template_page_num": 4,
+      "content": {
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程名称或演讲主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "章节标题1": {
+          "type": "text",
+          "hint": "填写该章节的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容1": {
+          "type": "text",
+          "hint": "填写对应章节的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "章节标题2": {
+          "type": "text",
+          "hint": "填写该章节的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容2": {
+          "type": "text",
+          "hint": "填写对应章节的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "章节标题3": {
+          "type": "text",
+          "hint": "填写该章节的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容3": {
+          "type": "text",
+          "hint": "填写对应章节的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "章节标题4": {
+          "type": "text",
+          "hint": "填写该章节的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容4": {
+          "type": "text",
+          "hint": "填写对应章节的简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        }
+      },
+      "meta": {
+        "layout": "目录页",
+        "scene": [],
+        "style": "",
+        "text_slots": 9,
+        "image_slots": 0,
+        "notes": "展示课程或演讲的主要章节结构"
+      }
+    },
+    {
+      "page_type": "目录页",
+      "page_note": "展示课程或演讲的主要章节结构及简要内容",
+      "template_page_num": 5,
+      "content": {
+        "章节标题4": {
+          "type": "text",
+          "hint": "填写第4章标题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容4": {
+          "type": "text",
+          "hint": "填写第4章内容简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "章节标题1": {
+          "type": "text",
+          "hint": "填写第1章标题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容1": {
+          "type": "text",
+          "hint": "填写第1章简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "章节标题2": {
+          "type": "text",
+          "hint": "填写第2章标题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容2": {
+          "type": "text",
+          "hint": "填写第2章内容简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "章节标题3": {
+          "type": "text",
+          "hint": "填写第3章标题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "章节内容3": {
+          "type": "text",
+          "hint": "填写第3章内容简介",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程名称或演讲主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "目录页",
+        "scene": [],
+        "style": "",
+        "text_slots": 9,
+        "image_slots": 0,
+        "notes": "展示课程或演讲的主要章节结构及简要内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "用于呈现核心主题及多段详细说明内容",
+      "template_page_num": 6,
+      "content": {
+        "主标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "正文内容 1": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "正文内容 2": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": false,
+          "value": "",
+          "max_chars": 32
+        },
+        "正文内容 3": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "正文内容 4": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 6,
+        "image_slots": 0,
+        "notes": "用于呈现核心主题及多段详细说明内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "展示多模块内容的详细讲解页面",
+      "template_page_num": 7,
+      "content": {
+        "模块1标题": {
+          "type": "text",
+          "hint": "填写模块1的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "模块1内容": {
+          "type": "text",
+          "hint": "填写模块1的具体内容",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "主标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "模块2标题": {
+          "type": "text",
+          "hint": "填写模块2的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "模块2内容": {
+          "type": "text",
+          "hint": "填写模块2的具体内容",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "模块3标题": {
+          "type": "text",
+          "hint": "填写模块3的主题",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "模块3内容": {
+          "type": "text",
+          "hint": "填写模块3的具体内容",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "侧边图片": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 8,
+        "image_slots": 1,
+        "notes": "展示多模块内容的详细讲解页面"
+      }
+    },
+    {
+      "page_type": "内容页多字版",
+      "page_note": "展示多层级标题、正文内容及辅助配图的通用内容页",
+      "template_page_num": 8,
+      "content": {
+        "文字内容": {
+          "type": "text",
+          "hint": "可以填写超长文字内容",
+          "required": true,
+          "value": "",
+          "max_chars": 192
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写三级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "配图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "内容页多字版",
+        "scene": [],
+        "style": "",
+        "text_slots": 5,
+        "image_slots": 1,
+        "notes": "展示多层级标题、正文内容及辅助配图的通用内容页"
+      }
+    },
+    {
+      "page_type": "流程内容页",
+      "page_note": "用于展示流程步骤及各环节详细内容",
+      "template_page_num": 9,
+      "content": {
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "正文段落": {
+          "type": "text",
+          "hint": "填写详细内容说明",
+          "required": true,
+          "value": "",
+          "max_chars": 80
+        },
+        "要点列表": {
+          "type": "text",
+          "hint": "列出关键要点",
+          "required": false,
+          "value": "",
+          "max_chars": 60
+        },
+        "分点内容": {
+          "type": "text",
+          "hint": "填写分点阐述内容",
+          "required": false,
+          "value": "",
+          "max_chars": 60
+        },
+        "子项内容": {
+          "type": "text",
+          "hint": "填写子项目具体内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "流程内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "用于展示流程步骤及各环节详细内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "",
+      "template_page_num": 10,
+      "content": {
+        "二级标题": {
+          "type": "text",
+          "hint": "填写子主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写细分主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "左侧区域标题": {
+          "type": "text",
+          "hint": "填写该区域主题",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "区域标题": {
+          "type": "text",
+          "hint": "填写区域标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "右侧区域标题": {
+          "type": "text",
+          "hint": "填写该区域主题",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "请根据实际需要填写内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "展示章节主题与对比表格内容",
+      "template_page_num": 11,
+      "content": {
+        "二级标题": {
+          "type": "text",
+          "hint": "填写子主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写细分主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程标识": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写本章主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "右侧表格标题": {
+          "type": "text",
+          "hint": "填写表格主题",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "标题": {
+          "type": "text",
+          "hint": "填写标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "左侧表格标题": {
+          "type": "text",
+          "hint": "填写表格主题",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": "展示章节主题与对比表格内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "",
+      "template_page_num": 12,
+      "content": {
+        "三级标题": {
+          "type": "text",
+          "hint": "填写本页核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写总课程名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "文字内容 4": {
+          "type": "text",
+          "hint": "填写该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "标签 4": {
+          "type": "text",
+          "hint": "填写简单 2 字标签",
+          "required": true,
+          "value": "",
+          "max_chars": 2
+        },
+        "文字内容 3": {
+          "type": "text",
+          "hint": "填写该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "标签 3": {
+          "type": "text",
+          "hint": "填写标签的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 2
+        },
+        "文字内容 2": {
+          "type": "text",
+          "hint": "填写该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "标签 2": {
+          "type": "text",
+          "hint": "填写标签的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 2
+        },
+        "文字内容 1": {
+          "type": "text",
+          "hint": "填写该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "标签 1": {
+          "type": "text",
+          "hint": "填写标签的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 2
+        },
+        "配图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 12,
+        "image_slots": 1,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "",
+      "template_page_num": 13,
+      "content": {
+        "页面标识": {
+          "type": "text",
+          "hint": "填写课程或模块名称",
+          "required": false,
+          "value": "",
+          "max_chars": 20
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写三级标题",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "表格内容 1": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 1": {
+          "type": "text",
+          "hint": "填写该列表格标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        },
+        "表格内容2": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 2": {
+          "type": "text",
+          "hint": "填写标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        },
+        "表格内容3": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 3": {
+          "type": "text",
+          "hint": "填写表格该列标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        },
+        "表格标题4": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 4": {
+          "type": "text",
+          "hint": "填写表格该列标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "展示课程主题与多层级标题及表格内容",
+      "template_page_num": 14,
+      "content": {
+        "课程标识": {
+          "type": "text",
+          "hint": "填写课程名称",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "三级子标题": {
+          "type": "text",
+          "hint": "填写三级标题内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "主标题": {
+          "type": "text",
+          "hint": "填写一级标题内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "表格内容 1": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 1": {
+          "type": "text",
+          "hint": "填写该列表格标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        },
+        "表格内容 2": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 2": {
+          "type": "text",
+          "hint": "填写表格该列标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        },
+        "表格内容 3": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "表格标题 3": {
+          "type": "text",
+          "hint": "填写该列表格标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        },
+        "表格内容 4": {
+          "type": "text",
+          "hint": "填写表格该列内容，四字一换行",
+          "required": true,
+          "value": "",
+          "max_chars": 14
+        },
+        "表格标题 4": {
+          "type": "text",
+          "hint": "填写该列表格标题",
+          "required": true,
+          "value": "",
+          "max_chars": 4
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "展示课程主题与多层级标题及表格内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "展示课程主题与分栏详细内容",
+      "template_page_num": 15,
+      "content": {
+        "右栏内容 1": {
+          "type": "text",
+          "hint": "填写右栏第一段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "右栏内容 2": {
+          "type": "text",
+          "hint": "填写右栏第二段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "右栏内容 3": {
+          "type": "text",
+          "hint": "填写右栏第三段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "右栏内容 4": {
+          "type": "text",
+          "hint": "填写右栏第四段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏内容 1": {
+          "type": "text",
+          "hint": "填写左栏第一段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏内容2": {
+          "type": "text",
+          "hint": "填写左栏第二段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "左栏内容3": {
+          "type": "text",
+          "hint": "填写左栏第三段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏内容4": {
+          "type": "text",
+          "hint": "填写左栏第四段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "细化主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程全称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "展示课程主题与分栏详细内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "展示多模块并列内容",
+      "template_page_num": 16,
+      "content": {
+        "左栏文字内容 3": {
+          "type": "text",
+          "hint": "填写左栏文字内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏文字内容2": {
+          "type": "text",
+          "hint": "填写文字内容2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏文字内容1": {
+          "type": "text",
+          "hint": "填写文字内容1的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "左栏文字标题": {
+          "type": "text",
+          "hint": "填写文字标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "右栏文字内容 3": {
+          "type": "text",
+          "hint": "填写右栏文字内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "右栏文字内容2": {
+          "type": "text",
+          "hint": "填写文字内容2的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "右栏文字内容1": {
+          "type": "text",
+          "hint": "填写文字内容1的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "右栏标题": {
+          "type": "text",
+          "hint": "填写右栏标题",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写三级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或报告总名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 12,
+        "image_slots": 0,
+        "notes": "展示多模块并列内容"
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "",
+      "template_page_num": 17,
+      "content": {
+        "模块内容 3": {
+          "type": "text",
+          "hint": "填写第一个模块详细内容",
+          "required": true,
+          "value": "",
+          "max_chars": 48
+        },
+        "文字标题 3": {
+          "type": "text",
+          "hint": "填写文字标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "模块内容 2": {
+          "type": "text",
+          "hint": "填写第一个模块详细内容",
+          "required": true,
+          "value": "",
+          "max_chars": 48
+        },
+        "文字标题 2": {
+          "type": "text",
+          "hint": "填写文字标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "模块内容 1": {
+          "type": "text",
+          "hint": "填写第一个模块详细内容",
+          "required": true,
+          "value": "",
+          "max_chars": 48
+        },
+        "文字标题 1": {
+          "type": "text",
+          "hint": "填写文字标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写细分项标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "课程名称": {
+          "type": "text",
+          "hint": "填写整体课程或主题名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 10,
+        "image_slots": 0,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "图文页",
+      "page_note": "",
+      "template_page_num": 18,
+      "content": {
+        "核心内容": {
+          "type": "text",
+          "hint": "填写本页核心观点或摘要",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
+        "正文段落": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": true,
+          "value": "",
+          "max_chars": 32
+        },
+        "要点列表": {
+          "type": "text",
+          "hint": "填写关键要点",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "子要点": {
+          "type": "text",
+          "hint": "填写次要要点",
+          "required": true,
+          "value": "",
+          "max_chars": 16
+        },
+        "主图": {
+          "type": "image",
+          "hint": "插入相关主题图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写三级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写一级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写整体课程名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "图文页",
+        "scene": [],
+        "style": "",
+        "text_slots": 8,
+        "image_slots": 1,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "",
+      "template_page_num": 19,
+      "content": {
+        "正文内容1": {
+          "type": "text",
+          "hint": "填写详细内容",
+          "required": false,
+          "value": "",
+          "max_chars": 64
+        },
+        "正文内容2": {
+          "type": "text",
+          "hint": "填写详细内容",
+          "required": false,
+          "value": "",
+          "max_chars": 60
+        },
+        "正文内容3": {
+          "type": "text",
+          "hint": "填写详细内容",
+          "required": false,
+          "value": "",
+          "max_chars": 60
+        },
+        "正文内容4": {
+          "type": "text",
+          "hint": "填写详细内容",
+          "required": false,
+          "value": "",
+          "max_chars": 60
+        },
+        "课程标识": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写子章节标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "一级标题": {
+          "type": "text",
+          "hint": "填写主要章节标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写次级章节标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 8,
+        "image_slots": 0,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "图文页",
+      "page_note": "",
+      "template_page_num": 20,
+      "content": {
+        "正文内容1": {
+          "type": "text",
+          "hint": "填写本部分核心内容",
+          "required": true,
+          "value": "",
+          "max_chars": 28
+        },
+        "正文内容2": {
+          "type": "text",
+          "hint": "填写本部分核心内容",
+          "required": true,
+          "value": "",
+          "max_chars": 28
+        },
+        "正文内容3": {
+          "type": "text",
+          "hint": "填写本部分核心内容",
+          "required": true,
+          "value": "",
+          "max_chars": 28
+        },
+        "课程标识": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写第三级标题内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "主标题": {
+          "type": "text",
+          "hint": "填写本页主要标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写第二级标题内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "主图": {
+          "type": "image",
+          "hint": "插入与本页内容相关的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "图文页",
+        "scene": [],
+        "style": "",
+        "text_slots": 7,
+        "image_slots": 1,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "图文页",
+      "page_note": "用于展示多组图文信息的通用页面",
+      "template_page_num": 21,
+      "content": {
+        "配图3": {
+          "type": "image",
+          "hint": "添加相关图片内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "配图2": {
+          "type": "image",
+          "hint": "添加相关图片内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "配图1": {
+          "type": "image",
+          "hint": "添加相关图片内容",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "图片描述 1": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
+        "图片描述 2": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
+        "图片描述 3": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写三级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写二级标题的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "图文页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 6,
+        "notes": "用于展示多组图文信息的通用页面"
+      }
+    },
+    {
+      "page_type": "图文页",
+      "page_note": "",
+      "template_page_num": 22,
+      "content": {
+        "图片描述 1": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 8
+        },
+        "图片描述 2": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 8
+        },
+        "图片描述 3": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "图片描述 4": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": true,
+          "value": "",
+          "max_chars": 8
+        },
+        "课程总标题": {
+          "type": "text",
+          "hint": "填写整体课程名称",
+          "required": true,
+          "value": "",
+          "max_chars": 15
+        },
+        "三级子标题": {
+          "type": "text",
+          "hint": "填写细分主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级主标题": {
+          "type": "text",
+          "hint": "填写本部分核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "第一插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "第三插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "第二插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "第四插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "图文页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 8,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "图文页",
+      "page_note": "展示课程主题与分点内容",
+      "template_page_num": 23,
+      "content": {
+        "正文内容1": {
+          "type": "text",
+          "hint": "填写该模块的文字说明",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "正文内容2": {
+          "type": "text",
+          "hint": "填写该模块的文字说明",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "正文内容4": {
+          "type": "text",
+          "hint": "填写该模块的文字说明",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "正文内容3": {
+          "type": "text",
+          "hint": "填写该模块的文字说明",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "课程总标题": {
+          "type": "text",
+          "hint": "填写整体课程名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写该部分的子标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "二级标题": {
+          "type": "text",
+          "hint": "填写该部分的主要标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "配图1": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "配图3": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "配图2": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "配图4": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "图文页",
+        "scene": [],
+        "style": "",
+        "text_slots": 7,
+        "image_slots": 4,
+        "notes": "展示课程主题与分点内容"
+      }
+    },
+    {
+      "page_type": "图文页",
+      "page_note": "展示主题内容和视觉素材",
+      "template_page_num": 24,
+      "content": {
+        "子标题": {
+          "type": "text",
+          "hint": "填写章节或子主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "正文内容": {
+          "type": "text",
+          "hint": "填写详细内容",
+          "required": false,
+          "value": "",
+          "max_chars": 80
+        },
+        "图片说明": {
+          "type": "image",
+          "hint": "填写图片相关说明",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
+        "关键词1": {
+          "type": "text",
+          "hint": "填写关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "关键词2": {
+          "type": "text",
+          "hint": "填写关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "关键词3": {
+          "type": "text",
+          "hint": "填写关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "关键词4": {
+          "type": "text",
+          "hint": "填写关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "主图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "课程名称": {
+          "type": "text",
+          "hint": "填写课程整体名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "图文页",
+        "scene": [],
+        "style": "",
+        "text_slots": 7,
+        "image_slots": 2,
+        "notes": "展示主题内容和视觉素材"
+      }
+    },
+    {
+      "page_type": "过渡页",
+      "page_note": "",
+      "template_page_num": 25,
+      "content": {
+        "关键词 1": {
+          "type": "text",
+          "hint": "填写关键要点或关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "课程标题": {
+          "type": "text",
+          "hint": "填写课程或演讲主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "关键词 2": {
+          "type": "text",
+          "hint": "填写核心关键词或要点",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        }
+      },
+      "meta": {
+        "layout": "过渡页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "",
+      "template_page_num": 26,
+      "content": {
+        "三级标题": {
+          "type": "text",
+          "hint": "填写当前页面标题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "文字内容 1": {
+          "type": "text",
+          "hint": "填写精简的关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文字内容 2": {
+          "type": "text",
+          "hint": "填写精简的关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "文字内容 3": {
+          "type": "text",
+          "hint": "填写精简的关键词",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "课程名称": {
+          "type": "text",
+          "hint": "填写课程整体名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "主要配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 5,
+        "image_slots": 1,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "过渡页",
+      "page_note": "",
+      "template_page_num": 27,
+      "content": {
+        "主标题": {
+          "type": "text",
+          "hint": "填写核心主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "内容要点 2": {
+          "type": "text",
+          "hint": "填写关键词或精简文字内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "内容要点 1": {
+          "type": "text",
+          "hint": "填写关键词或精简文字内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "过渡页",
+        "scene": [],
+        "style": "",
+        "text_slots": 3,
+        "image_slots": 0,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "封面页",
+      "page_note": "",
+      "template_page_num": 28,
+      "content": {
+        "主讲人姓名": {
+          "type": "text",
+          "hint": "填写主讲人姓名",
+          "required": true,
+          "value": "",
+          "max_chars": 5
+        },
+        "课程名称": {
+          "type": "text",
+          "hint": "填写课程或演讲主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "封面页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": ""
+      }
+    },
+    {
+      "page_type": "内容页",
+      "page_note": "展示课程章节主题与核心要点",
+      "template_page_num": 29,
+      "content": {
+        "章节标题": {
+          "type": "text",
+          "hint": "填写章节主题",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "要点内容1": {
+          "type": "text",
+          "hint": "填写要点内容",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "要点内容2": {
+          "type": "text",
+          "hint": "填写要点内容",
+          "required": false,
+          "value": "",
+          "max_chars": 10
+        },
+        "要点内容3": {
+          "type": "text",
+          "hint": "填写要点内容",
+          "required": false,
+          "value": "",
+          "max_chars": 10
+        },
+        "课程名称": {
+          "type": "text",
+          "hint": "填写整体课程名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "内容页",
+        "scene": [],
+        "style": "",
+        "text_slots": 5,
+        "image_slots": 0,
+        "notes": "展示课程章节主题与核心要点"
+      }
+    },
+    {
+      "page_type": "视频页",
+      "page_note": "用于展示视频内容及课程名称",
+      "template_page_num": 30,
+      "content": {
+        "视频": {
+          "type": "text",
+          "hint": "插入视频预览图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "视频页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "用于展示视频内容及课程名称"
+      }
+    },
+    {
+      "page_type": "视频页",
+      "page_note": "用于展示视频内容及课程基本信息",
+      "template_page_num": 31,
+      "content": {
+        "视频": {
+          "type": "text",
+          "hint": "插入视频预览图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
+        },
+        "总课程名称": {
+          "type": "text",
+          "hint": "填写课程或项目名称",
+          "required": true,
+          "value": "",
+          "max_chars": 10
+        }
+      },
+      "meta": {
+        "layout": "视频页",
+        "scene": [],
+        "style": "",
+        "text_slots": 2,
+        "image_slots": 0,
+        "notes": "用于展示视频内容及课程基本信息"
+      }
+    }
+  ]
+}
