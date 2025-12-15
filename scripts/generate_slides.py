@@ -148,13 +148,14 @@ def _clean_segment(segment, page_prefix):
 
 def _flatten_content(content):
     """
-    展平 content 结构，返回 (path -> value, path -> type) 两个映射。
+    展平 content 结构，返回 (path -> value, path -> type, path -> group_path) 三个映射。
 
-    新版格式：{"字段名": {"type": "text/image", "value": "..."}}
+    新版格式：{"字段名": {"type": "text/image", "value": "...", "group_path": "..."}}
     旧版格式：{"字段名": "..."} 或嵌套结构
     """
     value_mapping = {}
     type_mapping = {}
+    group_mapping = {}  # 记录每个字段的 group_path
 
     def walk(node, path):
         if isinstance(node, dict):
@@ -162,6 +163,8 @@ def _flatten_content(content):
             if "type" in node and "value" in node:
                 value_mapping[path] = node.get("value", "")
                 type_mapping[path] = node.get("type", "text")
+                if node.get("group_path"):
+                    group_mapping[path] = node.get("group_path")
             else:
                 # 嵌套结构，继续遍历
                 for key, value in node.items():
@@ -170,7 +173,7 @@ def _flatten_content(content):
             value_mapping[path] = node
 
     walk(content or {}, tuple())
-    return value_mapping, type_mapping
+    return value_mapping, type_mapping, group_mapping
 
 
 def _shape_aliases(name):
@@ -313,7 +316,7 @@ def _replace_picture(slide, shape, image_path):
 def _fill_slide(slide, page_content, slide_width):
     """根据 JSON 内容把文本和图片写入对应区域。"""
     prefix = _detect_prefix(slide)
-    content_map, type_map = _flatten_content(page_content)
+    content_map, type_map, group_map = _flatten_content(page_content)
     all_shapes = list(_iter_shapes(slide.shapes))
     shapes_by_name = {}
     shapes_by_exact = {}
@@ -321,6 +324,13 @@ def _fill_slide(slide, page_content, slide_width):
     used_text_shapes = set()
     used_picture_shapes = set()
     picture_placeholders = []
+
+    # 收集空内容字段所属的 GROUP（用于删除绑定的装饰元素）
+    empty_groups = set()
+    for path, value in content_map.items():
+        if not value and path in group_map:
+            # 该字段为空，记录其 GROUP 路径
+            empty_groups.add(group_map[path])
 
     for shape in all_shapes:
         if shape.name:
@@ -431,6 +441,59 @@ def _fill_slide(slide, page_content, slide_width):
 
     _clear_default_subtitles(all_shapes)
     _apply_layout_rules(all_shapes, slide_width)
+
+    # 处理空内容 GROUP：删除属于空 GROUP 的所有形状
+    if empty_groups:
+        _delete_empty_group_shapes(slide, empty_groups)
+
+
+def _delete_empty_group_shapes(slide, empty_groups):
+    """
+    删除属于空内容 GROUP 的所有形状。
+
+    当某个内容字段为空时，应该删除与其绑定的整个 GROUP（包括装饰元素）。
+
+    Args:
+        slide: 幻灯片对象
+        empty_groups: 需要删除的 GROUP 路径集合
+    """
+
+    def find_and_delete_groups(shapes, parent_path=""):
+        """递归查找并删除匹配的 GROUP"""
+        groups_to_delete = []
+        for shape in shapes:
+            if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+                group_name = shape.name or ""
+                current_path = (
+                    f"{parent_path}/{group_name}" if parent_path else group_name
+                )
+
+                # 检查当前 GROUP 是否应该删除：
+                # 1. 完全匹配 empty_groups 中的路径
+                # 2. 是 empty_groups 中某个路径的子 GROUP（如 "组合1/子组合" 是 "组合1" 的子级）
+                # 不删除外层 GROUP
+                should_delete = any(
+                    current_path == eg or current_path.startswith(eg + "/")
+                    for eg in empty_groups
+                )
+
+                if should_delete:
+                    groups_to_delete.append(shape)
+                    # 删除 GROUP 会自动删除其所有子元素，无需递归
+                else:
+                    # 递归检查子 GROUP
+                    find_and_delete_groups(shape.shapes, current_path)
+
+        # 删除标记的 GROUP（删除 GROUP 会自动删除其所有子元素）
+        for group in groups_to_delete:
+            try:
+                sp = group._element
+                sp.getparent().remove(sp)
+                print(f"🗑️  已删除空内容 GROUP：{group.name}")
+            except Exception as e:
+                print(f"⚠️  删除 GROUP 失败：{group.name}, 错误：{e}")
+
+    find_and_delete_groups(slide.shapes)
 
 
 def _clear_default_subtitles(shapes):

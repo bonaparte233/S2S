@@ -1027,12 +1027,13 @@ def generate_template_config(request):
                 if shape.get("is_named") and not shape.get("is_hidden"):
                     name = shape["name"]
                     is_text = shape["type"] == "text"
+                    group_path = shape.get("group_path", "")
 
                     if is_text:
                         text_slots += 1
                         # 智能估算 max_chars
                         max_chars = _estimate_max_chars(shape)
-                        content[name] = {
+                        field_config = {
                             "type": "text",
                             "hint": f"填写{name}的内容",
                             "required": True,
@@ -1041,13 +1042,19 @@ def generate_template_config(request):
                         }
                     else:
                         image_slots += 1
-                        content[name] = {
+                        field_config = {
                             "type": "image",
                             "hint": "插入与本页主题相关的图片路径",
                             "required": True,
                             "value": "",
                             "preferred_format": "png/jpg",
                         }
+
+                    # 保留 GROUP 路径信息（用于绑定关系）
+                    if group_path:
+                        field_config["group_path"] = group_path
+
+                    content[name] = field_config
 
             # 只添加有内容的页面
             if content:

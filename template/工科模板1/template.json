@@ -38,51 +38,51 @@
     },
     {
       "template_page_num": 7,
-      "page_type": "内容页",
+      "page_type": "目录页",
       "text_slots": 8,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 8,
       "page_type": "内容页多字版",
       "text_slots": 5,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 9,
       "page_type": "流程内容页",
       "text_slots": 8,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 10,
       "page_type": "内容页",
       "text_slots": 8,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 11,
       "page_type": "内容页",
-      "text_slots": 8,
-      "image_slots": 0
+      "text_slots": 7,
+      "image_slots": 1
     },
     {
       "template_page_num": 12,
       "page_type": "内容页",
       "text_slots": 12,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 13,
       "page_type": "内容页",
       "text_slots": 12,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 14,
       "page_type": "内容页",
       "text_slots": 12,
-      "image_slots": 0
+      "image_slots": 1
     },
     {
       "template_page_num": 15,
@@ -135,7 +135,7 @@
     {
       "template_page_num": 23,
       "page_type": "图文页",
-      "text_slots": 7,
+      "text_slots": 6,
       "image_slots": 4
     },
     {
@@ -503,7 +503,7 @@
       }
     },
     {
-      "page_type": "内容页",
+      "page_type": "目录页",
       "page_note": "展示多模块内容的详细讲解页面",
       "template_page_num": 7,
       "content": {
@@ -556,6 +556,13 @@
           "value": "",
           "max_chars": 24
         },
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "总课程名称": {
           "type": "text",
           "hint": "填写课程或项目名称",
@@ -565,11 +572,11 @@
         }
       },
       "meta": {
-        "layout": "内容页",
+        "layout": "目录页",
         "scene": [],
         "style": "",
         "text_slots": 8,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "展示多模块内容的详细讲解页面"
       }
     },
@@ -612,6 +619,13 @@
           "required": true,
           "value": "",
           "max_chars": 10
+        },
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
         }
       },
       "meta": {
@@ -619,7 +633,7 @@
         "scene": [],
         "style": "",
         "text_slots": 5,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "展示多层级标题、正文内容及辅助配图的通用内容页"
       }
     },
@@ -634,6 +648,13 @@
           "required": true,
           "value": "",
           "max_chars": 10
+        },
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
         },
         "正文段落": {
           "type": "text",
@@ -683,7 +704,7 @@
         "scene": [],
         "style": "",
         "text_slots": 8,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "用于展示流程步骤及各环节详细内容"
       }
     },
@@ -692,6 +713,13 @@
       "page_note": "",
       "template_page_num": 10,
       "content": {
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "二级标题": {
           "type": "text",
           "hint": "填写知识点名称",
@@ -702,7 +730,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -747,7 +775,7 @@
         "scene": [],
         "style": "",
         "text_slots": 8,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "请根据实际需要填写内容"
       }
     },
@@ -763,17 +791,17 @@
           "value": "",
           "max_chars": 10
         },
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
-          "value": "",
-          "max_chars": 10
-        },
-        "总课程名称": {
-          "type": "text",
-          "hint": "填写课程或项目名称",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -810,8 +838,8 @@
         "layout": "内容页",
         "scene": [],
         "style": "",
-        "text_slots": 8,
-        "image_slots": 0,
+        "text_slots": 7,
+        "image_slots": 1,
         "notes": "展示章节主题与对比表格内容"
       }
     },
@@ -820,10 +848,17 @@
       "page_note": "",
       "template_page_num": 12,
       "content": {
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -910,7 +945,7 @@
         "scene": [],
         "style": "",
         "text_slots": 12,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "请根据实际需要填写内容"
       }
     },
@@ -919,6 +954,13 @@
       "page_note": "",
       "template_page_num": 13,
       "content": {
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "页面标识": {
           "type": "text",
           "hint": "填写课程或模块名称",
@@ -929,7 +971,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -1009,7 +1051,7 @@
         "scene": [],
         "style": "",
         "text_slots": 12,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "请根据实际需要填写内容"
       }
     },
@@ -1018,17 +1060,24 @@
       "page_note": "展示课程主题与多层级标题及表格内容",
       "template_page_num": 14,
       "content": {
-        "课程名称": {
+        "配图": {
+          "type": "image",
+          "hint": "填写与本页内容相关的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "总课程名称": {
           "type": "text",
           "hint": "填写课程或项目名称",
           "required": true,
           "value": "",
-          "max_chars": 10
+          "max_chars": null
         },
-        "三级标题": {
+        "三级子标题": {
           "type": "text",
-          "hint": "填写当前页标题",
-          "required": true,
+          "hint": "填写当页标题",
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -1039,7 +1088,7 @@
           "value": "",
           "max_chars": 8
         },
-        "一级标题": {
+        "主标题": {
           "type": "text",
           "hint": "填写章节名称",
           "required": true,
@@ -1108,7 +1157,7 @@
         "scene": [],
         "style": "",
         "text_slots": 12,
-        "image_slots": 0,
+        "image_slots": 1,
         "notes": "展示课程主题与多层级标题及表格内容"
       }
     },
@@ -1176,7 +1225,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1275,7 +1324,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1360,7 +1409,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1435,13 +1484,6 @@
           "value": "",
           "max_chars": null
         },
-        "三级标题": {
-          "type": "text",
-          "hint": "填写当前页标题",
-          "required": true,
-          "value": "",
-          "max_chars": 10
-        },
         "一级标题": {
           "type": "text",
           "hint": "填写章节名称",
@@ -1453,6 +1495,13 @@
           "type": "text",
           "hint": "填写知识点名称",
           "required": true,
+          "value": "",
+          "max_chars": 10
+        },
+        "三级标题": {
+          "type": "text",
+          "hint": "填写当前页标题",
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1516,7 +1565,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1580,7 +1629,7 @@
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1589,7 +1638,7 @@
           "hint": "填写章节名称",
           "required": true,
           "value": "",
-          "max_chars": 10
+          "max_chars": 8
         },
         "二级标题": {
           "type": "text",
@@ -1620,12 +1669,26 @@
       "page_note": "用于展示多组图文信息的通用页面",
       "template_page_num": 21,
       "content": {
+        "图片描述 3": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
         "配图3": {
           "type": "image",
           "hint": "添加相关图片内容",
           "required": true,
           "value": "",
           "max_chars": null
+        },
+        "图片描述 2": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 12
         },
         "配图2": {
           "type": "image",
@@ -1648,24 +1711,10 @@
           "value": "",
           "max_chars": 12
         },
-        "图片描述 2": {
-          "type": "image",
-          "hint": "填写对应配图的描述信息",
-          "required": false,
-          "value": "",
-          "max_chars": 12
-        },
-        "图片描述 3": {
-          "type": "image",
-          "hint": "填写对应配图的描述信息",
-          "required": false,
-          "value": "",
-          "max_chars": 12
-        },
         "三级标题": {
           "type": "text",
           "hint": "填写当前页标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1735,17 +1784,17 @@
         },
         "三级标题": {
           "type": "text",
-          "hint": "填写细分主题",
-          "required": true,
+          "hint": "填写当页标题",
+          "required": false,
           "value": "",
-          "max_chars": 10
+          "max_chars": 8
         },
-        "二级标题": {
+        "二级主标题": {
           "type": "text",
-          "hint": "填写本部分核心主题",
+          "hint": "填写知识点名称",
           "required": true,
           "value": "",
-          "max_chars": 10
+          "max_chars": 8
         },
         "第一插图": {
           "type": "image",
@@ -1818,17 +1867,10 @@
           "value": "",
           "max_chars": 24
         },
-        "课程标题": {
-          "type": "text",
-          "hint": "填写课程或项目名称",
-          "required": true,
-          "value": "",
-          "max_chars": 10
-        },
         "三级标题": {
           "type": "text",
           "hint": "填写图文页子标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         },
@@ -1872,7 +1914,7 @@
         "layout": "图文页",
         "scene": [],
         "style": "",
-        "text_slots": 7,
+        "text_slots": 6,
         "image_slots": 4,
         "notes": "展示课程主题与分点内容"
       }
@@ -2060,14 +2102,14 @@
           "value": "",
           "max_chars": 10
         },
-        "内容要点 2": {
+        "内容要点 1": {
           "type": "text",
           "hint": "填写关键词或精简文字内容",
           "required": true,
           "value": "",
           "max_chars": 10
         },
-        "内容要点 1": {
+        "内容要点 2": {
           "type": "text",
           "hint": "填写关键词或精简文字内容",
           "required": true,

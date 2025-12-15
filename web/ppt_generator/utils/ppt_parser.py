@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.enum.dml import MSO_FILL_TYPE
 
 
 def is_generic_name(name: str) -> bool:
@@ -294,7 +295,18 @@ def extract_shapes_info(pptx_path: Path, filter_mode: str = "semantic") -> Dict:
                 continue
 
             # 判断元素类型
-            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+            # 检查是否有图片填充（FREEFORM 类型的图片占位符）
+            is_image_by_fill = False
+            try:
+                if hasattr(shape, "fill") and shape.fill.type == MSO_FILL_TYPE.PICTURE:
+                    is_image_by_fill = True
+            except Exception:
+                pass
+
+            if (
+                shape.shape_type == MSO_SHAPE_TYPE.PICTURE
+                or is_image_by_fill
+            ):
                 shape_type = "image"
             elif shape.has_text_frame:
                 shape_type = "text"
