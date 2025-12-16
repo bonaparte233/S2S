@@ -895,6 +895,11 @@
             publishBtn.classList.remove('btn-primary');
             publishBtn.classList.add('btn-success');
 
+            // 发布成功后隐藏"返回编辑"按钮（session 已被删除，无法返回编辑）
+            if (prevBtn) {
+                prevBtn.style.display = 'none';
+            }
+
         } catch (e) {
             statusDiv.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
             statusDiv.style.display = 'block';

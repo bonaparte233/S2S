@@ -64,6 +64,7 @@
   "ppt_pages": [
     {
       "page_type": "封面页",
+      "page_note": "展示主题、机构及装饰性图片",
       "template_page_num": 1,
       "content": {
         "机构名称": {
@@ -99,6 +100,7 @@
     },
     {
       "page_type": "欢迎页",
+      "page_note": "用于开场欢迎及介绍活动目标等信息",
       "template_page_num": 2,
       "content": {
         "主标题": {
@@ -127,6 +129,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示核心主题及详细说明内容",
       "template_page_num": 3,
       "content": {
         "页面标题": {
@@ -155,6 +158,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示具体活动或主题的详细内容",
       "template_page_num": 4,
       "content": {
         "页面标题": {
@@ -183,6 +187,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示核心信息和相关配图",
       "template_page_num": 5,
       "content": {
         "页面标题": {
@@ -218,6 +223,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示主题内容及配套说明",
       "template_page_num": 6,
       "content": {
         "页面标题": {
@@ -253,6 +259,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示核心主题及详细说明内容",
       "template_page_num": 7,
       "content": {
         "主标题": {
@@ -281,6 +288,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示具体主题下的详细内容",
       "template_page_num": 8,
       "content": {
         "主标题": {
@@ -309,6 +317,7 @@
     },
     {
       "page_type": "互动页",
+      "page_note": "引导观众参与互动环节或任务说明",
       "template_page_num": 9,
       "content": {
         "标题栏": {
@@ -344,6 +353,7 @@
     },
     {
       "page_type": "内容页",
+      "page_note": "展示主题核心内容和详细信息",
       "template_page_num": 10,
       "content": {
         "页面标题": {

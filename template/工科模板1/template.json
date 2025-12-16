@@ -122,19 +122,19 @@
     },
     {
       "template_page_num": 21,
-      "page_type": "图文页",
+      "page_type": "三图页",
       "text_slots": 3,
       "image_slots": 6
     },
     {
       "template_page_num": 22,
-      "page_type": "图文页",
+      "page_type": "四图页",
       "text_slots": 3,
       "image_slots": 8
     },
     {
       "template_page_num": 23,
-      "page_type": "图文页",
+      "page_type": "四图页多字版",
       "text_slots": 6,
       "image_slots": 4
     },
@@ -304,7 +304,7 @@
         "章节标题1": {
           "type": "text",
           "hint": "填写该章节的主题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -318,7 +318,7 @@
         "章节标题2": {
           "type": "text",
           "hint": "填写该章节的主题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -332,7 +332,7 @@
         "章节标题3": {
           "type": "text",
           "hint": "填写该章节的主题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -346,7 +346,7 @@
         "章节标题4": {
           "type": "text",
           "hint": "填写该章节的主题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -375,7 +375,7 @@
         "章节标题4": {
           "type": "text",
           "hint": "填写第4章标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -389,7 +389,7 @@
         "章节标题1": {
           "type": "text",
           "hint": "填写第1章标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -403,7 +403,7 @@
         "章节标题2": {
           "type": "text",
           "hint": "填写第2章标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -417,7 +417,7 @@
         "章节标题3": {
           "type": "text",
           "hint": "填写第3章标题",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
         },
@@ -457,6 +457,20 @@
           "value": "",
           "max_chars": 8
         },
+        "正文内容 4": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
+        "正文内容 3": {
+          "type": "text",
+          "hint": "填写详细说明文字",
+          "required": false,
+          "value": "",
+          "max_chars": 16
+        },
         "正文内容 1": {
           "type": "text",
           "hint": "填写详细说明文字",
@@ -470,20 +484,6 @@
           "required": false,
           "value": "",
           "max_chars": 32
-        },
-        "正文内容 3": {
-          "type": "text",
-          "hint": "填写详细说明文字",
-          "required": false,
-          "value": "",
-          "max_chars": 16
-        },
-        "正文内容 4": {
-          "type": "text",
-          "hint": "填写详细说明文字",
-          "required": false,
-          "value": "",
-          "max_chars": 16
         },
         "总课程名称": {
           "type": "text",
@@ -1176,49 +1176,42 @@
         "右栏内容 2": {
           "type": "text",
           "hint": "填写右栏第二段内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 24
         },
         "右栏内容 3": {
           "type": "text",
           "hint": "填写右栏第三段内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 12
         },
         "右栏内容 4": {
           "type": "text",
           "hint": "填写右栏第四段内容",
-          "required": true,
-          "value": "",
-          "max_chars": 12
-        },
-        "左栏内容 1": {
-          "type": "text",
-          "hint": "填写左栏第一段内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 12
         },
         "左栏内容2": {
           "type": "text",
           "hint": "填写左栏第二段内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 24
         },
         "左栏内容3": {
           "type": "text",
           "hint": "填写左栏第三段内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 12
         },
         "左栏内容4": {
           "type": "text",
           "hint": "填写左栏第四段内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 12
         },
@@ -1243,6 +1236,13 @@
           "value": "",
           "max_chars": 10
         },
+        "左栏内容 1": {
+          "type": "text",
+          "hint": "填写左栏第一段内容",
+          "required": true,
+          "value": "",
+          "max_chars": 12
+        },
         "总课程名称": {
           "type": "text",
           "hint": "填写课程全称",
@@ -1265,45 +1265,17 @@
       "page_note": "展示多模块并列内容",
       "template_page_num": 16,
       "content": {
-        "左栏文字内容 3": {
-          "type": "text",
-          "hint": "填写左栏文字内容",
-          "required": true,
-          "value": "",
-          "max_chars": 12
-        },
-        "左栏文字内容2": {
-          "type": "text",
-          "hint": "填写文字内容2的内容",
-          "required": true,
-          "value": "",
-          "max_chars": 12
-        },
-        "左栏文字内容1": {
-          "type": "text",
-          "hint": "填写文字内容1的内容",
-          "required": true,
-          "value": "",
-          "max_chars": 24
-        },
-        "左栏文字标题": {
-          "type": "text",
-          "hint": "填写文字标题的内容",
-          "required": true,
-          "value": "",
-          "max_chars": 6
-        },
         "右栏文字内容 3": {
           "type": "text",
           "hint": "填写右栏文字内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 12
         },
         "右栏文字内容2": {
           "type": "text",
           "hint": "填写文字内容2的内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 12
         },
@@ -1317,6 +1289,34 @@
         "右栏标题": {
           "type": "text",
           "hint": "填写右栏标题",
+          "required": true,
+          "value": "",
+          "max_chars": 6
+        },
+        "左栏文字内容 3": {
+          "type": "text",
+          "hint": "填写左栏文字内容",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏文字内容2": {
+          "type": "text",
+          "hint": "填写文字内容2的内容",
+          "required": false,
+          "value": "",
+          "max_chars": 12
+        },
+        "左栏文字内容1": {
+          "type": "text",
+          "hint": "填写文字内容1的内容",
+          "required": true,
+          "value": "",
+          "max_chars": 24
+        },
+        "左栏文字标题": {
+          "type": "text",
+          "hint": "填写文字标题的内容",
           "required": true,
           "value": "",
           "max_chars": 6
@@ -1459,21 +1459,21 @@
         "正文段落": {
           "type": "text",
           "hint": "填写详细说明文字",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 32
         },
         "要点列表": {
           "type": "text",
           "hint": "填写关键要点",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 16
         },
         "子要点": {
           "type": "text",
           "hint": "填写次要要点",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 16
         },
@@ -1601,21 +1601,21 @@
         "正文内容1": {
           "type": "text",
           "hint": "填写本部分核心内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 28
         },
         "正文内容2": {
           "type": "text",
           "hint": "填写本部分核心内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 28
         },
         "正文内容3": {
           "type": "text",
           "hint": "填写本部分核心内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 28
         },
@@ -1665,7 +1665,7 @@
       }
     },
     {
-      "page_type": "图文页",
+      "page_type": "三图页",
       "page_note": "用于展示多组图文信息的通用页面",
       "template_page_num": 21,
       "content": {
@@ -1679,7 +1679,7 @@
         "配图3": {
           "type": "image",
           "hint": "添加相关图片内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": null
         },
@@ -1693,7 +1693,7 @@
         "配图2": {
           "type": "image",
           "hint": "添加相关图片内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": null
         },
@@ -1734,7 +1734,7 @@
         }
       },
       "meta": {
-        "layout": "图文页",
+        "layout": "三图页",
         "scene": [],
         "style": "",
         "text_slots": 3,
@@ -1743,17 +1743,10 @@
       }
     },
     {
-      "page_type": "图文页",
+      "page_type": "四图页",
       "page_note": "",
       "template_page_num": 22,
       "content": {
-        "图片描述 1": {
-          "type": "image",
-          "hint": "填写对应配图的描述信息",
-          "required": false,
-          "value": "",
-          "max_chars": 8
-        },
         "图片描述 2": {
           "type": "image",
           "hint": "填写对应配图的描述信息",
@@ -1761,19 +1754,54 @@
           "value": "",
           "max_chars": 8
         },
-        "图片描述 3": {
+        "第二插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "图片描述 1": {
           "type": "image",
           "hint": "填写对应配图的描述信息",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
+        },
+        "第一插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
         },
         "图片描述 4": {
           "type": "image",
           "hint": "填写对应配图的描述信息",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 8
+        },
+        "第四插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "图片描述 3": {
+          "type": "image",
+          "hint": "填写对应配图的描述信息",
+          "required": false,
+          "value": "",
+          "max_chars": 8
+        },
+        "第三插图": {
+          "type": "image",
+          "hint": "插入相关图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
         },
         "课程总标题": {
           "type": "text",
@@ -1795,38 +1823,10 @@
           "required": true,
           "value": "",
           "max_chars": 8
-        },
-        "第一插图": {
-          "type": "image",
-          "hint": "插入相关图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
-        },
-        "第三插图": {
-          "type": "image",
-          "hint": "插入相关图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
-        },
-        "第二插图": {
-          "type": "image",
-          "hint": "插入相关图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
-        },
-        "第四插图": {
-          "type": "image",
-          "hint": "插入相关图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
         }
       },
       "meta": {
-        "layout": "图文页",
+        "layout": "四图页",
         "scene": [],
         "style": "",
         "text_slots": 3,
@@ -1835,23 +1835,37 @@
       }
     },
     {
-      "page_type": "图文页",
+      "page_type": "四图页多字版",
       "page_note": "展示课程主题与分点内容",
       "template_page_num": 23,
       "content": {
-        "正文内容1": {
-          "type": "text",
-          "hint": "填写该模块的文字说明",
-          "required": true,
-          "value": "",
-          "max_chars": 24
-        },
         "正文内容2": {
           "type": "text",
           "hint": "填写该模块的文字说明",
           "required": false,
           "value": "",
           "max_chars": 24
+        },
+        "配图2": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
+        "正文内容1": {
+          "type": "text",
+          "hint": "填写该模块的文字说明",
+          "required": false,
+          "value": "",
+          "max_chars": 24
+        },
+        "配图1": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": true,
+          "value": "",
+          "max_chars": null
         },
         "正文内容4": {
           "type": "text",
@@ -1860,12 +1874,26 @@
           "value": "",
           "max_chars": 24
         },
+        "配图4": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
+        },
         "正文内容3": {
           "type": "text",
           "hint": "填写该模块的文字说明",
           "required": false,
           "value": "",
           "max_chars": 24
+        },
+        "配图3": {
+          "type": "image",
+          "hint": "上传对应模块的图片",
+          "required": false,
+          "value": "",
+          "max_chars": null
         },
         "三级标题": {
           "type": "text",
@@ -1880,38 +1908,10 @@
           "required": true,
           "value": "",
           "max_chars": 10
-        },
-        "配图1": {
-          "type": "image",
-          "hint": "上传对应模块的图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
-        },
-        "配图3": {
-          "type": "image",
-          "hint": "上传对应模块的图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
-        },
-        "配图2": {
-          "type": "image",
-          "hint": "上传对应模块的图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
-        },
-        "配图4": {
-          "type": "image",
-          "hint": "上传对应模块的图片",
-          "required": true,
-          "value": "",
-          "max_chars": null
         }
       },
       "meta": {
-        "layout": "图文页",
+        "layout": "四图页多字版",
         "scene": [],
         "style": "",
         "text_slots": 6,
@@ -2055,14 +2055,14 @@
         "文字内容 2": {
           "type": "text",
           "hint": "填写精简的关键词",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 6
         },
         "文字内容 3": {
           "type": "text",
           "hint": "填写精简的关键词",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 6
         },
@@ -2112,7 +2112,7 @@
         "内容要点 2": {
           "type": "text",
           "hint": "填写关键词或精简文字内容",
-          "required": true,
+          "required": false,
           "value": "",
           "max_chars": 10
         }
@@ -2167,13 +2167,6 @@
           "value": "",
           "max_chars": 10
         },
-        "要点内容1": {
-          "type": "text",
-          "hint": "填写要点内容",
-          "required": true,
-          "value": "",
-          "max_chars": 10
-        },
         "要点内容2": {
           "type": "text",
           "hint": "填写要点内容",
@@ -2185,6 +2178,13 @@
           "type": "text",
           "hint": "填写要点内容",
           "required": false,
+          "value": "",
+          "max_chars": 10
+        },
+        "要点内容1": {
+          "type": "text",
+          "hint": "填写要点内容",
+          "required": true,
           "value": "",
           "max_chars": 10
         },
