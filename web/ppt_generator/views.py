@@ -224,7 +224,8 @@ def _run_generation_task(generation_id):
         if not template_json.exists():
             raise FileNotFoundError(f"配置模板不存在: {template_json}")
 
-        template_list = settings.S2S_TEMPLATE_DIR / "template.txt"
+        # template.txt 已废弃，不再使用
+        template_list = None
 
         # Create run directory
         run_dir = settings.S2S_TEMP_DIR / f"web-{generation.id}"

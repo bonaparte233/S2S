@@ -70,7 +70,7 @@ def extract_shapes_from_group(
     group_shape, slide_width: int, slide_height: int, parent_name: str = ""
 ) -> list:
     """
-    递归提取 GROUP 中的可编辑元素
+    递归提取 GROUP 中的元素（尽量保留，过滤明显背景）
 
     Args:
         group_shape: GROUP 形状对象
@@ -106,9 +106,21 @@ def extract_shapes_from_group(
         if is_background_element(child, slide_width, slide_height):
             continue
 
-        # 图片：保留
-        if child_type == MSO_SHAPE_TYPE.PICTURE:
-            # 跳过名称为"背景"的图片
+        # 图片判定：图片形状、图片填充、图片占位符
+        is_picture = child_type == MSO_SHAPE_TYPE.PICTURE
+        try:
+            is_picture = is_picture or (
+                hasattr(child, "fill") and child.fill.type == MSO_FILL_TYPE.PICTURE
+            )
+        except Exception:
+            pass
+        try:
+            if child.is_placeholder and child.placeholder_format.type == 18:
+                is_picture = True
+        except Exception:
+            pass
+
+        if is_picture:
             if child.name and "背景" in child.name:
                 continue
             results.append(
@@ -116,32 +128,23 @@ def extract_shapes_from_group(
             )
             continue
 
-        # 文本框：检查是否有内容
-        if child_type == MSO_SHAPE_TYPE.TEXT_BOX:
-            text = child.text.strip() if hasattr(child, "text") and child.text else ""
-            if len(text) > 0:
-                results.append(
-                    {
-                        "shape": child,
-                        "group_path": current_path,
-                        "type": "text",
-                        "text": text,
-                    }
-                )
-            continue
-
-        # 其他有文本的形状
+        # 文本：保留，即使内容为空（占位文本框也要显示）
         if hasattr(child, "has_text_frame") and child.has_text_frame:
             text = child.text.strip() if child.text else ""
-            if len(text) > 0:
-                results.append(
-                    {
-                        "shape": child,
-                        "group_path": current_path,
-                        "type": "text",
-                        "text": text,
-                    }
-                )
+            results.append(
+                {
+                    "shape": child,
+                    "group_path": current_path,
+                    "type": "text",
+                    "text": text,
+                }
+            )
+            continue
+
+        # 其他类型也保留，标记为 other，方便前端显示或手动命名
+        results.append(
+            {"shape": child, "group_path": current_path, "type": "other"}
+        )
 
     return results
 

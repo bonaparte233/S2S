@@ -32,6 +32,112 @@ IMAGE_NAME_TEMPLATE = "doc_image_{idx}.{ext}"
 # 调试标志：设置为 True 时打印 LLM 请求和响应
 DEBUG_LLM = os.getenv("DEBUG_LLM", "false").lower() in ("true", "1", "yes")
 
+# 章节标题正则表达式
+# 一级标题：一、xxx / 第一章 xxx / 1 xxx
+HEADING_L1_RE = re.compile(
+    r"^(?:"
+    r"[一二三四五六七八九十]+、|"  # 一、二、三、
+    r"第[一二三四五六七八九十\d]+[章节部分]|"  # 第一章、第1节
+    r"\d+\s+"  # 1 xxx（数字后有空格）
+    r")(.+)",
+    re.MULTILINE,
+)
+# 二级标题：（一）xxx / （1）xxx / 1.1 xxx
+HEADING_L2_RE = re.compile(
+    r"^(?:"
+    r"[（\(][一二三四五六七八九十\d]+[）\)]|"  # （一）（1）
+    r"\d+\.\d+\s*"  # 1.1 xxx
+    r")(.+)",
+    re.MULTILINE,
+)
+# 三级标题：1. xxx / ① xxx / a) xxx
+HEADING_L3_RE = re.compile(
+    r"^(?:"
+    r"\d+\.\s+|"  # 1. xxx
+    r"[①②③④⑤⑥⑦⑧⑨⑩]|"  # ① xxx
+    r"[a-z][）\)]\s*"  # a) xxx
+    r")(.+)",
+    re.MULTILINE,
+)
+
+
+def _extract_heading_level(text: str) -> Tuple[Optional[int], Optional[str]]:
+    """
+    从文本中提取章节标题级别和标题内容。
+
+    Returns:
+        (level, title): level 为 1/2/3 表示一/二/三级标题，None 表示不是标题
+    """
+    text = text.strip()
+    if not text:
+        return None, None
+
+    # 检查一级标题
+    match = HEADING_L1_RE.match(text)
+    if match:
+        # 返回完整的标题文本（包括序号）
+        return 1, text
+
+    # 检查二级标题
+    match = HEADING_L2_RE.match(text)
+    if match:
+        return 2, text
+
+    # 检查三级标题
+    match = HEADING_L3_RE.match(text)
+    if match:
+        return 3, text
+
+    return None, None
+
+
+class SectionContext:
+    """章节上下文，跟踪当前所处的章节层级"""
+
+    def __init__(self):
+        self.level1: Optional[str] = None  # 一级标题（章）
+        self.level2: Optional[str] = None  # 二级标题（节/知识点）
+        self.level3: Optional[str] = None  # 三级标题（小节）
+
+    def update(self, text: str) -> None:
+        """根据文本内容更新章节上下文"""
+        level, title = _extract_heading_level(text)
+        if level == 1:
+            self.level1 = title
+            self.level2 = None  # 重置下级标题
+            self.level3 = None
+        elif level == 2:
+            self.level2 = title
+            self.level3 = None  # 重置下级标题
+        elif level == 3:
+            self.level3 = title
+        else:
+            # 兜底：短句当标题，避免纯文本标题丢失
+            candidate = text.strip()
+            if candidate and len(candidate) <= 24 and not re.search(r"[。！？!?]", candidate):
+                if not self.level1:
+                    self.level1 = candidate
+                elif not self.level2:
+                    self.level2 = candidate
+
+    def to_dict(self) -> Dict[str, Optional[str]]:
+        """返回当前章节上下文的字典表示"""
+        return {
+            "chapter": self.level1,  # 章节名称
+            "section": self.level2,  # 知识点名称
+            "subsection": self.level3,  # 小节名称
+        }
+
+    def __str__(self) -> str:
+        parts = []
+        if self.level1:
+            parts.append(f"章节：{self.level1}")
+        if self.level2:
+            parts.append(f"知识点：{self.level2}")
+        if self.level3:
+            parts.append(f"小节：{self.level3}")
+        return " > ".join(parts) if parts else "（无章节信息）"
+
 
 def _create_run_dir(base_dir: Path = Path("temp")) -> Path:
     """创建带时间戳前缀的运行目录，方便前端一次处理对应到单独目录。"""
@@ -148,18 +254,28 @@ def parse_docx_blocks(doc_path: str, image_dir: Path) -> Tuple[List[Dict], bool,
     return slides, has_marker, metadata
 
 
-def load_template_defs(template_json: str, template_list: str) -> Dict[int, Dict]:
+def load_template_defs(
+    template_json: str, template_list: Optional[str] = None
+) -> Dict[int, Dict]:
+    """
+    加载模板定义。
+
+    Args:
+        template_json: template.json 文件路径
+        template_list: （已废弃）template.txt 文件路径，用于过滤允许的模板页码
+                      如果文件不存在或内容为空，则不进行过滤
+    """
     data = json.loads(Path(template_json).read_text(encoding="utf-8"))
     allowed = None
+    # template.txt 已废弃，但为了兼容旧版本，仍然支持
     if template_list and Path(template_list).exists():
-        allowed = {
-            int(item.strip())
-            for item in Path(template_list)
-            .read_text(encoding="utf-8")
-            .replace(",", " ")
-            .split()
-            if item.strip().isdigit()
-        }
+        content = Path(template_list).read_text(encoding="utf-8").strip()
+        if content:  # 只有内容非空时才过滤
+            allowed = {
+                int(item.strip())
+                for item in content.replace(",", " ").split()
+                if item.strip().isdigit()
+            }
     templates = {}
     manifest = {
         item["template_page_num"]: item
@@ -265,6 +381,7 @@ def _build_prompt(
     is_multimodal: bool = False,
     user_prompt: Optional[str] = None,
     metadata: Optional[Dict] = None,
+    section_context: Optional[Dict[str, Optional[str]]] = None,
 ) -> str:
     def describe_fields(fields):
         if not fields:
@@ -350,6 +467,9 @@ def _build_prompt(
 3. 内容必须精炼！把讲稿的完整表述压缩为幻灯片要点，只保留核心信息。
 4. 违反字数限制的输出将被视为无效，必须重新生成。
 5. 务必记住讲稿中提到的主讲人姓名、课程/讲座/项目名称等关键专有名词，并在所有需要这些信息的字段保持完全一致，不要改写。
+6. 同一页内的不同字段要符合各自语义，严禁把同一句话复制到多个字段、或用课程名/章节名去填正文/小节标题，标题/正文/要点应各填最贴合的内容。
+7. 如无匹配内容且字段非必填，请留空，不要复制课程名/章节名充数。
+8. 自查：同页字段不得出现同一句话；标题类字段必须与其语义匹配，正文/要点不得被课程名/章节名占用。
 {
         ""
         if not metadata
@@ -360,6 +480,19 @@ def _build_prompt(
 {f"- 学院/单位名称：{metadata['college']}" if metadata.get('college') else ""}
 {f"- 主讲人/讲师：{metadata['lecturer']}" if metadata.get('lecturer') else ""}
 请根据字段名称的语义，将上述信息填入最匹配的字段（如"主标题"、"课程名"、"讲师"、"单位"等）。
+'''
+    }
+{
+        ""
+        if not section_context or not any(section_context.values())
+        else f'''
+📚 当前章节上下文（仅用于标题字段）：
+本页 PPT 属于以下章节结构：
+{f"- 章节名称/一级标题：{section_context['chapter']}" if section_context.get('chapter') else ""}
+{f"- 知识点名称/二级标题：{section_context['section']}" if section_context.get('section') else ""}
+{f"- 小节名称/三级标题：{section_context['subsection']}" if section_context.get('subsection') else ""}
+⚠️ 注意：上述信息只能用于填充明确包含"标题"、"名称"、"章节"等关键词的字段。
+绝对不要将课程名称或章节标题填入"正文"、"内容"、"文字内容"、"要点"等正文类字段！
 '''
     }
 
@@ -412,6 +545,7 @@ def _build_multimodal_messages(
     images: List[str],
     user_prompt: Optional[str] = None,
     metadata: Optional[Dict] = None,
+    section_context: Optional[Dict[str, Optional[str]]] = None,
 ) -> List[Dict]:
     """构建多模态消息，用于 Taichu-VL 或 GLMV。"""
     prompt_text = _build_prompt(
@@ -421,6 +555,7 @@ def _build_multimodal_messages(
         is_multimodal=True,
         user_prompt=user_prompt,
         metadata=metadata,
+        section_context=section_context,
     )
 
     content: List[Dict[str, Any]] = [{"type": "text", "text": prompt_text}]
@@ -481,6 +616,7 @@ def llm_fill_slide(
     user_prompt: Optional[str] = None,
     use_multimodal: bool = True,
     metadata: Optional[Dict] = None,
+    section_context: Optional[Dict[str, Optional[str]]] = None,
 ) -> Dict:
     """
     使用 LLM 填充单页幻灯片内容。
@@ -494,6 +630,7 @@ def llm_fill_slide(
         use_multimodal: 是否使用多模态消息（默认 True）
                        当讲稿有 PPT 标记时，图片位置已确定，可设为 False
         metadata: 元数据（课程名称、学院名称、讲师名称）
+        section_context: 章节上下文（chapter/section/subsection）
     """
     if not llm:
         return _simple_fill(template_info, raw_text, images)
@@ -501,11 +638,16 @@ def llm_fill_slide(
     # 只有在允许使用多模态且模型支持多模态且有图片时，才使用多模态消息
     if use_multimodal and _is_multimodal_llm(llm) and images:
         messages = _build_multimodal_messages(
-            template_info, raw_text, images, user_prompt, metadata
+            template_info, raw_text, images, user_prompt, metadata, section_context
         )
     else:
         prompt = _build_prompt(
-            template_info, raw_text, images, user_prompt=user_prompt, metadata=metadata
+            template_info,
+            raw_text,
+            images,
+            user_prompt=user_prompt,
+            metadata=metadata,
+            section_context=section_context,
         )
         messages = [{"role": "user", "content": prompt}]
 
@@ -653,6 +795,7 @@ def llm_plan_slides(
 3. 内容必须精炼！把讲稿的完整表述压缩为幻灯片要点，只保留核心信息。
 4. 违反字数限制的输出将被视为无效，必须重新生成。
 5. 务必记住并重复使用讲稿中的主讲人姓名、课程/讲座/项目名称等关键专有名词，确保在所有幻灯片中需要填写专有名词的位置保持一致，不要随意改写或另造新名称。
+6. 同一页内的不同字段要符合各自语义，严禁把同一句话复制到多个字段，或用课程名/章节名去填正文/小节标题；标题/正文/要点请各填最贴合的内容。
 
 讲稿全文：
 {doc_text}
@@ -1086,6 +1229,83 @@ def _apply_metadata_overrides(content: Dict, template_info: Dict, metadata: Dict
             _assign_in_schema(content, path, value)
 
 
+def _apply_section_context(
+    content: Dict,
+    template_info: Dict,
+    section_context: Dict[str, Optional[str]],
+    title_hint: Optional[str] = None,
+):
+    """
+    根据章节上下文填充章节/知识点相关字段。
+
+    如果 LLM 没有正确填充这些字段，通过关键词匹配进行备用填充。
+    """
+    if not section_context:
+        return
+
+    # 字段名关键词 → 章节上下文 key 的映射
+    field_mappings = [
+        # 一级标题（章节）
+        (["章节", "一级标题", "章节名", "大章节"], "chapter"),
+        # 二级标题（知识点）
+        (["知识点", "二级标题", "小节名", "节名"], "section"),
+        # 三级标题
+        (["三级标题", "小节", "子节"], "subsection"),
+    ]
+
+    def _trim_to_max(value: str, max_chars: Optional[int]) -> str:
+        if max_chars and len(value) > max_chars:
+            return value[:max_chars]
+        return value
+    def _norm(text: Optional[str]) -> str:
+        return re.sub(r"[（()）\s]", "", text or "")
+
+    for field in template_info["text_fields"]:
+        path = list(field["path"])
+        key = "/".join(path)
+        max_chars = field.get("max_chars")
+
+        current_value = _get_in_schema(content, path) or ""
+        required = bool(field.get("required"))
+
+        # 根据字段名匹配章节上下文
+        for keywords, ctx_key in field_mappings:
+            if any(kw in key for kw in keywords):
+                target = section_context.get(ctx_key)
+
+                # 为三级标题增加回退：仅在字段必填时才用当前页首句摘要
+                if ctx_key == "subsection" and not target and required and title_hint:
+                    target = title_hint
+
+                if not target:
+                    break
+
+                target = _trim_to_max(str(target), max_chars)
+
+                # 必填字段：如果与上下文不同则覆盖；可选字段：仅在为空时填充
+                if required:
+                    if _norm(current_value) != _norm(target):
+                        _assign_in_schema(content, path, target)
+                else:
+                    if not current_value:
+                        _assign_in_schema(content, path, target)
+                break
+
+
+def _get_in_schema(content: Dict, path: List[str]) -> Optional[str]:
+    """从嵌套字典中获取值。"""
+    node = content
+    for key in path:
+        if isinstance(node, dict) and key in node:
+            node = node[key]
+        else:
+            return None
+    # 处理 {"type": "text", "value": "xxx"} 格式
+    if isinstance(node, dict) and "value" in node:
+        return node.get("value")
+    return node if isinstance(node, str) else None
+
+
 def _fill_with_template(
     template_num: int,
     template_info: Dict,
@@ -1094,6 +1314,7 @@ def _fill_with_template(
     metadata: Dict,
     user_prompt: Optional[str] = None,
     use_multimodal: bool = True,
+    section_context: Optional[Dict[str, Optional[str]]] = None,
 ) -> Dict:
     """
     使用模板填充单个 block 的内容。
@@ -1101,6 +1322,7 @@ def _fill_with_template(
     Args:
         use_multimodal: 是否使用多模态消息（默认 True）
                        当讲稿有 PPT 标记时，图片位置已确定，建议设为 False
+        section_context: 章节上下文（chapter/section/subsection）
     """
     content = llm_fill_slide(
         llm,
@@ -1110,6 +1332,7 @@ def _fill_with_template(
         user_prompt,
         use_multimodal,
         metadata,  # 传递 metadata 给 LLM
+        section_context,  # 传递章节上下文给 LLM
     )
     # 备用：如果 LLM 没有正确填充 metadata，尝试通过关键词匹配填充
     _apply_metadata_overrides(content, template_info, metadata)
@@ -1198,8 +1421,12 @@ def _fill_by_markers(
 
     由于讲稿已有明确的标记，图片位置已经确定（每个 block 的 images 字段），
     因此不需要使用多模态模型来界定图片位置，设置 use_multimodal=False。
+
+    新增：跟踪章节上下文，让 LLM 知道当前内容属于哪个章节/知识点。
     """
     pages: List[Dict] = []
+    section_ctx = SectionContext()  # 章节上下文跟踪器
+
     for block in blocks:
         template_num = block.get("template_hint")
         if template_num is None:
@@ -1208,6 +1435,13 @@ def _fill_by_markers(
             raise ValueError(
                 f"模板 {template_num} 未在 template.json 中定义或不在 template.txt 中允许。"
             )
+
+        # 更新章节上下文（根据当前 block 的文本内容）
+        block_text = block.get("text", "")
+        # 检查文本的前几行是否包含章节标题
+        for line in block_text.split("\n")[:5]:  # 只检查前5行
+            section_ctx.update(line)
+
         pages.append(
             _fill_with_template(
                 template_num,
@@ -1217,6 +1451,7 @@ def _fill_by_markers(
                 metadata,
                 user_prompt,
                 use_multimodal=False,  # 有标记时图片位置已确定，不需要多模态
+                section_context=section_ctx.to_dict(),  # 传递章节上下文
             )
         )
     return pages
@@ -1414,7 +1649,12 @@ def process_docx(
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="根据 DOCX 讲稿生成 PPT 配置 JSON。")
-    parser.add_argument("--docx", required=True, help="讲稿 DOCX 路径")
+    parser.add_argument("--docx", default=None, help="讲稿 DOCX 路径")
+    parser.add_argument(
+        "--from-preprocessed",
+        default=None,
+        help="从预处理后的讲稿(.md)继续，跳过预处理步骤",
+    )
     parser.add_argument(
         "--template-json", default="template/template.json", help="模板定义 JSON 文件"
     )
@@ -1447,11 +1687,123 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default="config.json",
         help="输出目录中生成的配置文件名称",
     )
+    parser.add_argument(
+        "--template-pptx",
+        default=None,
+        help="模板 PPTX 路径（用于 --from-preprocessed 模式）",
+    )
     return parser
+
+
+def continue_from_preprocessed(
+    preprocessed_path: str,
+    template_json: str,
+    template_pptx: str,
+    use_llm: bool = True,
+    llm_provider: str = "deepseek",
+    llm_model: Optional[str] = None,
+    llm_base_url: Optional[str] = None,
+    override_course: Optional[str] = None,
+    override_college: Optional[str] = None,
+    override_lecturer: Optional[str] = None,
+    run_dir: Optional[str] = None,
+    config_name: str = "config.json",
+) -> Dict:
+    """
+    从预处理后的讲稿继续生成 config.json。
+
+    Args:
+        preprocessed_path: 预处理后的讲稿(.md)路径
+        template_json: 模板定义 JSON 文件路径
+        template_pptx: 模板 PPTX 文件路径
+        其他参数与 process_docx 相同
+
+    Returns:
+        生成的 config 数据
+    """
+    preprocessed_file = Path(preprocessed_path)
+    if not preprocessed_file.exists():
+        raise FileNotFoundError(f"预处理讲稿不存在: {preprocessed_path}")
+
+    # 确定 run_dir（默认使用预处理文件所在目录）
+    if run_dir:
+        run_dir_path = Path(run_dir)
+    else:
+        run_dir_path = preprocessed_file.parent
+
+    image_dir = run_dir_path / "images"
+
+    # 读取预处理后的讲稿
+    preprocessed_text = preprocessed_file.read_text(encoding="utf-8")
+
+    # 解析成 blocks
+    blocks = _parse_preprocessed_script(preprocessed_text, image_dir)
+    print(f"✅ 解析到 {len(blocks)} 个 blocks")
+
+    # 加载模板
+    templates = load_template_defs(template_json, None)
+    print(f"✅ 加载了 {len(templates)} 个模板页")
+
+    # 初始化 LLM
+    llm = choose_llm(use_llm, llm_provider, llm_model, llm_base_url)
+
+    # 准备 metadata
+    metadata = {
+        "course": override_course or "",
+        "college": override_college or "",
+        "lecturer": override_lecturer or "",
+    }
+
+    # 填充内容
+    print("🔄 开始填充内容...")
+    pages = _fill_by_markers(blocks, templates, llm, metadata, user_prompt=None)
+    print(f"✅ 生成了 {len(pages)} 页")
+
+    # 构建 config
+    config = {
+        "template": template_pptx,
+        "pages": pages,
+    }
+
+    # 保存
+    config_path = run_dir_path / config_name
+    config_path.write_text(
+        json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(f"✅ 已保存到 {config_path}")
+
+    return config
 
 
 def main():
     args = build_arg_parser().parse_args()
+
+    # 从预处理讲稿继续
+    if args.from_preprocessed:
+        if not args.template_pptx:
+            print("❌ 使用 --from-preprocessed 时必须指定 --template-pptx")
+            return
+        continue_from_preprocessed(
+            preprocessed_path=args.from_preprocessed,
+            template_json=args.template_json,
+            template_pptx=args.template_pptx,
+            use_llm=args.use_llm,
+            llm_provider=args.llm_provider,
+            llm_model=args.llm_model,
+            llm_base_url=args.llm_base_url,
+            override_course=args.course_name,
+            override_college=args.college_name,
+            override_lecturer=args.lecturer_name,
+            run_dir=args.run_dir,
+            config_name=args.config_name,
+        )
+        return
+
+    # 正常流程：从 DOCX 开始
+    if not args.docx:
+        print("❌ 必须指定 --docx 或 --from-preprocessed")
+        return
+
     process_docx(
         docx_path=args.docx,
         template_json=args.template_json,
