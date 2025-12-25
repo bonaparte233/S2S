@@ -100,7 +100,7 @@ class SectionContext:
         self.level3: Optional[str] = None  # 三级标题（小节）
 
     def update(self, text: str) -> None:
-        """根据文本内容更新章节上下文"""
+        """根据文本内容更新章节上下文，只识别明确的章节标题格式"""
         level, title = _extract_heading_level(text)
         if level == 1:
             self.level1 = title
@@ -111,14 +111,7 @@ class SectionContext:
             self.level3 = None  # 重置下级标题
         elif level == 3:
             self.level3 = title
-        else:
-            # 兜底：短句当标题，避免纯文本标题丢失
-            candidate = text.strip()
-            if candidate and len(candidate) <= 24 and not re.search(r"[。！？!?]", candidate):
-                if not self.level1:
-                    self.level1 = candidate
-                elif not self.level2:
-                    self.level2 = candidate
+        # 不再使用兜底逻辑，避免把无关内容当作章节标题
 
     def to_dict(self) -> Dict[str, Optional[str]]:
         """返回当前章节上下文的字典表示"""
@@ -383,139 +376,142 @@ def _build_prompt(
     metadata: Optional[Dict] = None,
     section_context: Optional[Dict[str, Optional[str]]] = None,
 ) -> str:
-    def describe_fields(fields):
+    """
+    构建 LLM prompt，核心原则：
+    - hint 是填充该字段的最重要依据
+    - required 和 max_chars 是必须遵守的约束
+    - page_note 是本页的特殊说明，必须优先遵守
+    """
+
+    def describe_fields(fields, is_image: bool = False):
+        """详细描述每个字段，突出 hint 的指导作用"""
         if not fields:
-            return "无"
+            return "（无）"
         lines = []
         for idx, field in enumerate(fields, 1):
             name = "/".join(field["path"])
-            hint = field.get("hint") or "填写内容"
-            extra = []
-            if field.get("max_chars"):
-                extra.append(f"≤{field['max_chars']}字")
-            if field.get("required"):
-                extra.append("必填")
-            extra_note = f"（{'，'.join(extra)}）" if extra else ""
-            lines.append(f"{idx}. {name}：{hint}{extra_note}")
-        return "\n".join(lines)
+            hint = field.get("hint") or ""
+            max_chars = field.get("max_chars")
+            required = field.get("required", False)
 
-    text_desc = describe_fields(template_info["text_fields"])
-    image_desc = describe_fields(template_info["image_fields"])
+            # 构建字段描述，hint 作为核心指导
+            parts = [f"  【字段{idx}】{name}"]
+            if hint:
+                parts.append(f"    → 填写要求：{hint}")
+            if required:
+                parts.append(f"    → ⚠️ 必填")
+            else:
+                parts.append(f"    → 可选（无匹配内容时留空）")
+            if max_chars and not is_image:
+                parts.append(f"    → 字数限制：≤{max_chars}字")
 
-    # 对于多模态模型，不需要列出图片路径（图片已通过 base64 附加）
+            lines.append("\n".join(parts))
+        return "\n\n".join(lines)
+
+    text_desc = describe_fields(template_info["text_fields"], is_image=False)
+    image_desc = describe_fields(template_info["image_fields"], is_image=True)
+
+    # 对于多模态模型，不需要列出图片路径
     if is_multimodal:
-        image_section = f"已附加 {len(images)} 张图片供你参考"
+        image_section = f"已附加 {len(images)} 张图片"
     else:
         image_section = "无" if not images else "\n".join(images)
 
+    # page_note 是本页最重要的特殊说明
+    page_note = template_info.get("page_note") or ""
     meta = template_info.get("meta") or {}
-    scene = "、".join(meta.get("scene", [])) or "通用"
-    layout = meta.get("layout", template_info["page_type"])
-    style = meta.get("style", "")
-    # 优先使用顶层 page_note，其次使用 meta.notes
-    note = template_info.get("page_note") or meta.get("notes", "")
+    if not page_note:
+        page_note = meta.get("notes", "")
 
+    # 构建 page_note 部分，如果有内容则高亮显示
+    page_note_section = ""
+    if page_note:
+        page_note_section = f"""
+════════════════════════════════════════
+📋 【本页特殊说明 - 必须优先遵守】
+{page_note}
+════════════════════════════════════════
+"""
+
+    # 多模态图片说明
     multimodal_instruction = ""
     if is_multimodal and images:
         multimodal_instruction = f"""
-🖼️ 多模态图片理解（重要）：
-我已附带了 {len(images)} 张图片，这些图片是讲稿的重要组成部分，请务必认真处理。
-
-图片与文本的关系：
-- 每张图片都紧跟在相关文本段落的下方（图片在文本下方）
-- 图片是对上方文本的补充说明、示例或可视化
-- 讲稿文本中的 `[图片资源: ...]` 标记仅用于指示图片在原文中的位置
-
-你的任务：
-1. 仔细查看每张图片的内容，理解图片传达的信息
-2. 分析图片与上下文文本的关系，确定图片所属的主题
-3. 将图片放入合适的图片字段（通常与相关文本在同一页 PPT）
-4. 在 JSON 的 "images" 数组对应位置填入该图片的完整路径
-5. 根据图片内容优化文本描述，使其更准确、更生动
-6. 如果图片字段不需要图片，请留空字符串
-
-⚠️ 重要：不要忽略图片！图片是讲稿的核心内容之一，必须合理使用。
+🖼️ 图片处理说明：
+已附加 {len(images)} 张图片。图片与文本的关系：
+- 每张图片紧跟在相关文本段落的下方，是对上方文本的补充说明
+- 讲稿中的 `[图片资源: ...]` 标记指示图片在原文中的位置
+- 请根据图片字段的 hint 要求，将图片填入对应字段
+- 如果 page_note 中有图片选择规则（如"选择1,3"），必须严格遵守
 """
 
-    prompt = f"""
-请阅读以下讲稿并生成一个 JSON，对模板《{
-        template_info["page_type"]
-    }》的文本/图片字段进行填充。
-模板布局：{layout}；使用场景：{scene}；风格提示：{style}
-注意事项：{note}
-{multimodal_instruction}
+    # 预设元信息
+    metadata_section = ""
+    if metadata and any(metadata.values()):
+        meta_items = []
+        if metadata.get("course"):
+            meta_items.append(f"课程名称：{metadata['course']}（填入 hint 中要求'课程'、'项目'的字段）")
+        if metadata.get("college"):
+            meta_items.append(f"学院名称：{metadata['college']}（填入 hint 中要求'学院'、'单位'的字段）")
+        if metadata.get("lecturer"):
+            meta_items.append(f"主讲人：{metadata['lecturer']}（填入 hint 中要求'主讲'、'讲师'、'姓名'的字段）")
+        if meta_items:
+            metadata_section = f"""
+📌 预设信息（严格按照括号内的指示填入对应字段）：
+{chr(10).join('- ' + item for item in meta_items)}
+⚠️ 注意：主讲人姓名只能填入 hint 明确要求'主讲人'或'姓名'的字段，绝对不能填入'一级标题'、'章节标题'等标题类字段！
+"""
 
-📌 核心原则（幻灯片 vs 讲稿）：
-讲稿是演讲者手里的稿子，是他演讲时要说的完整内容。
-幻灯片是投影给观众看的，应该是讲稿的**精炼要点**，而非照搬全文。
-你需要把讲稿内容**提炼、概括、分点**后放到幻灯片上。
+    # 章节上下文
+    context_section = ""
+    if section_context and any(section_context.values()):
+        ctx_items = []
+        if section_context.get("chapter"):
+            ctx_items.append(f"章节：{section_context['chapter']}（填入 hint 中要求'章节'、'一级标题'的字段）")
+        if section_context.get("section"):
+            ctx_items.append(f"知识点：{section_context['section']}（填入 hint 中要求'知识点'、'二级标题'的字段）")
+        if section_context.get("subsection"):
+            ctx_items.append(f"小节：{section_context['subsection']}（填入 hint 中要求'小节'、'三级标题'的字段）")
+        if ctx_items:
+            context_section = f"""
+📚 当前章节上下文（按照括号内的指示填入对应字段）：
+{chr(10).join('- ' + item for item in ctx_items)}
+"""
 
-✅ 正确做法：
-- 提取核心观点，用简洁的短语或短句表达
-- 使用要点列表（如"1. xxx  2. xxx"或"• xxx"）
-- 删除口语化表达、过渡语、详细解释
-- 保留关键数据、专有名词、核心结论
+    prompt = f"""请根据讲稿内容填充模板《{template_info["page_type"]}》的各个字段。
+{page_note_section}
+═══════════════════════════════════════
+📝 【字段定义 - 严格按照 hint 要求填写】
 
-❌ 错误做法：
-- 把讲稿的长段落直接复制到幻灯片
-- 保留"接下来我们来看""正如前面所说"等口语
-- 内容过于详细，像在读文章
+每个字段的 hint 是填写该字段的最重要依据，必须严格遵守。
 
-⚠️ 严格要求（必须遵守）：
-1. 所有标记为"required"的字段必须填写，绝对不得留空。
-2. 每个文本字段都有字数上限（max_chars），你生成的内容绝对不能超过这个限制。
-3. 内容必须精炼！把讲稿的完整表述压缩为幻灯片要点，只保留核心信息。
-4. 违反字数限制的输出将被视为无效，必须重新生成。
-5. 务必记住讲稿中提到的主讲人姓名、课程/讲座/项目名称等关键专有名词，并在所有需要这些信息的字段保持完全一致，不要改写。
-6. 同一页内的不同字段要符合各自语义，严禁把同一句话复制到多个字段、或用课程名/章节名去填正文/小节标题，标题/正文/要点应各填最贴合的内容。
-7. 如无匹配内容且字段非必填，请留空，不要复制课程名/章节名充数。
-8. 自查：同页字段不得出现同一句话；标题类字段必须与其语义匹配，正文/要点不得被课程名/章节名占用。
-{
-        ""
-        if not metadata
-        else f'''
-📋 预设元信息（必须使用）：
-以下是用户预设的关键信息，请优先将这些信息填入对应的字段：
-{f"- 课程/项目名称：{metadata['course']}" if metadata.get('course') else ""}
-{f"- 学院/单位名称：{metadata['college']}" if metadata.get('college') else ""}
-{f"- 主讲人/讲师：{metadata['lecturer']}" if metadata.get('lecturer') else ""}
-请根据字段名称的语义，将上述信息填入最匹配的字段（如"主标题"、"课程名"、"讲师"、"单位"等）。
-'''
-    }
-{
-        ""
-        if not section_context or not any(section_context.values())
-        else f'''
-📚 当前章节上下文（仅用于标题字段）：
-本页 PPT 属于以下章节结构：
-{f"- 章节名称/一级标题：{section_context['chapter']}" if section_context.get('chapter') else ""}
-{f"- 知识点名称/二级标题：{section_context['section']}" if section_context.get('section') else ""}
-{f"- 小节名称/三级标题：{section_context['subsection']}" if section_context.get('subsection') else ""}
-⚠️ 注意：上述信息只能用于填充明确包含"标题"、"名称"、"章节"等关键词的字段。
-绝对不要将课程名称或章节标题填入"正文"、"内容"、"文字内容"、"要点"等正文类字段！
-'''
-    }
-
-该模板包含如下文本字段（按照顺序对应）：
+【文本字段】
 {text_desc}
 
-图片字段（若无可留空）：
+【图片字段】
 {image_desc}
 
-可用图片路径：
-{image_section}
+可用图片：{image_section}
+════════════════════════════════════════
+{metadata_section}{context_section}{multimodal_instruction}
+📌 填写原则：
+1. 每个字段严格按照其 hint 要求填写，hint 是唯一的填写依据
+2. 必填字段不得留空，可选字段无匹配内容时留空
+3. 严格遵守字数限制，超出限制的内容需精简
+4. 从讲稿中提炼要点，不要照搬原文
+5. 如果 page_note 中有特殊规则（如图片选择规则），必须严格遵守
 
-输出格式示例：
+输出格式：
 {{
-  "texts": ["文本1", "文本2", "..."],
-  "images": ["图片路径1", "图片路径2", "..."]
+  "texts": ["字段1内容", "字段2内容", ...],
+  "images": ["图片路径1", "图片路径2", ...]
 }}
 
-请严格保持数组长度与字段数量一致，texts[1] 必须对应上述列表中的第 1 个文本字段，依此类推。
+数组顺序必须与上述字段定义顺序一致。
+
 讲稿内容：
 {raw_text}
 """
-    # Append user prompt if provided
     if user_prompt:
         prompt += f"\n\n用户额外要求：\n{user_prompt}"
 
@@ -879,7 +875,7 @@ def llm_preprocess_script(
     if not llm:
         raise ValueError("预处理讲稿需要启用 LLM。")
 
-    # 构建模板描述
+    # 构建模板描述，突出 page_note 和字段 hint
     template_desc_lines = []
     for num, info in templates.items():
         text_count = len(info["text_fields"])
@@ -887,27 +883,61 @@ def llm_preprocess_script(
         page_type = info["page_type"]
         has_required_image = any(f.get("required") for f in info["image_fields"])
 
-        # 获取文本字段的详细信息
+        # 获取 page_note
+        page_note = info.get("page_note") or ""
+        meta = info.get("meta") or {}
+        if not page_note:
+            page_note = meta.get("notes", "")
+
+        # 获取文本字段的详细信息（包含 hint）
         text_fields_desc = []
         for field in info["text_fields"]:
-            name = field.get("name", "未命名")
-            max_chars = field.get("max_chars", "无限制")
-            text_fields_desc.append(f"    - {name}（最多{max_chars}字）")
+            path = field.get("path", ())
+            name = "/".join(path) if path else "未命名"
+            hint = field.get("hint", "")
+            max_chars = field.get("max_chars")
+            required = field.get("required", False)
+            req_mark = "必填" if required else "可选"
+            char_limit = f"≤{max_chars}字" if max_chars else ""
+            desc_parts = [name]
+            if hint:
+                desc_parts.append(f"({hint})")
+            if char_limit:
+                desc_parts.append(f"[{char_limit}]")
+            desc_parts.append(f"[{req_mark}]")
+            text_fields_desc.append(f"    - {' '.join(desc_parts)}")
 
         image_fields_desc = []
         for field in info["image_fields"]:
-            name = field.get("name", "图片")
+            path = field.get("path", ())
+            name = "/".join(path) if path else "图片"
+            hint = field.get("hint", "")
             required = "必填" if field.get("required") else "可选"
-            image_fields_desc.append(f"    - {name}（{required}）")
+            desc_parts = [name]
+            if hint:
+                desc_parts.append(f"({hint})")
+            desc_parts.append(f"[{required}]")
+            image_fields_desc.append(f"    - {' '.join(desc_parts)}")
 
+        # 构建模板描述
         desc = f"【PPT{num}】{page_type}"
         if has_required_image:
             desc += " ⚠️需要图片"
-        desc += f"\n  文本字段({text_count}个):\n"
-        desc += "\n".join(text_fields_desc) if text_fields_desc else "    （无）"
+        
+        # 如果有 page_note，高亮显示
+        if page_note:
+            desc += f"\n  📋 特殊说明：{page_note}"
+        
+        desc += f"\n  文本字段({text_count}个):"
+        if text_fields_desc:
+            desc += "\n" + "\n".join(text_fields_desc)
+        else:
+            desc += "\n    （无）"
+        
         if image_count > 0:
-            desc += f"\n  图片字段({image_count}个):\n"
-            desc += "\n".join(image_fields_desc)
+            desc += f"\n  图片字段({image_count}个):"
+            desc += "\n" + "\n".join(image_fields_desc)
+        
         template_desc_lines.append(desc)
 
     template_desc = "\n\n".join(template_desc_lines)
@@ -1442,16 +1472,29 @@ def _fill_by_markers(
                 f"模板 {template_num} 未在 template.json 中定义或不在 template.txt 中允许。"
             )
 
-        # 更新章节上下文（根据当前 block 的文本内容）
+        template_info = templates[template_num]
+        page_type = template_info.get("page_type", "")
         block_text = block.get("text", "")
-        # 检查文本的前几行是否包含章节标题
-        for line in block_text.split("\n")[:5]:  # 只检查前5行
-            section_ctx.update(line)
+        lines = [l.strip() for l in block_text.split("\n") if l.strip()]
+
+        # 对于章节页，特殊处理：第一行是章节名，第二行是知识点名
+        if "章节" in page_type and lines:
+            # 第一行作为章节名称（一级标题）
+            section_ctx.level1 = lines[0]
+            section_ctx.level2 = None
+            section_ctx.level3 = None
+            # 第二行如果存在，作为知识点名称（二级标题）
+            if len(lines) > 1:
+                section_ctx.level2 = lines[1]
+        else:
+            # 非章节页：检查文本的前几行是否包含章节标题格式
+            for line in lines[:5]:
+                section_ctx.update(line)
 
         pages.append(
             _fill_with_template(
                 template_num,
-                templates[template_num],
+                template_info,
                 block,
                 llm,
                 metadata,
