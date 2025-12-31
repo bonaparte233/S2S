@@ -1004,7 +1004,7 @@ def llm_preprocess_script(
 {template_desc}
 
 ## 章节/知识点抽取指引
-- 如果原文未显式写出章节/知识点，请根据语义推断出“章节/知识点”层级，并在对应页开头写清楚（如“【PPT2】\n常用传感器及其工作原理简介\n（一）光电传感器”）。
+- 如果原文未显式写出章节/知识点，请根据语义推断出“章节/知识点”层级，并在对应页开头写清楚（如“【PPT2】\n一、常用传感器及其工作原理简介\n1.光电传感器”）。
 - 同一层级的标题保持用词一致，后续页面复用相同的章节/知识点名称，不要随意改写。
 - 仅在有合理子标题时写三级标题；无合适小节时可以不写三级标题，避免用课程名/正文句子填充。
 
@@ -1445,13 +1445,127 @@ def _prepend_cover_page(
     )
 
 
+def _insert_toc_page(
+    pages: List[Dict],
+    templates: Dict[int, Dict],
+    metadata: Dict,
+    chapters: List[str],
+):
+    """
+    在封面页后插入目录页（模板4），根据收集的章节信息填充。
+    
+    Args:
+        pages: 页面列表（已包含封面页）
+        templates: 模板定义字典
+        metadata: 元数据（课程名称等）
+        chapters: 章节名称列表
+    """
+    toc_template = templates.get(4)
+    if not toc_template:
+        print("⚠️  模板4（目录页）不存在，跳过目录页生成")
+        return
+    
+    if not chapters:
+        print("ℹ️  未检测到章节信息，跳过目录页生成")
+        return
+    
+    # 创建目录页内容
+    content = _clone_schema(toc_template["schema"])
+    
+    # 填充总课程名称
+    course_name = metadata.get("course", "")
+    for field in toc_template["text_fields"]:
+        path = list(field["path"])
+        key = "/".join(path)
+        if "总课程名称" in key or "课程" in key:
+            _assign_in_schema(content, path, course_name)
+            break
+    
+    # 填充章节标题（最多4个）
+    for idx, chapter in enumerate(chapters[:4], start=1):
+        # 填充章节标题
+        for field in toc_template["text_fields"]:
+            path = list(field["path"])
+            key = "/".join(path)
+            if f"章节标题{idx}" in key:
+                _assign_in_schema(content, path, chapter)
+                break
+        
+        # 章节内容可以留空或填写简介（这里留空）
+        for field in toc_template["text_fields"]:
+            path = list(field["path"])
+            key = "/".join(path)
+            if f"章节内容{idx}" in key:
+                _assign_in_schema(content, path, "")
+                break
+    
+    # 清空未使用的章节字段
+    for idx in range(len(chapters) + 1, 5):
+        for field in toc_template["text_fields"]:
+            path = list(field["path"])
+            key = "/".join(path)
+            if f"章节标题{idx}" in key or f"章节内容{idx}" in key:
+                _assign_in_schema(content, path, "")
+    
+    toc_page = {
+        "page_type": toc_template["page_type"],
+        "template_page_num": 4,
+        "content": content,
+    }
+    
+    # 插入到封面页后（索引1的位置）
+    insert_pos = 1 if pages and pages[0].get("template_page_num") == 1 else 0
+    pages.insert(insert_pos, toc_page)
+    print(f"✅ 已插入目录页，包含 {len(chapters[:4])} 个章节")
+
+
+def _append_end_page(
+    pages: List[Dict],
+    templates: Dict[int, Dict],
+    metadata: Dict,
+):
+    """
+    在页面列表末尾添加结束页（模板30）。
+    
+    Args:
+        pages: 页面列表
+        templates: 模板定义字典
+        metadata: 元数据（课程名称等）
+    """
+    end_template = templates.get(30)
+    if not end_template:
+        print("⚠️  模板30（结束页）不存在，跳过结束页生成")
+        return
+    
+    # 创建结束页内容
+    content = _clone_schema(end_template["schema"])
+    
+    # 填充总课程名称
+    course_name = metadata.get("course", "")
+    for field in end_template["text_fields"]:
+        path = list(field["path"])
+        key = "/".join(path)
+        if "总课程名称" in key or "课程" in key:
+            _assign_in_schema(content, path, course_name)
+            break
+    
+    end_page = {
+        "page_type": end_template["page_type"],
+        "template_page_num": 30,
+        "content": content,
+    }
+    
+    pages.append(end_page)
+    print("✅ 已添加结束页")
+
+
 def _fill_by_markers(
     blocks: List[Dict],
     templates: Dict[int, Dict],
     llm: Optional[BaseLLM],
     metadata: Dict,
     user_prompt: Optional[str] = None,
-) -> List[Dict]:
+) -> Tuple[List[Dict], List[str]]:
     """
     按照讲稿中的 PPT 标记填充内容。
 
@@ -1459,9 +1573,13 @@ def _fill_by_markers(
     因此不需要使用多模态模型来界定图片位置，设置 use_multimodal=False。
 
     新增：跟踪章节上下文，让 LLM 知道当前内容属于哪个章节/知识点。
+
+    Returns:
+        (pages, chapters): 填充后的页面列表和收集到的章节名称列表
     """
     pages: List[Dict] = []
     section_ctx = SectionContext()  # 章节上下文跟踪器
+    chapters: List[str] = []  # 收集所有章节名称（用于目录页）
 
     for block in blocks:
         template_num = block.get("template_hint")
@@ -1486,10 +1604,18 @@ def _fill_by_markers(
             # 第二行如果存在，作为知识点名称（二级标题）
             if len(lines) > 1:
                 section_ctx.level2 = lines[1]
+            # 收集章节名称（去重）
+            if section_ctx.level1 and section_ctx.level1 not in chapters:
+                chapters.append(section_ctx.level1)
         else:
             # 非章节页：检查文本的前几行是否包含章节标题格式
             for line in lines[:5]:
+                old_level1 = section_ctx.level1
                 section_ctx.update(line)
+                # 如果检测到新的一级标题，收集它
+                if section_ctx.level1 and section_ctx.level1 != old_level1:
+                    if section_ctx.level1 not in chapters:
+                        chapters.append(section_ctx.level1)
 
         pages.append(
             _fill_with_template(
@@ -1503,7 +1629,7 @@ def _fill_by_markers(
                 section_context=section_ctx.to_dict(),  # 传递章节上下文
             )
         )
-    return pages
+    return pages, chapters
 
 
 def _preprocess_and_fill(
@@ -1591,9 +1717,9 @@ def _preprocess_and_fill(
 
     # Step 3: 复用 _fill_by_markers 处理
     print("📝 Step 2: 填充页面内容...")
-    pages = _fill_by_markers(preprocessed_blocks, templates, llm, metadata, user_prompt)
+    pages, chapters = _fill_by_markers(preprocessed_blocks, templates, llm, metadata, user_prompt)
 
-    return pages
+    return pages, chapters
 
 
 def generate_config_data(
@@ -1622,14 +1748,21 @@ def generate_config_data(
     # 统一走预处理流程：
     # - 如果已有标记：保持分页，只优化文本
     # - 如果无标记：自动分页 + 优化文本
-    pages = _preprocess_and_fill(
+    pages, chapters = _preprocess_and_fill(
         blocks, templates, llm, metadata, user_prompt, run_dir, has_marker
     )
 
     if not pages:
         raise ValueError("未生成任何幻灯片内容，请检查讲稿或模板。")
 
+    # 添加封面页（在最前面）
     _prepend_cover_page(pages, templates, metadata, llm)
+    
+    # 添加目录页（在封面页后）
+    _insert_toc_page(pages, templates, metadata, chapters)
+    
+    # 添加结束页（在最后面）
+    _append_end_page(pages, templates, metadata)
 
     stripped_pages = []
     for page in pages:
@@ -1805,8 +1938,13 @@ def continue_from_preprocessed(
 
     # 填充内容
     print("🔄 开始填充内容...")
-    pages = _fill_by_markers(blocks, templates, llm, metadata, user_prompt=None)
+    pages, chapters = _fill_by_markers(blocks, templates, llm, metadata, user_prompt=None)
     print(f"✅ 生成了 {len(pages)} 页")
+    
+    # 添加封面页、目录页、结束页
+    _prepend_cover_page(pages, templates, metadata, llm)
+    _insert_toc_page(pages, templates, metadata, chapters)
+    _append_end_page(pages, templates, metadata)
 
     # 构建 config
     config = {
