@@ -240,6 +240,15 @@ def parse_docx_blocks(doc_path: str, image_dir: Path) -> Tuple[List[Dict], bool,
         if stripped:
             buffer.append(stripped)
 
+    # 提取表格内容并追加到 buffer
+    if doc.tables:
+        from scripts.docx_table_parser import extract_tables_from_docx
+        table_results = extract_tables_from_docx(doc)
+        for table_result in table_results:
+            if table_result.raw_text:
+                buffer.append("\n--- 表格内容 ---\n")
+                buffer.append(table_result.raw_text)
+
     flush()
     if not slides:
         full_text = "\n".join(p.text.strip() for p in doc.paragraphs if p.text.strip())
