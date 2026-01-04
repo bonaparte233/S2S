@@ -132,7 +132,11 @@
                     <option value="semantic">语义模式 - 仅导出命名规范的元素（推荐）</option>
                     <option value="text">文本模式 - 导出所有可编辑文本框</option>
                 </select>
-                <small class="form-help">语义模式只导出包含"xx区"等命名的元素</small>
+                <small class="form-help">
+                    <strong>语义模式</strong>：只导出在 PPT 中已命名的元素（如"标题区"、"内容区"）。
+                    如果返回 0 页，请先在 PPT 中给元素命名，或使用"文本模式"。<br>
+                    <strong>文本模式</strong>：导出所有可编辑文本框，适合快速预览模板结构。
+                </small>
             </div>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary btn-large" id="submitBtn">🚀 生成配置模板</button>
@@ -269,18 +273,36 @@
 
             if (response.ok) {
                 generatedData = data;
-                document.getElementById('pageCount').textContent = data.ppt_pages ? data.ppt_pages.length : 0;
-                resultDiv.style.display = 'block';
+                const pageCount = data.ppt_pages ? data.ppt_pages.length : 0;
+                document.getElementById('pageCount').textContent = pageCount;
+                
+                if (pageCount === 0) {
+                    // 0 页时显示警告
+                    document.getElementById('generateResult').style.display = 'none';
+                    document.getElementById('generateErrorContent').innerHTML = `
+                        <strong>⚠️ 未找到可导出的元素</strong><br><br>
+                        可能的原因：<br>
+                        1. <strong>语义模式</strong>要求 PPT 中的元素已命名（如"标题区"、"内容区"）<br>
+                        2. PPT 中的元素都是默认名称（如"文本框 1"、"图片 2"）<br><br>
+                        解决方案：<br>
+                        • 使用<strong>文本模式</strong>导出所有文本框<br>
+                        • 或先在 PPT 中给元素命名，再使用语义模式
+                    `;
+                    errorDiv.style.display = 'block';
+                } else {
+                    resultDiv.style.display = 'block';
+                    errorDiv.style.display = 'none';
 
-                // 获取文件名
-                const fileInput = document.getElementById('template_file');
-                const fileName = fileInput.files[0] ? fileInput.files[0].name.replace('.pptx', '') : '配置模板';
+                    // 获取文件名
+                    const fileInput = document.getElementById('template_file');
+                    const fileName = fileInput.files[0] ? fileInput.files[0].name.replace('.pptx', '') : '配置模板';
 
-                // 保存会话并更新链接
-                generatedSessionId = await saveGeneratedSession(data, fileName);
-                if (generatedSessionId) {
-                    const goToEditBtn = document.getElementById('goToEditBtn');
-                    goToEditBtn.href = '{% url "config_editor_page" %}?session=' + generatedSessionId;
+                    // 保存会话并更新链接
+                    generatedSessionId = await saveGeneratedSession(data, fileName);
+                    if (generatedSessionId) {
+                        const goToEditBtn = document.getElementById('goToEditBtn');
+                        goToEditBtn.href = '{% url "config_editor_page" %}?session=' + generatedSessionId;
+                    }
                 }
             } else {
                 let errorMsg = data.error || '生成失败';

@@ -354,6 +354,9 @@
                 <button id="wizardAiAutoFillBtn" class="btn btn-info" title="使用 AI 补全缺失的配置（保留现有命名）">
                     ✨ AI 查漏补缺
                 </button>
+                <button id="wizardGlobalConfigBtn" class="btn btn-secondary" onclick="openGlobalConfigInEditor()" title="编辑全局配置（特殊页面、AI 提示词等）" style="background: linear-gradient(135deg, #6b7280, #4b5563); color: white; border: none;">
+                    ⚙️ 全局配置
+                </button>
                 <span id="wizardAiProgress" style="margin-left: 15px; color: #666; display: none;"></span>
             </div>
             <div class="embedded-editor" id="pptEditorContainer">
@@ -658,6 +661,16 @@
 
     // AI 查漏补缺（保留现有配置）
     document.getElementById('wizardAiAutoFillBtn')?.addEventListener('click', () => triggerAiNaming(false));
+
+    // 打开全局配置（通过 postMessage 通知 iframe）
+    function openGlobalConfigInEditor() {
+        const iframe = document.getElementById('pptEditorIframe');
+        if (!iframe || !iframe.contentWindow) {
+            alert('编辑器尚未加载完成，请稍候...');
+            return;
+        }
+        iframe.contentWindow.postMessage({ type: 'openGlobalConfig' }, '*');
+    }
 
     // 监听来自 iframe 的消息
     window.addEventListener('message', function (event) {

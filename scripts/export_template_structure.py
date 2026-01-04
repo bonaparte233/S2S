@@ -305,7 +305,29 @@ def export_template_structure(
         data_manifest.append(manifest_entry)
         ppt_pages.append(page_payload)
 
-    return {"manifest": data_manifest, "ppt_pages": ppt_pages}
+    return _build_full_config(data_manifest, ppt_pages)
+
+
+def _build_full_config(manifest: List[Dict], ppt_pages: List[Dict]) -> Dict:
+    """构建包含全局配置的完整 JSON 结构。"""
+    return {
+        "template_prompt": {
+            "preprocess_guide": "",
+            "fill_guide": "",
+            "section_tracking": True,
+            "section_field_mappings": {
+                "chapter": "'章节'、'一级标题'",
+                "section": "'知识点'、'二级标题'",
+            },
+        },
+        "special_pages": {
+            "cover": None,
+            "toc": None,
+            "end": None,
+        },
+        "manifest": manifest,
+        "ppt_pages": ppt_pages,
+    }
 
 
 def ai_enrich_template(
@@ -352,9 +374,25 @@ def ai_enrich_template(
 
     print(f"🤖 使用 {llm_provider} 进行 AI 填充...")
 
-    # Process each page
-    enriched_data = template_data.copy()
-    enriched_data["ppt_pages"] = []
+    # 保留全局配置（如果存在）
+    enriched_data = {
+        "template_prompt": template_data.get("template_prompt", {
+            "preprocess_guide": "",
+            "fill_guide": "",
+            "section_tracking": True,
+            "section_field_mappings": {
+                "chapter": "'章节'、'一级标题'",
+                "section": "'知识点'、'二级标题'",
+            },
+        }),
+        "special_pages": template_data.get("special_pages", {
+            "cover": None,
+            "toc": None,
+            "end": None,
+        }),
+        "manifest": template_data.get("manifest", []),
+        "ppt_pages": [],
+    }
 
     for page_idx, page in enumerate(template_data["ppt_pages"], start=1):
         print(

@@ -140,18 +140,64 @@ python scripts/generate_slides.py --template template.pptx --json config.json --
 
 ```
 S2S/
-├── main.py                 # 主入口
-├── scripts/                # 核心脚本
-│   ├── docx_to_config.py   # DOCX → JSON
-│   ├── generate_slides.py  # JSON → PPT
+├── main.py                 # CLI 主入口
+├── scripts/                # 核心后端模块
+│   ├── docx_to_config.py   # DOCX → JSON（主入口）
+│   ├── generate_slides.py  # JSON → PPT（主入口）
 │   ├── llm_client.py       # LLM 抽象层
-│   └── export_template_structure.py
+│   ├── export_template_structure.py  # 模板结构导出
+│   ├── docx_processing/    # DOCX 解析子包
+│   │   ├── docx_parser.py      # 文档解析
+│   │   ├── docx_table_parser.py # 表格解析
+│   │   ├── llm_processor.py    # LLM 调用
+│   │   ├── slide_filler.py     # 内容填充
+│   │   └── special_pages.py    # 特殊页面
+│   └── ppt_processing/     # PPT 渲染子包
+│       ├── slide_builder.py    # 幻灯片构建
+│       ├── shape_utils.py      # 形状处理
+│       └── text_utils.py       # 文本填充
 ├── web/                    # Django Web 应用
 │   ├── ppt_generator/      # PPT 生成模块
 │   ├── templates/          # HTML 模板
 │   └── static/             # 静态资源
 ├── template/               # PPT 模板和配置
+│   └── 工科模板1/          # 示例模板
+│       ├── template.pptx   # PPT 模板文件
+│       └── template.json   # 模板配置
 └── requirements.txt
+```
+
+## 🔌 后端 API 集成
+
+详细的后端 API 文档请参考 [`scripts/README.md`](scripts/README.md)。
+
+### 快速示例
+
+```python
+from pathlib import Path
+from scripts.docx_to_config import generate_config_data
+from scripts.generate_slides import render_slides
+
+# DOCX → JSON
+config = generate_config_data(
+    docx_path="讲稿.docx",
+    template_json="template/工科模板1/template.json",
+    template_list=None,
+    use_llm=True,
+    llm_provider="deepseek",
+    llm_model="deepseek-chat",
+    llm_base_url=None,
+    metadata_overrides={"course": "传感器技术"},
+    run_dir=Path("output"),
+)
+
+# JSON → PPT
+result = render_slides(
+    template_path=Path("template/工科模板1/template.pptx"),
+    config=config,
+    output_name="slides.pptx",
+    run_dir=Path("output"),
+)
 ```
 
 ## 🛠️ 开发者工具
@@ -178,6 +224,37 @@ S2S/
 - ✨ **AI 查漏补缺**：只补全缺失的配置，保留已有命名
 - 📦 批量操作（多选、隐藏、显示）
 - 💾 自动保存编辑进度，支持会话恢复
+
+### 模板配置 (template.json)
+
+模板配置文件包含以下关键部分：
+
+```json
+{
+  "template_prompt": {
+    "preprocess_guide": "LLM 预处理指导",
+    "fill_guide": "LLM 填充指导",
+    "section_tracking": true,
+    "section_field_mappings": {
+      "chapter": "'章节'、'一级标题'",
+      "section": "'知识点'、'二级标题'"
+    }
+  },
+  "special_pages": {
+    "cover": 1,
+    "toc": 2,
+    "end": 28
+  },
+  "ppt_pages": [...]
+}
+```
+
+| 配置项 | 说明 |
+|--------|------|
+| `special_pages.cover` | 封面页模板编号（null 不添加） |
+| `special_pages.toc` | 目录页模板编号（null 不添加） |
+| `special_pages.end` | 结束页模板编号（null 不添加） |
+| `section_tracking` | 是否启用章节追踪 |
 
 ## 🔧 高级配置
 

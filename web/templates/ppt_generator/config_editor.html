@@ -99,6 +99,20 @@
         color: white;
     }
 
+    .page-item.global-config {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: 2px solid #5a67d8;
+    }
+
+    .page-item.global-config:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    }
+
+    .page-item.global-config.active {
+        background: linear-gradient(135deg, #4c51bf 0%, #553c9a 100%);
+    }
+
     .page-item-title {
         font-weight: 600;
         margin-bottom: 4px;
@@ -107,6 +121,42 @@
     .page-item-meta {
         font-size: 0.85rem;
         opacity: 0.8;
+    }
+
+    /* 全局配置编辑区样式 */
+    .global-config-section {
+        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-md);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background: var(--bg-secondary);
+    }
+
+    .global-config-section h4 {
+        margin: 0 0 var(--spacing-md) 0;
+        color: var(--primary-color);
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .global-config-section .field-row {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .global-config-section textarea {
+        width: 100%;
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    .global-config-section select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
     }
 
     .edit-area {
@@ -262,7 +312,7 @@
 {% block extra_js %}
 <script>
     let templateData = null;
-    let currentPageIndex = 0;
+    let currentPageIndex = -1;  // -1 表示全局配置
     let currentSessionId = null;
     let currentFileName = null;
 
@@ -443,15 +493,41 @@
 
     function loadTemplateData(data) {
         templateData = data;
+        // 确保全局配置存在
+        if (!templateData.template_prompt) {
+            templateData.template_prompt = {
+                preprocess_guide: "",
+                fill_guide: "",
+                section_tracking: true,
+                section_field_mappings: {
+                    chapter: "'章节'、'一级标题'",
+                    section: "'知识点'、'二级标题'",
+                    subsection: "'小节'、'三级标题'"
+                }
+            };
+        }
+        if (!templateData.special_pages) {
+            templateData.special_pages = { cover: null, toc: null, end: null };
+        }
         document.getElementById('uploadSection').style.display = 'none';
         document.getElementById('editorSection').style.display = 'block';
         renderPageList();
-        if (data.ppt_pages && data.ppt_pages.length > 0) selectPage(0);
+        // 默认选中全局配置
+        selectPage(-1);
     }
 
     function renderPageList() {
         const pageList = document.getElementById('pageList');
         pageList.innerHTML = '';
+        
+        // 添加全局配置项
+        const globalItem = document.createElement('div');
+        globalItem.className = 'page-item global-config' + (currentPageIndex === -1 ? ' active' : '');
+        globalItem.innerHTML = '<div class="page-item-title">⚙️ 全局配置</div><div class="page-item-meta">特殊页面、AI 提示词</div>';
+        globalItem.addEventListener('click', () => selectPage(-1));
+        pageList.appendChild(globalItem);
+        
+        // 添加页面列表
         templateData.ppt_pages.forEach((page, index) => {
             const pageItem = document.createElement('div');
             pageItem.className = 'page-item' + (index === currentPageIndex ? ' active' : '');
@@ -464,13 +540,157 @@
 
     function selectPage(index) {
         currentPageIndex = index;
-        document.querySelectorAll('.page-item').forEach((item, i) => item.classList.toggle('active', i === index));
+        // 更新左侧列表高亮
+        const items = document.querySelectorAll('.page-item');
+        items.forEach((item, i) => {
+            if (i === 0) {
+                // 全局配置项
+                item.classList.toggle('active', index === -1);
+            } else {
+                item.classList.toggle('active', i - 1 === index);
+            }
+        });
         renderEditArea();
     }
 
     function renderEditArea() {
-        const page = templateData.ppt_pages[currentPageIndex];
         const editArea = document.getElementById('editArea');
+        
+        if (currentPageIndex === -1) {
+            // 渲染全局配置编辑界面
+            renderGlobalConfigArea(editArea);
+        } else {
+            // 渲染页面字段编辑界面
+            renderPageEditArea(editArea);
+        }
+    }
+
+    function renderGlobalConfigArea(editArea) {
+        const tp = templateData.template_prompt || {};
+        const sp = templateData.special_pages || {};
+        const sfm = tp.section_field_mappings || {};
+        
+        // 构建页码选项
+        const pageOptions = templateData.ppt_pages.map(p => 
+            `<option value="${p.template_page_num}">${p.template_page_num} - ${p.page_type}</option>`
+        ).join('');
+        
+        let html = `
+            <h3 style="margin-bottom: var(--spacing-lg);">⚙️ 全局配置</h3>
+            
+            <div class="global-config-section">
+                <h4>📄 特殊页面</h4>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: var(--spacing-md);">
+                    指定封面、目录、结束页的模板页码，这些页面在生成时会特殊处理
+                </p>
+                <div class="field-row">
+                    <div class="field-label">封面页:</div>
+                    <select data-global="special_pages.cover">
+                        <option value="">不指定</option>
+                        ${pageOptions}
+                    </select>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">目录页:</div>
+                    <select data-global="special_pages.toc">
+                        <option value="">不指定</option>
+                        ${pageOptions}
+                    </select>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">结束页:</div>
+                    <select data-global="special_pages.end">
+                        <option value="">不指定</option>
+                        ${pageOptions}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="global-config-section">
+                <h4>🤖 AI 提示词配置</h4>
+                <div class="field-row" style="display: block;">
+                    <div class="field-label" style="margin-bottom: 8px;">预处理提示词 (preprocess_guide):</div>
+                    <textarea class="field-input" data-global="template_prompt.preprocess_guide" 
+                        placeholder="指导 AI 如何预处理讲稿内容...">${tp.preprocess_guide || ''}</textarea>
+                </div>
+                <div class="field-row" style="display: block; margin-top: var(--spacing-md);">
+                    <div class="field-label" style="margin-bottom: 8px;">填充提示词 (fill_guide):</div>
+                    <textarea class="field-input" data-global="template_prompt.fill_guide" 
+                        placeholder="指导 AI 如何填充 PPT 内容...">${tp.fill_guide || ''}</textarea>
+                </div>
+            </div>
+            
+            <div class="global-config-section">
+                <h4>📑 章节追踪配置</h4>
+                <div class="field-row">
+                    <div class="field-label">启用章节追踪:</div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" data-global="template_prompt.section_tracking" 
+                            ${tp.section_tracking ? 'checked' : ''}>
+                        <span style="font-size: 0.9rem;">自动追踪章节层级</span>
+                    </div>
+                </div>
+                <div class="field-row" style="display: block; margin-top: var(--spacing-md);">
+                    <div class="field-label" style="margin-bottom: 8px;">章节字段映射 (chapter):</div>
+                    <input type="text" class="field-input" data-global="template_prompt.section_field_mappings.chapter" 
+                        value="${sfm.chapter || ''}" placeholder="如：'章节'、'一级标题'">
+                </div>
+                <div class="field-row" style="display: block; margin-top: var(--spacing-sm);">
+                    <div class="field-label" style="margin-bottom: 8px;">小节字段映射 (section):</div>
+                    <input type="text" class="field-input" data-global="template_prompt.section_field_mappings.section" 
+                        value="${sfm.section || ''}" placeholder="如：'知识点'、'二级标题'">
+                </div>
+                <div class="field-row" style="display: block; margin-top: var(--spacing-sm);">
+                    <div class="field-label" style="margin-bottom: 8px;">子节字段映射 (subsection):</div>
+                    <input type="text" class="field-input" data-global="template_prompt.section_field_mappings.subsection" 
+                        value="${sfm.subsection || ''}" placeholder="如：'小节'、'三级标题'">
+                </div>
+            </div>
+        `;
+        
+        editArea.innerHTML = html;
+        
+        // 设置特殊页面下拉框的选中值
+        const coverSelect = editArea.querySelector('[data-global="special_pages.cover"]');
+        const tocSelect = editArea.querySelector('[data-global="special_pages.toc"]');
+        const endSelect = editArea.querySelector('[data-global="special_pages.end"]');
+        if (coverSelect && sp.cover) coverSelect.value = sp.cover;
+        if (tocSelect && sp.toc) tocSelect.value = sp.toc;
+        if (endSelect && sp.end) endSelect.value = sp.end;
+        
+        // 绑定事件
+        editArea.querySelectorAll('[data-global]').forEach(input => {
+            input.addEventListener('change', handleGlobalConfigChange);
+        });
+    }
+
+    function handleGlobalConfigChange(e) {
+        const input = e.target;
+        const path = input.dataset.global;
+        const parts = path.split('.');
+        
+        let value;
+        if (input.type === 'checkbox') {
+            value = input.checked;
+        } else if (input.tagName === 'SELECT') {
+            value = input.value ? parseInt(input.value) : null;
+        } else {
+            value = input.value;
+        }
+        
+        // 设置嵌套属性值
+        let obj = templateData;
+        for (let i = 0; i < parts.length - 1; i++) {
+            if (!obj[parts[i]]) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+        }
+        obj[parts[parts.length - 1]] = value;
+        
+        saveEditSession();
+    }
+
+    function renderPageEditArea(editArea) {
+        const page = templateData.ppt_pages[currentPageIndex];
         let html = '<h3 style="margin-bottom: var(--spacing-lg);">' + page.page_type + ' <span style="color: var(--text-secondary); font-size: 0.9rem;">(页码: ' + page.template_page_num + ')</span></h3>';
         html += '<div class="field-editor" style="background: var(--primary-light); border-color: var(--primary-color);"><div class="field-name" style="color: var(--primary-color);">📝 页面说明 (notes)</div><textarea class="field-input" style="width: 100%; min-height: 80px; resize: vertical;" data-type="notes" placeholder="帮助大模型理解这一页的具体用处...">' + (page.meta?.notes || '') + '</textarea></div>';
         html += '<h4 style="margin: var(--spacing-lg) 0 var(--spacing-md) 0;">字段配置</h4>';
@@ -483,7 +703,11 @@
             html += '<div class="field-row"><div class="field-label">最大字数:</div><input type="number" class="field-input" value="' + (field.max_chars || '') + '" data-field="' + fieldName + '" data-prop="max_chars" placeholder="最大字符数..." min="1"></div></div>';
         });
         editArea.innerHTML = html;
-        editArea.querySelectorAll('input, textarea').forEach(input => input.addEventListener('change', handleFieldChange));
+        editArea.querySelectorAll('input, textarea').forEach(input => {
+            if (!input.dataset.global) {
+                input.addEventListener('change', handleFieldChange);
+            }
+        });
     }
 
     function handleFieldChange(e) {

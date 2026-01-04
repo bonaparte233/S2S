@@ -486,6 +486,9 @@
             <h2 id="editorTitle">🎨 PPT 模板编辑器</h2>
         </div>
         <div class="toolbar-right">
+            <button id="globalConfigBtn" class="btn btn-secondary" onclick="openGlobalConfigModal()" title="编辑全局配置">
+                ⚙️ 全局配置
+            </button>
             <button id="saveTemplateBtn" class="btn btn-success">
                 💾 保存
             </button>
@@ -612,6 +615,114 @@
     </div>
 </div>
 
+<!-- 全局配置模态框 -->
+<div id="globalConfigModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                                background: rgba(0,0,0,0.5); z-index: 10000;
+                                justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 12px; width: 90%; max-width: 700px; max-height: 90vh;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px;
+                    border-bottom: 1px solid var(--border-color);">
+            <h3 style="margin: 0; font-size: 1.2rem;">⚙️ 全局配置</h3>
+            <button onclick="closeGlobalConfigModal()" style="background: none; border: none; font-size: 1.5rem;
+                            cursor: pointer; color: #999;">&times;</button>
+        </div>
+        <div style="padding: 24px; overflow-y: auto; flex: 1;">
+            <!-- 特殊页面配置 -->
+            <div class="config-section" style="margin-bottom: 24px;">
+                <h4 style="margin: 0 0 12px 0; font-size: 1rem; color: var(--text-primary);">
+                    📄 特殊页面
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+                    指定封面、目录、结束页的模板页码，这些页面在生成时会特殊处理
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 6px;">封面页</label>
+                        <select id="coverPageSelect" class="form-control" style="width: 100%; padding: 8px;">
+                            <option value="">-- 不使用 --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 6px;">目录页</label>
+                        <select id="tocPageSelect" class="form-control" style="width: 100%; padding: 8px;">
+                            <option value="">-- 不使用 --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 6px;">结束页</label>
+                        <select id="endPageSelect" class="form-control" style="width: 100%; padding: 8px;">
+                            <option value="">-- 不使用 --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 提示词配置 -->
+            <div class="config-section" style="margin-bottom: 24px;">
+                <h4 style="margin: 0 0 12px 0; font-size: 1rem; color: var(--text-primary);">
+                    🤖 AI 提示词配置
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+                    自定义 AI 处理讲稿和填充内容时的指引
+                </p>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                        预处理指引 <span style="color: var(--text-secondary);">(讲稿分页时使用)</span>
+                    </label>
+                    <textarea id="preprocessGuideInput" class="form-control" rows="3" 
+                        placeholder="例如：本模板使用三级标题结构，章节页用于一级标题，知识点页用于二级标题..."
+                        style="width: 100%; padding: 10px; font-size: 0.9rem; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                        填充指引 <span style="color: var(--text-secondary);">(内容填充时使用)</span>
+                    </label>
+                    <textarea id="fillGuideInput" class="form-control" rows="3" 
+                        placeholder="例如：主讲人姓名只能填入 hint 明确要求的字段，不要随意填充..."
+                        style="width: 100%; padding: 10px; font-size: 0.9rem; resize: vertical;"></textarea>
+                </div>
+            </div>
+
+            <!-- 章节追踪配置 -->
+            <div class="config-section">
+                <h4 style="margin: 0 0 12px 0; font-size: 1rem; color: var(--text-primary);">
+                    📑 章节追踪
+                </h4>
+                
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="sectionTrackingCheckbox" checked>
+                        <span style="font-size: 0.9rem;">启用章节追踪</span>
+                    </label>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 6px 0 0 26px;">
+                        自动在内容页显示当前章节/知识点标题
+                    </p>
+                </div>
+                
+                <div id="sectionMappingsContainer" style="margin-top: 12px;">
+                    <label style="font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                        字段映射 <span style="color: var(--text-secondary);">(JSON 格式)</span>
+                    </label>
+                    <textarea id="sectionMappingsInput" class="form-control" rows="4" 
+                        placeholder='{"chapter": "章节", "section": "知识点", "subsection": "小节"}'
+                        style="width: 100%; padding: 10px; font-size: 0.85rem; font-family: monospace; resize: vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px;
+                    border-top: 1px solid var(--border-color);">
+            <button onclick="closeGlobalConfigModal()" class="btn btn-secondary">取消</button>
+            <button onclick="saveGlobalConfigFromModal()" class="btn btn-primary">保存配置</button>
+        </div>
+    </div>
+</div>
+
 <!-- 页面备注模态框 -->
 <div id="pageNoteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                                 background: rgba(0,0,0,0.5); z-index: 10000;
@@ -653,7 +764,8 @@
         selectedShapeId: null,  // 当前选中的元素
         imageCache: new Map(),  // 图片缓存，避免重复加载
         embeddedMode: false,    // 嵌入模式标记
-        wizardMode: false       // 向导模式标记（显示 hint/max_chars/required/note）
+        wizardMode: false,      // 向导模式标记（显示 hint/max_chars/required/note）
+        globalConfig: null      // 全局配置（template_prompt, special_pages）
     };
 
     // ========================================
@@ -1398,11 +1510,15 @@
         const editView = document.getElementById('elementEditView');
         const batchActionsBar = document.getElementById('batchActionsBar');
 
+        // 重置所有 tabs
+        tabs.forEach(t => t.classList.remove('active'));
+        listView.style.display = 'none';
+        editView.style.display = 'none';
+        if (batchActionsBar) batchActionsBar.style.display = 'none';
+
         if (tab === 'list') {
             tabs[0].classList.add('active');
-            tabs[1].classList.remove('active');
             listView.style.display = 'block';
-            editView.style.display = 'none';
             // 显示批量操作栏（如果当前页面有元素）
             if (batchActionsBar) {
                 const page = templateEditorState.pages.find(p => p.page_num === templateEditorState.currentPageNum);
@@ -1410,17 +1526,150 @@
                     batchActionsBar.style.display = 'block';
                 }
             }
-        } else {
-            tabs[0].classList.remove('active');
+        } else if (tab === 'edit') {
             tabs[1].classList.add('active');
-            listView.style.display = 'none';
             editView.style.display = 'block';
-            // 隐藏批量操作栏（编辑单个元素时不需要）
-            if (batchActionsBar) {
-                batchActionsBar.style.display = 'none';
+        }
+    }
+
+    // 打开全局配置模态框
+    function openGlobalConfigModal() {
+        const modal = document.getElementById('globalConfigModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            initGlobalConfigForm();
+        }
+    }
+
+    // 关闭全局配置模态框
+    function closeGlobalConfigModal() {
+        const modal = document.getElementById('globalConfigModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // 从模态框保存全局配置
+    function saveGlobalConfigFromModal() {
+        saveGlobalConfigToState();
+        closeGlobalConfigModal();
+        console.log('[saveGlobalConfigFromModal] 全局配置已保存');
+    }
+
+    // 初始化全局配置表单
+    function initGlobalConfigForm() {
+        const state = templateEditorState;
+        
+        // 填充特殊页面下拉框选项
+        const coverSelect = document.getElementById('coverPageSelect');
+        const tocSelect = document.getElementById('tocPageSelect');
+        const endSelect = document.getElementById('endPageSelect');
+        
+        if (coverSelect && state.pages) {
+            // 清空并重新填充选项
+            [coverSelect, tocSelect, endSelect].forEach(select => {
+                if (!select) return;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">-- 不使用 --</option>';
+                state.pages.forEach(page => {
+                    const option = document.createElement('option');
+                    option.value = page.page_num;
+                    option.textContent = `第 ${page.page_num} 页 - ${page.page_type || '未命名'}`;
+                    select.appendChild(option);
+                });
+                // 恢复之前的选择
+                if (currentValue) select.value = currentValue;
+            });
+            
+            // 设置已保存的值
+            if (state.globalConfig) {
+                const sp = state.globalConfig.special_pages || {};
+                if (sp.cover) coverSelect.value = sp.cover;
+                if (sp.toc) tocSelect.value = sp.toc;
+                if (sp.end) endSelect.value = sp.end;
+                
+                const tp = state.globalConfig.template_prompt || {};
+                const preprocessInput = document.getElementById('preprocessGuideInput');
+                const fillInput = document.getElementById('fillGuideInput');
+                const trackingCheckbox = document.getElementById('sectionTrackingCheckbox');
+                const mappingsInput = document.getElementById('sectionMappingsInput');
+                
+                if (preprocessInput) preprocessInput.value = tp.preprocess_guide || '';
+                if (fillInput) fillInput.value = tp.fill_guide || '';
+                if (trackingCheckbox) trackingCheckbox.checked = tp.section_tracking !== false;
+                if (mappingsInput && tp.section_field_mappings) {
+                    mappingsInput.value = JSON.stringify(tp.section_field_mappings, null, 2);
+                }
             }
         }
     }
+
+    // 从表单收集全局配置
+    function collectGlobalConfig() {
+        const coverSelect = document.getElementById('coverPageSelect');
+        const tocSelect = document.getElementById('tocPageSelect');
+        const endSelect = document.getElementById('endPageSelect');
+        const preprocessInput = document.getElementById('preprocessGuideInput');
+        const fillInput = document.getElementById('fillGuideInput');
+        const trackingCheckbox = document.getElementById('sectionTrackingCheckbox');
+        const mappingsInput = document.getElementById('sectionMappingsInput');
+        
+        let sectionMappings = {
+            "chapter": "'章节'、'一级标题'",
+            "section": "'知识点'、'二级标题'",
+            "subsection": "'小节'、'三级标题'"
+        };
+        
+        try {
+            if (mappingsInput && mappingsInput.value.trim()) {
+                sectionMappings = JSON.parse(mappingsInput.value);
+            }
+        } catch (e) {
+            console.warn('章节映射 JSON 解析失败，使用默认值');
+        }
+        
+        return {
+            template_prompt: {
+                preprocess_guide: preprocessInput?.value || '',
+                fill_guide: fillInput?.value || '',
+                section_tracking: trackingCheckbox?.checked !== false,
+                section_field_mappings: sectionMappings
+            },
+            special_pages: {
+                cover: coverSelect?.value ? parseInt(coverSelect.value) : null,
+                toc: tocSelect?.value ? parseInt(tocSelect.value) : null,
+                end: endSelect?.value ? parseInt(endSelect.value) : null
+            }
+        };
+    }
+
+    // 保存全局配置到状态（表单变更时自动调用）
+    function saveGlobalConfigToState() {
+        templateEditorState.globalConfig = collectGlobalConfig();
+        console.log('[saveGlobalConfigToState] 已保存全局配置:', templateEditorState.globalConfig);
+    }
+
+    // 初始化全局配置表单事件监听器
+    function initGlobalConfigListeners() {
+        const inputs = [
+            'coverPageSelect', 'tocPageSelect', 'endPageSelect',
+            'preprocessGuideInput', 'fillGuideInput',
+            'sectionTrackingCheckbox', 'sectionMappingsInput'
+        ];
+        
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', saveGlobalConfigToState);
+                if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+                    el.addEventListener('input', saveGlobalConfigToState);
+                }
+            }
+        });
+    }
+
+    // 页面加载后初始化全局配置监听器
+    setTimeout(initGlobalConfigListeners, 100);
 
     // Render element list
     function renderElementList() {
@@ -2386,6 +2635,12 @@
             console.log('[applyInitialConfig] 接收到初始配置:', event.data.config);
             applyConfigFromJSON(event.data.config);
         }
+
+        // 向导请求打开全局配置模态框
+        if (event.data.type === 'openGlobalConfig') {
+            console.log('[postMessage] 收到打开全局配置请求');
+            openGlobalConfigModal();
+        }
     });
 
     // 从 JSON 配置恢复编辑器状态（编辑已发布模板时使用）
@@ -2397,6 +2652,15 @@
 
         // 显示加载提示
         showLoading('正在应用模板配置...');
+
+        // 保存全局配置到状态
+        if (configData.template_prompt || configData.special_pages) {
+            templateEditorState.globalConfig = {
+                template_prompt: configData.template_prompt || {},
+                special_pages: configData.special_pages || {}
+            };
+            console.log('[applyConfigFromJSON] 已加载全局配置:', templateEditorState.globalConfig);
+        }
 
         // 等待页面数据加载完成
         const checkAndApply = async () => {
@@ -2570,7 +2834,12 @@
             }
         });
 
+        // 收集全局配置
+        const globalConfig = collectGlobalConfig();
+
         const config = {
+            template_prompt: globalConfig.template_prompt,
+            special_pages: globalConfig.special_pages,
             manifest: manifest,
             ppt_pages: pptPages
         };

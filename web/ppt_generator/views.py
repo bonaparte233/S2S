@@ -1095,7 +1095,25 @@ def generate_template_config(request):
                     }
                 )
 
-        config = {"manifest": manifest, "ppt_pages": ppt_pages}
+        # 构建完整配置（包含全局配置）
+        config = {
+            "template_prompt": {
+                "preprocess_guide": "",
+                "fill_guide": "",
+                "section_tracking": True,
+                "section_field_mappings": {
+                    "chapter": "'章节'、'一级标题'",
+                    "section": "'知识点'、'二级标题'"
+                }
+            },
+            "special_pages": {
+                "cover": None,
+                "toc": None,
+                "end": None
+            },
+            "manifest": manifest,
+            "ppt_pages": ppt_pages
+        }
 
         return JsonResponse({"config": config})
 
